@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RealWorld — QA Guru</title>
+  <meta name="description" content="RealWorld fullstack demo: React / Express / PostgreSQL. Training stand for QA Guru courses.">
+  <link rel="icon" href="logo.png">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #0f1419;
+      --surface: #1a2332;
+      --border: #2d3a4f;
+      --text: #e7ecf3;
+      --muted: #9aa8bc;
+      --accent: #5cb85c;
+      --accent-dim: #3d8b3d;
+      --link: #6eb5ff;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f4f6f9;
+        --surface: #fff;
+        --border: #d8dee8;
+        --text: #1a2332;
+        --muted: #5c6b7f;
+        --accent: #2e7d32;
+        --accent-dim: #1b5e20;
+        --link: #1565c0;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    header { text-align: center; margin-bottom: 2.5rem; }
+    header img { max-width: 200px; height: auto; }
+    h1 { font-size: 1.75rem; margin: 1rem 0 0.5rem; font-weight: 600; }
+    .tagline { color: var(--muted); font-size: 1.05rem; margin: 0; }
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+    }
+    h2 { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 1rem; font-weight: 600; }
+    .stand { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.5rem 1rem; margin-bottom: 0.75rem; }
+    .stand:last-child { margin-bottom: 0; }
+    .stand strong { min-width: 4.5rem; }
+    .stand a { color: var(--link); word-break: break-all; }
+    .stand .hint { color: var(--muted); font-size: 0.9rem; width: 100%; margin-left: 4.5rem; }
+    .links { list-style: none; padding: 0; margin: 0; }
+    .links li { margin-bottom: 0.5rem; }
+    .links li:last-child { margin-bottom: 0; }
+    .links a { color: var(--link); }
+    .badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      background: var(--accent-dim);
+      color: #fff;
+      margin-left: 0.35rem;
+      vertical-align: middle;
+    }
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; margin-top: 2rem; }
+    footer a { color: var(--link); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <img src="logo.png" alt="RealWorld logo" width="200">
+      <h1>RealWorld Example App</h1>
+      <p class="tagline">React / Vite + Express.js / Sequelize / PostgreSQL — QA Guru training stand</p>
+    </header>
+
+    <section>
+      <h2>Live stands</h2>
+      <div class="stand">
+        <strong>Prod</strong>
+        <a href="https://realworld.qa.guru" target="_blank" rel="noopener noreferrer">realworld.qa.guru</a>
+        <span class="badge">UI + API</span>
+        <span class="hint">Fullstack app — browse articles, auth, CRUD</span>
+      </div>
+      <div class="stand">
+        <strong>Stage</strong>
+        <a href="https://realworld-stage.qa.guru" target="_blank" rel="noopener noreferrer">realworld-stage.qa.guru</a>
+        <span class="badge">API</span>
+        <span class="hint">Development stack — API root returns <code>{"status":"API is running on /api"}</code></span>
+      </div>
+    </section>
+
+    <section>
+      <h2>API</h2>
+      <ul class="links">
+        <li><a href="https://realworld.qa.guru/api/articles?limit=1" target="_blank" rel="noopener noreferrer">GET /api/articles?limit=1</a> — prod articles sample</li>
+        <li><a href="https://realworld-stage.qa.guru/api/articles" target="_blank" rel="noopener noreferrer">GET /api/articles</a> — stage (empty dev DB)</li>
+        <li><a href="https://realworld.qa.guru/api/tags" target="_blank" rel="noopener noreferrer">GET /api/tags</a> — prod tags</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2>Repository</h2>
+      <ul class="links">
+        <li><a href="https://github.com/qa-guru/realworld" target="_blank" rel="noopener noreferrer">qa-guru/realworld</a> — source code</li>
+        <li><a href="https://github.com/qa-guru/realworld/actions/workflows/deploy_production.yml" target="_blank" rel="noopener noreferrer">deploy_production</a> — prod deploy (Hetzner)</li>
+        <li><a href="https://github.com/qa-guru/realworld/actions/workflows/deploy_development.yml" target="_blank" rel="noopener noreferrer">deploy_development</a> — stage deploy</li>
+        <li><a href="https://realworld.io/" target="_blank" rel="noopener noreferrer">realworld.io</a> — spec</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Hosted by <a href="https://qa.guru" target="_blank" rel="noopener noreferrer">QA Guru</a> · Hetzner Cloud CPX32 (EU)</p>
+    </footer>
+  </div>
+</body>
+</html>
