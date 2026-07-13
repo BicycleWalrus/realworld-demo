@@ -20,9 +20,9 @@ jobs:
         env:
           ENV: development
           PREFIX: DEV
-          JWT_KEY: ${STAGE_JWT_KEY}
-          POSTGRES_USER: ${POSTGRES_USER}
-          POSTGRES_PASSWORD: ${STAGE_POSTGRES_PASSWORD}
+          JWT_KEY: ${{ secrets.STAGE_JWT_KEY }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.STAGE_POSTGRES_PASSWORD }}
           PORT: 3002
         run: |
           docker compose --project-name realworld-${ENV} build
