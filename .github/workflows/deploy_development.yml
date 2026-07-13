@@ -3,6 +3,10 @@ on:
   push:
     branches:
       - dev
+    paths-ignore:
+      - 'docs/**'
+      - 'README.md'
+      - '.github/workflows/github-pages.yml'
 jobs:
   checkout:
     runs-on: realworld-runner
@@ -21,6 +25,6 @@ jobs:
           POSTGRES_PASSWORD: ${STAGE_POSTGRES_PASSWORD}
           PORT: 3002
         run: |
-         docker-compose --project-name realworld-${ENV} build
-         docker-compose --project-name realworld-${ENV} up -d
-         docker image prune -f
+          docker compose --project-name realworld-${ENV} build
+          docker compose --project-name realworld-${ENV} up -d
+          docker image prune -f
