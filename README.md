@@ -1,134 +1,58 @@
-# ![RealWorld Example App](logo.png)
+# Conduit — Legacy Implementation
 
-> **React / Vite + SWC / Express.js / Sequelize / PostgreSQL codebase containing real world examples (CRUD, auth, advanced patterns, etc) that adheres to the [RealWorld](https://realworld.io/) spec and API.**
+## Purpose
 
-This codebase was created to demonstrate a fully fledged fullstack application built with **React / Vite + SWC / Express.js / Sequelize / PostgreSQL** including CRUD operations, authentication, routing, pagination, and more.
+This repository contains a working full-stack implementation of **Conduit**, a
+social blogging platform in the style of Medium, built to the
+[RealWorld](https://github.com/gothinkster/realworld) specification. Users can
+register an account, publish and edit articles written in Markdown, tag
+articles, comment on articles, favorite articles, and follow other authors. A
+personalized feed shows articles from authors a user follows, alongside a
+global feed of all articles.
 
-**[Prod app](https://realworld.qa.guru)&nbsp;&nbsp;|&nbsp;&nbsp;[Stage API](https://realworld-stage.qa.guru)&nbsp;&nbsp;|&nbsp;&nbsp;[Pages landing](https://qa-guru.github.io/realworld/)&nbsp;&nbsp;|&nbsp;&nbsp;[Other RealWorld Example Apps](https://codebase.show/projects/realworld?category=fullstack)**
+The system is composed of:
 
-> For more information on how to this works with other frontends/backends, head over to the [RealWorld](https://github.com/gothinkster/realworld) repo.
+- A REST API (Node.js / Express / Sequelize) that persists data in a
+  relational database and enforces authentication and ownership rules.
+- A single-page web client (React) that consumes the API to provide the
+  browsing, authoring, and social-interaction experience.
 
----
+## Primary domain concepts
 
-## Getting Started
+- **User** — an account with credentials (email/password), a public profile
+  (username, bio, image), and a session token issued at login.
+- **Article** — a piece of content with a title, description, and Markdown
+  body, written by exactly one User (its author), and identified externally
+  by a slug derived from its title.
+- **Comment** — a piece of text written by a User in reply to a specific
+  Article.
+- **Tag** — a short label that can be attached to an Article; Articles can be
+  browsed or filtered by tag.
+- **Favorite** — a relationship between a User and an Article expressing that
+  the User has marked the Article as a favorite; Articles carry a favorite
+  count and a per-viewer favorited state.
+- **Follow** — a relationship between two Users (follower and followed);
+  following another user causes that user's articles to appear in the
+  follower's personalized feed.
 
-These instructions will help you install and run the project on your local machine for development and testing.
+## Status of this codebase
 
-### Prerequisites
+This is an **existing legacy implementation**. The application is functional
+and already in use; this documentation set (`README.md`,
+[`REQUIREMENTS.md`](./REQUIREMENTS.md), [`USER_STORIES.md`](./USER_STORIES.md),
+and [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md)) describes the
+system **as it currently behaves**, reconstructed directly from its source
+code and existing automated tests. It intentionally does not propose
+architectural changes, refactors, or new features — including any behavior
+that is arguably a defect. Where the current implementation contains a
+surprising, inconsistent, or fragile behavior, that behavior is documented
+as-is in `REQUIREMENTS.md`, because it is what the running system actually
+does today.
 
-Before you run the project, make sure that you have the following tools and software installed on your computer:
+## Related documents
 
-- Text editor/IDE (e.g., VS Code, Sublime Text, Atom)
-- [Git](https://git-scm.com/downloads)
-- [Node.js](https://nodejs.org/en/download/) `v18.11.0+`
-- [NPM](https://www.npmjs.com/) (usually included with Node.js)
-- SQL database
-
-### Installation
-
-To install the project on your computer, follow these steps:
-
-1. Clone the repository to your local machine.
-
-   ```bash
-   git clone https://github.com/TonyMckes/conduit-realworld-example-app.git
-   ```
-
-2. Navigate to the project directory.
-
-   ```bash
-   cd conduit-realworld-example-app
-   ```
-
-3. Install project dependencies by running the command:
-
-   ```bash
-   npm install
-   ```
-
-### Configuration
-
-1. Create a `.env` file in the root directory of the project
-2. Add the required environment variables as specified in the [`.env.example`](backend/.env.example) file
-3. (Optional) update the Sequelize configuration parameters in the [`config.js`](backend/config/config.js) file
-4. If you are **not** using PostgreSQL, you may also have to install the driver for your database:
-
-   <details>
-   <summary>Use one of the following commands to install:</summary><br/>
-
-   > Note: `-w backend` option is used to install it in the backend [`package.json`](backend/package.json).
-
-   ```bash
-   npm install -w backend pg pg-hstore  # Postgres (already installed)
-   npm install -w backend mysql2
-   npm install -w backend mariadb
-   npm install -w backend sqlite3
-   npm install -w backend tedious       # Microsoft SQL Server
-   npm install -w backend oracledb      # Oracle Database
-   ```
-
-   > :information_source: Visit [Sequelize - Installing](https://sequelize.org/docs/v6/getting-started/#installing) for more infomation.
-
-   ***
-
-   </details>
-
-5. Create database specified by configuration by executing
-
-   > :warning: Please, make sure you have already created a superuser for your database.
-
-   ```bash
-   npm run sqlz -- db:create
-   ```
-
-   > :information_source: The command `npm run sqlz` is an alias for `npx -w backend sequelize-cli`.  
-   > Execute `npm run sqlz -- --help` to see more of `sequelize-cli` commands availables.
-
-6. Optionally you can run the following command to populate your database with some dummy data:
-
-   ```bash
-   npm run sqlz -- db:seed:all
-   ```
-
-### Usage
-
-#### Development Server
-
-To run the project, follow these steps:
-
-1. Start the development server by executing the command:
-
-   ```bash
-   npm run dev
-   ```
-
-2. Open a web browser and navigate to:
-   - Home page should be available at [`http://localhost:3000/`](http://localhost:3000).
-   - API endpoints should be available at [`http://localhost:3001/api`](http://localhost:3001/api).
-
-#### Running Tests
-
-To run tests, simply run the following command:
-
-```bash
-npm run test
-```
-
-#### Production
-
-The following command will build the production version of the app:
-
-```bash
-npm run start
-```
-
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Acknowledgments
-
-- [RealWorld](https://realworld.io/)
-- [RealWorld (GitHub)](https://github.com/gothinkster/realworld)
-- [CodebaseShow](https://codebase.show/)
-- [How to write a Good readme](https://bulldogjob.com/news/449-how-to-write-a-good-readme-for-your-github-project)
+| Document | Contents |
+|---|---|
+| [`REQUIREMENTS.md`](./REQUIREMENTS.md) | Numbered (`REQ-###`) statements of observable system behavior. |
+| [`USER_STORIES.md`](./USER_STORIES.md) | Numbered (`US-###`) stories tracing back to one or more requirements. |
+| [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md) | Numbered (`AC-###`) testable criteria tracing back to one or more user stories. |
