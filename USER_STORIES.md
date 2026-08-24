@@ -126,3 +126,11 @@ that I can understand what went wrong.
 credentials are invalid, malformed, or stale, so that a broken or expired
 session doesn't leave requests silently unresolved.
 *Related requirements: REQ-002, REQ-003, REQ-005, REQ-041*
+
+---
+
+**US-027** *(pending — see REQ-046)* — As a developer running the
+application locally, I want the frontend development server to be
+reachable from other devices on my local network at a predictable address,
+so that I can test the app from other machines during development.
+*Related requirements: REQ-046*
