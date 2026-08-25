@@ -231,7 +231,9 @@ on the platform.
 
 - Do not change the default tab selection logic for "Your Feed" /
   "Global Feed" (`REQ-030`).
-- See "Known overlap" above re: Issue 20.
+- Coordinate with issue #20 (Multi-tag (AND) filtering) before starting —
+  both touch the article-listing endpoint's query handling; avoid picking
+  both at once unless you plan to rebase carefully.
 
 ### Definition of Done
 
@@ -536,7 +538,9 @@ that I can find it again later without publicly favoriting it.
 
 - This is a distinct concept from `Favorite` (`REQ-025`/`REQ-026`) — do
   not reuse or alter the existing favorites table/behavior.
-- See "Known overlap" above re: Issue 14.
+- Coordinate with issue #14 (Multi-reaction articles) before starting —
+  both add a new per-user/per-article join table adjacent to `Favorites`;
+  avoid picking both at once unless you plan to rebase carefully.
 
 ### Definition of Done
 
@@ -666,7 +670,9 @@ response, so that I can express more than a single generic "favorite."
 - If favoriting (`REQ-025`/`REQ-026`) is kept as a separate, independent
   concept, do not change its existing behavior. If you fold it into
   reactions instead, document that explicitly as an amendment.
-- See "Known overlap" above re: Issue 11.
+- Coordinate with issue #11 (Read-later / bookmark list) before starting —
+  both add a new per-user/per-article join table adjacent to `Favorites`;
+  avoid picking both at once unless you plan to rebase carefully.
 
 ### Definition of Done
 
@@ -927,7 +933,9 @@ can narrow results to content matching several topics simultaneously.
 ### Constraints
 
 - Must not change single-tag or no-tag filtering behavior (`REQ-013`).
-- See "Known overlap" above re: Issue 4.
+- Coordinate with issue #4 (Trending / Top Articles feed tab) before
+  starting — both touch the article-listing endpoint's query handling;
+  avoid picking both at once unless you plan to rebase carefully.
 
 ### Definition of Done
 

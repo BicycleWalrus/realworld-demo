@@ -373,8 +373,7 @@ changed.
   (500) — unlike AC-066, only one error-handling attempt occurs.
 
 ### US-027 — Frontend dev server reachable on the local network
-*(REQ-046)* — **Pending: not yet implemented, not yet verifiable against
-running code.**
+*(REQ-046)*
 
 - **AC-074** — Given the frontend development server's configuration, when
   inspected, then it is set to bind to `0.0.0.0` on port `2224`, rather
@@ -435,4 +434,4 @@ running code.**
 | REQ-043 | US-010 | AC-070 |
 | REQ-044 | US-020 | AC-071 |
 | REQ-045 | US-002, US-003 | AC-072, AC-073 |
-| REQ-046 *(pending)* | US-027 | AC-074, AC-075 |
+| REQ-046 | US-027 | AC-074, AC-075 |

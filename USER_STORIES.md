@@ -129,8 +129,8 @@ session doesn't leave requests silently unresolved.
 
 ---
 
-**US-027** *(pending — see REQ-046)* — As a developer running the
-application locally, I want the frontend development server to be
-reachable from other devices on my local network at a predictable address,
-so that I can test the app from other machines during development.
+**US-027** — As a developer running the application locally, I want the
+frontend development server to be reachable from other devices on my
+local network at a predictable address, so that I can test the app from
+other machines during development.
 *Related requirements: REQ-046*
