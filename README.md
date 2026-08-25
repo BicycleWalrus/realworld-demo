@@ -141,3 +141,5 @@ development.
 | [`REQUIREMENTS.md`](./REQUIREMENTS.md) | Numbered (`REQ-###`) statements of observable system behavior. |
 | [`USER_STORIES.md`](./USER_STORIES.md) | Numbered (`US-###`) stories tracing back to one or more requirements. |
 | [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md) | Numbered (`AC-###`) testable criteria tracing back to one or more user stories. |
+| [`ISSUES.md`](./ISSUES.md) | Backlog of new-feature tickets (also filed as GitHub Issues) for the course assignment, with acceptance criteria and Definition of Done. |
+| [`GITHUB.md`](./GITHUB.md) | How to get push access, install/use `gh`, and open a Pull Request against this repo. |
