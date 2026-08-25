@@ -364,22 +364,9 @@ its password field. Neither the login nor the registration server endpoint
 enforces any password length requirement — both only reject an entirely
 empty password (REQ-006, REQ-008).
 
----
-
-## Pending Changes
-
-Unlike REQ-001–REQ-045 above, which are reconstructed from behavior the
-code already exhibits, the requirement below records a change that has
-been explicitly approved but not yet implemented. It is tracked here ahead
-of the corresponding code change, per `CLAUDE.md`'s allowance for a future
-task to explicitly change the documented contract. It should not be taken
-as a description of the current running code until its status is updated.
-
 ### REQ-046 — Frontend development server binds to all interfaces on port 2224
-**Status: approved, not yet implemented.**
-
-When started via `npm run dev`, the frontend's Vite development server is
-to listen on port `2224` and bind to all network interfaces (`0.0.0.0`),
+When started via `npm run dev`, the frontend's Vite development server
+listens on port `2224` and binds to all network interfaces (`0.0.0.0`),
 rather than its previous configuration (port `3000`, bound to `localhost`
 only) — making the dev server reachable from other devices on the local
 network. This requirement covers only the development server started via
