@@ -1,8 +1,8 @@
 # Feature Backlog — Advanced Course Assignment
 
-The "add a new feature" backlog for this assignment. These 20 tickets are
+The "add a new feature" backlog for this assignment. These 21 tickets are
 also filed as [GitHub Issues](https://github.com/BicycleWalrus/realworld-demo/issues)
-on this repo (same numbering, `#1`–`#20`) — this file is the retained,
+on this repo (same numbering, `#1`–`#21`) — this file is the retained,
 readable copy of the same content, grouped with the shared context above.
 
 ## How to work a ticket
@@ -936,6 +936,54 @@ can narrow results to content matching several topics simultaneously.
 - Coordinate with issue #4 (Trending / Top Articles feed tab) before
   starting — both touch the article-listing endpoint's query handling;
   avoid picking both at once unless you plan to rebase carefully.
+
+### Definition of Done
+
+- [ ] Feature implemented end-to-end
+- [ ] Automated tests added for the new behavior
+- [ ] `REQUIREMENTS.md` / `USER_STORIES.md` / `ACCEPTANCE_CRITERIA.md`
+      updated with new numbered entries
+- [ ] No existing `REQ-001`–`REQ-046` behavior changed
+- [ ] PR opened per `GITHUB.md`
+
+---
+
+## Issue 21 — External link previews in articles
+
+**Size:** M · **Area:** Full-stack
+
+### Summary
+
+When an article's body contains a link to an external site, show a small
+preview card (the linked page's title, and its image if one is available)
+near that link on the article detail page — similar to how chat apps
+"unfurl" links people paste into a conversation.
+
+### User story
+
+As a reader, I want to see a preview card for external links inside an
+article, so that I can tell what a link leads to before clicking it.
+
+### Acceptance criteria
+
+- When an article's body contains an `http(s)://` URL, the article detail
+  page shows a preview card near that link with, at minimum, the linked
+  page's title (and its image, if the page exposes one via Open Graph
+  metadata).
+- Preview data is fetched and cached server-side rather than requested
+  directly by each reader's browser, so the same link isn't re-fetched
+  from the target site on every page view.
+- A link to a site that is unreachable, slow, or returns no usable
+  metadata degrades gracefully — the link itself still renders normally,
+  just without a preview card.
+- An article with no external links renders exactly as it does today,
+  with no preview UI.
+
+### Constraints
+
+- Do not change how the article body's Markdown is otherwise rendered.
+- No particular caching mechanism is mandated — an in-memory cache, a new
+  table, or something else is your call, as long as it's documented.
 
 ### Definition of Done
 

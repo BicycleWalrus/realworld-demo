@@ -167,6 +167,54 @@ set -a && source .env && set +a && claude
 The role can only `SELECT`; any write attempt through the MCP tool is
 rejected by Postgres itself, not just by the tool.
 
+## Claude Code tooling in this repo
+
+This repo is configured with several pieces of Claude Code tooling. Item 5
+of the Postgres setup above covers the MCP server; the rest are covered
+here.
+
+### Subagents (`.claude/agents/`)
+
+- **`code-reviewer`** — read-only focused code review of a specific file,
+  feature, or change (not full-codebase audits, not test runs, not edits).
+- **`test-runner`** — runs `npm test` and reports pass/fail results only;
+  does not diagnose failures, suggest fixes, or modify anything.
+
+### Skills (`.claude/skills/`)
+
+- **`req-doc`** — drafts the matching `REQUIREMENTS.md`/`USER_STORIES.md`/
+  `ACCEPTANCE_CRITERIA.md` entries (next unused `REQ-###`/`US-###`/`AC-###`
+  numbers, cross-referenced, plus the Traceability Matrix row) for a
+  behavior change just made or described, in this repo's exact existing
+  style. Applies the edits directly and stops for review — never stages,
+  commits, or pushes. This is the task `ISSUES.md`'s Definition of Done
+  (item 3) requires for every ticket.
+
+### Hooks (`.claude/settings.json`, `.claude/hooks/`)
+
+- A `PreToolUse` hook (matcher `Edit|Write|MultiEdit`) runs
+  `.claude/hooks/req-freeze-guard.cjs`, which mechanically blocks edits to
+  any *existing* `REQ-###`/`US-###`/`AC-###` entry or Traceability Matrix
+  row in `REQUIREMENTS.md`/`USER_STORIES.md`/`ACCEPTANCE_CRITERIA.md` —
+  only new, higher-numbered entries may be added. This holds even under
+  bypassed permissions. It does not guard edits made via `Bash` (e.g.
+  `sed -i`) rather than Claude Code's own Edit/Write/MultiEdit tools — PR
+  review is the backstop there.
+
+### Automated PR checks (`.github/workflows/`)
+
+- **`pr-tests.yml`** — runs `npm test` on every PR into `main`; a required,
+  blocking check (branch protection won't allow merging without it
+  passing).
+- **`codeql.yml`** — GitHub CodeQL security scanning (`javascript-typescript`,
+  `security-and-quality` query pack) on every PR into `main`, on pushes to
+  `main`, and weekly. Findings surface as annotations on the PR's "Files
+  changed" tab and as alerts in the repo's Security tab. Because this repo
+  is public, this runs under GitHub Advanced Security's free-for-public-repos
+  tier — no API key, no per-run token cost. It is advisory, not a required
+  check, and only flags security-pattern issues (e.g. injection, SSRF,
+  hardcoded secrets) — not general code-quality findings.
+
 ## Related documents
 
 | Document | Contents |
