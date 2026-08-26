@@ -383,6 +383,27 @@ changed.
   on the same local network at the host machine's IP address on port
   `2224`, then the application loads successfully.
 
+### US-028 — Read-only MCP access to the local database
+*(REQ-047, REQ-048)*
+
+- **AC-076** — Given the `mcp_readonly` role's grants, when a `SELECT`
+  query is run as that role against the local `realworld` database, then
+  it succeeds and returns data.
+- **AC-077** — Given the `mcp_readonly` role's grants, when an
+  `INSERT`/`UPDATE`/`DELETE` (or other write/DDL) statement is attempted
+  as that role, then it is rejected by the database itself with a
+  read-only-transaction error, regardless of what the connecting client
+  requests.
+- **AC-078** — Given the checked-in `.mcp.json` and the
+  `MCP_PG_READONLY_URL` environment variable exported in the shell, when
+  Claude Code starts, then the Postgres MCP server connects successfully
+  using only the `mcp_readonly` credential, and no literal credential
+  appears in any file tracked by git.
+- **AC-079** — Given `.claude/settings.json`, when inspected, then the MCP
+  server's tools are absent from any auto-approval allowlist, so the first
+  use of the server in a session requires an interactive permission
+  prompt.
+
 ---
 
 ## Traceability Matrix
@@ -435,3 +456,5 @@ changed.
 | REQ-044 | US-020 | AC-071 |
 | REQ-045 | US-002, US-003 | AC-072, AC-073 |
 | REQ-046 | US-027 | AC-074, AC-075 |
+| REQ-047 | US-028 | AC-076, AC-077 |
+| REQ-048 | US-028 | AC-078, AC-079 |

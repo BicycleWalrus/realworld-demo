@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "postgres-readonly": {
+      "command": "node_modules/.bin/mcp-server-postgres",
+      "args": ["${MCP_PG_READONLY_URL}"]
+    }
+  }
+}

@@ -19,9 +19,11 @@
     "dev": "concurrently --names 'Node,Vite' -c 'green,blue' 'npm run dev -w backend' 'npm run dev -w frontend'",
     "sqlz": "npx -w backend sequelize-cli",
     "start": "npm run build -w frontend && npm run start -w backend",
-    "test": "vitest"
+    "test": "vitest",
+    "db:mcp-role": "docker exec -i realworld-postgres psql -U alta3 -d realworld -v ON_ERROR_STOP=1 < db/init/01-mcp-readonly-role.sql"
   },
   "devDependencies": {
+    "@ahmetkca/mcp-server-postgres": "1.2.0",
     "@vitejs/plugin-react-swc": "^3.2.0",
     "concurrently": "^7.6.0",
     "jsdom": "^30.0.1",

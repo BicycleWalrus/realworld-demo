@@ -15,4 +15,4 @@ Closes #<!-- issue number, if this closes one of the backlog tickets in ISSUES.m
 - [ ] `REQUIREMENTS.md` updated with new `REQ-###` entries
 - [ ] `USER_STORIES.md` updated with new `US-###` entries
 - [ ] `ACCEPTANCE_CRITERIA.md` updated with new `AC-###` entries
-- [ ] No existing `REQ-001`–`REQ-046` behavior changed, unless explicitly noted as an approved amendment
+- [ ] No existing `REQ-###`/`US-###`/`AC-###` entries edited or removed, unless explicitly noted as an approved amendment (enforced by the `req-freeze-guard` Claude Code hook)

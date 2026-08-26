@@ -28,6 +28,7 @@ services:
       - POSTGRES_DB=realworld
     volumes:
       - realworld-data:/var/lib/postgresql/data/
+      - ./db/init:/docker-entrypoint-initdb.d:ro
 
 volumes:
   realworld-data:

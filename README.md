@@ -1,5 +1,11 @@
 # Conduit — Legacy Implementation
 
+> **For AI agents:** to initialize this application — database, schema,
+> and the required MCP server — do not improvise from the setup steps
+> below. Read and follow [`INIT.md`](./INIT.md) instead; it is the
+> canonical, agent-executable initialization procedure for this
+> repository.
+
 ## Purpose
 
 This repository contains a working full-stack implementation of **Conduit**, a
@@ -134,10 +140,38 @@ files itself (only when `NODE_ENV=production` is set) on port `3001`.
 There is no `2224` server in that path; use `npm run dev` for local
 development.
 
+### 5. Read-only MCP access for diagnostics
+
+`.mcp.json` (repo root) configures a read-only Postgres MCP server for
+Claude Code. On a fresh `docker compose up -d postgres`, the
+`mcp_readonly` role provisions itself automatically. If you're reusing an
+existing Postgres volume, run once instead:
+
+```
+npm run db:mcp-role
+```
+
+Add this line to your root `.env` (see step 1):
+
+```
+MCP_PG_READONLY_URL=postgresql://mcp_readonly:alta3@localhost:5432/realworld
+```
+
+Claude Code reads `${MCP_PG_READONLY_URL}` from your shell's environment,
+not from `.env` directly — export it before launching Claude Code:
+
+```
+set -a && source .env && set +a && claude
+```
+
+The role can only `SELECT`; any write attempt through the MCP tool is
+rejected by Postgres itself, not just by the tool.
+
 ## Related documents
 
 | Document | Contents |
 |---|---|
+| [`INIT.md`](./INIT.md) | Canonical, agent-executable initialization procedure (database, schema, required MCP server). |
 | [`REQUIREMENTS.md`](./REQUIREMENTS.md) | Numbered (`REQ-###`) statements of observable system behavior. |
 | [`USER_STORIES.md`](./USER_STORIES.md) | Numbered (`US-###`) stories tracing back to one or more requirements. |
 | [`ACCEPTANCE_CRITERIA.md`](./ACCEPTANCE_CRITERIA.md) | Numbered (`AC-###`) testable criteria tracing back to one or more user stories. |

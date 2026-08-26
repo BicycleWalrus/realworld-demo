@@ -134,3 +134,11 @@ frontend development server to be reachable from other devices on my
 local network at a predictable address, so that I can test the app from
 other machines during development.
 *Related requirements: REQ-046*
+
+---
+
+**US-028** — As a developer diagnosing an issue in this repository, I want
+read-only MCP access to the local development database, so that I can
+inspect schema and data directly while any accidental write attempt is
+blocked at the database level, not just by the tool's own claims.
+*Related requirements: REQ-047, REQ-048*

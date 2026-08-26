@@ -373,3 +373,35 @@ network. This requirement covers only the development server started via
 `npm run dev`; it does not alter the production build/serve path, and the
 backend Express server's own listening port and bind address are
 unchanged.
+
+---
+
+### REQ-047 — Dedicated read-only Postgres role for MCP diagnostic access
+A Postgres role named `mcp_readonly` exists in the local development
+database (the `postgres` service in `docker-compose.yml`), provisioned
+idempotently via `db/init/01-mcp-readonly-role.sql` — automatically on a
+fresh volume (mounted as a `docker-entrypoint-initdb.d` script), or via
+`npm run db:mcp-role` against a pre-existing volume. The role is granted
+`CONNECT` on the `realworld` database, `USAGE` on the `public` schema, and
+`SELECT` only on all tables in that schema — via both a direct grant and
+`ALTER DEFAULT PRIVILEGES`, so tables added by future migrations are
+covered automatically — with `default_transaction_read_only` set to `on`
+for the role. No `INSERT`/`UPDATE`/`DELETE`/DDL privilege is granted, and
+the role has no superuser attribute. This requirement does not alter the
+existing application role's (`POSTGRES_USER`) privileges, and applies only
+to local development — no production database is reachable from this
+role.
+
+### REQ-048 — MCP server for read-only local Postgres access
+The repository's checked-in `.mcp.json` configures a Postgres MCP server
+(`postgres-readonly`) that connects using the `mcp_readonly` role
+(REQ-047), with the connection string supplied only via the
+`MCP_PG_READONLY_URL` environment variable — no literal credential is
+committed to `.mcp.json` or any other tracked file. The server package
+(`@ahmetkca/mcp-server-postgres`) is pinned to an exact version in
+`package.json`, with its integrity hash captured in `package-lock.json`,
+rather than resolved as "latest" at each session start. The server's
+tools are not added to any auto-approval allowlist in
+`.claude/settings.json`, so the first use of the server in a session
+requires the normal Claude Code permission prompt rather than running
+unattended.
