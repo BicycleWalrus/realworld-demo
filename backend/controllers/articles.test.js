@@ -7,7 +7,7 @@ const {
 } = require("../helper/customErrors");
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
+const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), create: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
 mockRequire(require.resolve("../models"), { Article, Tag, User });
@@ -77,6 +77,7 @@ function fakeArticleList(seedRows) {
 beforeEach(() => {
   Article.findOne.mockReset();
   Article.findAndCountAll.mockReset();
+  Article.findAll.mockReset();
   Article.create.mockReset();
   Tag.findByPk.mockReset();
   Tag.create.mockReset();
@@ -514,6 +515,81 @@ describe("allArticles", () => {
     const error = next.mock.calls[0][0];
     expect(error).not.toBeInstanceOf(NotFoundError);
     expect(error).not.toBeInstanceOf(FieldRequiredError);
+  });
+
+  // Trending sort: ordered by favorite count, highest first. Equal counts
+  // keep the newest-first order the underlying query already returns them
+  // in (a stable sort's tie-break), matching how every other listing
+  // orders newest first by default.
+  test("sort=trending -> ordered by favorite count, highest first, newest-first tie-break", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({ id: 1, slug: "c-newer-tied", author, favoritesCount: 2, createdAt: new Date("2020-01-03") }),
+      makeArticle({ id: 2, slug: "a-most-favorited", author, favoritesCount: 5, createdAt: new Date("2020-01-01") }),
+      makeArticle({ id: 3, slug: "b-older-tied", author, favoritesCount: 2, createdAt: new Date("2020-01-02") }),
+    ];
+    // findAll is only ever called with `order: [["createdAt", "DESC"]]`
+    // (mirroring the default listing query), so the mock returns rows in
+    // that same newest-first order for the controller to sort further.
+    Article.findAll.mockResolvedValue(
+      [...seed].sort((a, b) => b.dataValues.createdAt - a.dataValues.createdAt),
+    );
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual([
+      "a-most-favorited",
+      "c-newer-tied",
+      "b-older-tied",
+    ]);
+  });
+
+  // Trending sort still uses this app's standard page size and reports the
+  // true total count across all matches, same as the default listing.
+  test("sort=trending -> paginates at the standard page size with a true total count", async () => {
+    const author = makeFollowableUser();
+    const seed = Array.from({ length: 5 }, (_, i) =>
+      makeArticle({
+        id: i + 1,
+        slug: `article-${i + 1}`,
+        author,
+        favoritesCount: 5 - i,
+        createdAt: new Date(`2020-01-0${i + 1}`),
+      }),
+    );
+    Article.findAll.mockResolvedValue(seed);
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(5);
+    expect(articles).toHaveLength(3);
+    expect(articles.map((a) => a.slug)).toEqual(["article-1", "article-2", "article-3"]);
+  });
+
+  // Trending sort's second page picks up where the first left off, using
+  // the same offset*limit paging math as the default listing.
+  test("sort=trending -> second page continues from the first", async () => {
+    const author = makeFollowableUser();
+    const seed = Array.from({ length: 5 }, (_, i) =>
+      makeArticle({
+        id: i + 1,
+        slug: `article-${i + 1}`,
+        author,
+        favoritesCount: 5 - i,
+        createdAt: new Date(`2020-01-0${i + 1}`),
+      }),
+    );
+    Article.findAll.mockResolvedValue(seed);
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending", offset: 1 } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["article-4", "article-5"]);
   });
 });
 

@@ -23,7 +23,7 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, limit = 3, offset = 0, sort } = req.query;
     const searchOptions = {
       include: [
         {
@@ -50,6 +50,30 @@ const allArticles = async (req, res, next) => {
 
       articles.rows = await user.getFavorites(searchOptions);
       articles.count = await user.countFavorites();
+    } else if (sort === "trending") {
+      // Favorite-count sort can't be expressed as a plain column ORDER BY,
+      // so this fetches every matching article (already newest-first) and
+      // sorts by favorite count in memory before paginating - a stable
+      // sort preserves that newest-first order as the tie-break for equal
+      // counts. Mirrors this codebase's existing per-article count-fetch
+      // pattern (appendFavorites/appendAuthorStats) rather than a
+      // GROUP BY/aggregate query.
+      const { limit: _limit, offset: _offset, ...unpaginated } = searchOptions;
+      const matching = await Article.findAll(unpaginated);
+
+      const withCounts = await Promise.all(
+        matching.map(async (article) => ({
+          article,
+          favoritesCount: await article.countUsers(),
+        })),
+      );
+      withCounts.sort((a, b) => b.favoritesCount - a.favoritesCount);
+
+      const from = offset * limit;
+      articles.count = withCounts.length;
+      articles.rows = withCounts
+        .slice(from, from + parseInt(limit))
+        .map(({ article }) => article);
     } else {
       articles = await Article.findAndCountAll(searchOptions);
     }
