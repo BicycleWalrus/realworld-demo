@@ -516,3 +516,31 @@ page.
 Switching to or away from the Top Articles tab re-fetches the article
 listing, so an article list from a previously selected tab is never left
 displayed under a different, newly selected tab.
+
+---
+
+### REQ-065 — Only the comment's author may edit its body
+Editing an existing comment's body, via `PUT
+/api/articles/:slug/comments/:commentId`, is only permitted for the
+account that authored it. Any other authenticated account attempting to
+edit the comment is rejected with an authorization error (mirroring the
+comment-delete ownership rule, REQ-023). An unauthenticated visitor cannot
+edit a comment; the request is rejected with an authentication-required
+error (mirroring REQ-003).
+
+### REQ-066 — Comment editing requires a non-empty body
+Editing a comment requires a non-empty `body`, checked the same way as
+comment creation (REQ-022): the submitted body is only checked for
+truthiness on the server, so a body consisting solely of whitespace is
+not rejected server-side.
+
+### REQ-067 — Edited comment body is persisted and shown on subsequent loads
+After a comment edit succeeds, the updated body is saved and is what is
+returned and displayed the next time the article's comments are loaded —
+not only reflected transiently in the client that made the edit.
+
+### REQ-068 — The edit control is shown only to the comment's author
+The client only renders a control for editing a comment's body to the
+account that authored that comment. Any other authenticated visitor, or
+an anonymous visitor, does not see the control (mirroring the existing
+comment-delete control's ownership check).

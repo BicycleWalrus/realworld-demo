@@ -10,7 +10,7 @@ const Article = { findOne: vi.fn() };
 const Comment = { create: vi.fn(), findByPk: vi.fn() };
 mockRequire(require.resolve("../models"), { Article, Comment, User: {} });
 
-const { allComments, createComment, deleteComment } = require("./comments");
+const { allComments, createComment, deleteComment, updateComment } = require("./comments");
 
 function makeFollowableUser(overrides = {}) {
   return makeInstance(
@@ -148,5 +148,111 @@ describe("deleteComment", () => {
 
     expect(next.mock.calls[0][0]).toBeInstanceOf(ForbiddenError);
     expect(comment.destroy).not.toHaveBeenCalled();
+  });
+});
+
+describe("updateComment", () => {
+  // AC-096: an unauthenticated request is rejected.
+  test("no loggedUser -> UnauthorizedError", async () => {
+    const next = vi.fn();
+
+    await updateComment(
+      { loggedUser: undefined, params: {}, body: { comment: {} } },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
+  });
+
+  test("comment not found -> NotFoundError", async () => {
+    Comment.findByPk.mockResolvedValue(null);
+    const next = vi.fn();
+
+    await updateComment(
+      {
+        loggedUser: makeFollowableUser(),
+        params: { commentId: 1 },
+        body: { comment: { body: "edited" } },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+  });
+
+  // AC-096: a non-author cannot edit someone else's comment.
+  test("non-author attempts edit -> ForbiddenError, comment not saved", async () => {
+    const comment = makeInstance(
+      { id: 1, userId: 9, body: "original" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    Comment.findByPk.mockResolvedValue(comment);
+    const next = vi.fn();
+
+    await updateComment(
+      {
+        loggedUser: makeFollowableUser({ id: 2 }),
+        params: { commentId: 1 },
+        body: { comment: { body: "edited" } },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(ForbiddenError);
+    expect(comment.save).not.toHaveBeenCalled();
+    expect(comment.body).toBe("original");
+  });
+
+  // AC-097: an empty body is rejected and the comment is left unsaved.
+  test("empty body -> FieldRequiredError, comment not saved", async () => {
+    const comment = makeInstance(
+      { id: 1, userId: 9, body: "original" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    Comment.findByPk.mockResolvedValue(comment);
+    const next = vi.fn();
+
+    await updateComment(
+      {
+        loggedUser: makeFollowableUser({ id: 9 }),
+        params: { commentId: 1 },
+        body: { comment: { body: "" } },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(FieldRequiredError);
+    expect(comment.save).not.toHaveBeenCalled();
+    expect(comment.body).toBe("original");
+  });
+
+  // AC-098: the comment's author can edit its body, and the persisted
+  // comment reflects the new value.
+  test("comment author edits own comment -> body updated and saved", async () => {
+    const author = makeFollowableUser({ id: 9 });
+    const comment = makeInstance(
+      { id: 1, userId: 9, body: "original" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    Comment.findByPk.mockResolvedValue(comment);
+    const res = makeRes();
+
+    await updateComment(
+      {
+        loggedUser: author,
+        params: { commentId: 1 },
+        body: { comment: { body: "edited" } },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(comment.body).toBe("edited");
+    expect(comment.save).toHaveBeenCalled();
+    expect(res.json).toHaveBeenCalledWith({ comment });
   });
 });

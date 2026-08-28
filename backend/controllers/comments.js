@@ -84,4 +84,38 @@ const deleteComment = async (req, res, next) => {
   }
 };
 
-module.exports = { allComments, createComment, deleteComment };
+//* Update Comment for Article
+// REQ-065 / REQ-066: only the comment's author may edit it (mirrors
+// deleteComment's ownership check, REQ-023), and a non-empty body is
+// required (mirrors createComment's validation, REQ-022).
+const updateComment = async (req, res, next) => {
+  try {
+    const { loggedUser } = req;
+    if (!loggedUser) throw new UnauthorizedError();
+
+    const { slug, commentId } = req.params;
+
+    const comment = await Comment.findByPk(commentId);
+    if (!comment) throw new NotFoundError("Comment");
+
+    if (loggedUser.id !== comment.userId) {
+      throw new ForbiddenError("comment");
+    }
+
+    const { body } = req.body.comment;
+    if (!body) throw new FieldRequiredError("Comment body");
+
+    comment.body = body;
+    await comment.save();
+
+    delete loggedUser.dataValues.token;
+    comment.dataValues.author = loggedUser;
+    await appendFollowers(loggedUser, loggedUser);
+
+    res.json({ comment });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { allComments, createComment, deleteComment, updateComment };
