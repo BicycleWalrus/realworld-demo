@@ -684,3 +684,32 @@ derived from the authenticated requester and is not exposed to other
 users. Adding or removing an article from the read-later list leaves
 Favorites (REQ-025/REQ-026) and the article's public favorite count
 unchanged.
+
+---
+
+## Follow Tags
+
+### REQ-089 — Following/unfollowing a tag requires authentication and an existing tag
+An authenticated user can follow or unfollow a tag via `POST`/`DELETE
+/api/tags/:name/follow`. The target tag must already exist, identified by
+name; otherwise the request fails with a not-found error. Following or
+unfollowing a tag requires a resolved, authenticated user, mirroring
+REQ-027's authentication rule for following a user. This is backed by a
+`TagFollows` join table, distinct from the article tag list join table
+(REQ-020/REQ-021): following a tag never creates, attaches, or removes it
+from any article.
+
+### REQ-090 — Personalized feed includes articles by followed authors or with followed tags (amends REQ-018)
+REQ-018 stated that the personalized feed returns only articles authored
+by users the requesting user follows. This is amended: the feed now
+returns published articles that are authored by a user the requesting
+user follows, or that carry a tag the requesting user follows, or both —
+a union of the two conditions rather than followed authors alone. Results
+remain ordered newest first.
+
+### REQ-091 — Personalized feed is empty only when following no author and no tag (amends REQ-018)
+REQ-018 stated that the feed returns no articles if the user follows no
+one. This is amended by REQ-090's union rule: the feed is empty only when
+the requesting user follows neither any author nor any tag. A user who
+follows at least one tag, even with no followed authors, receives any
+matching articles in their feed.

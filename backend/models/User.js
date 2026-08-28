@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ Article, Comment, User }) {
+    static associate({ Article, Comment, User, Tag }) {
       // define association here
 
       // Articles
@@ -46,6 +46,18 @@ module.exports = (sequelize, DataTypes) => {
         through: "ReadLater",
         as: "readLater",
         foreignKey: "userId",
+      });
+
+      // Follow Tags (REQ-089): additive to Followers above - a user can
+      // follow a Tag as well as another User. Backed by a TagFollows join
+      // table, entirely distinct from the article TagList join table
+      // (REQ-020/REQ-021), so following a tag never affects which
+      // articles carry that tag.
+      this.belongsToMany(Tag, {
+        through: "TagFollows",
+        as: "followedTags",
+        foreignKey: "userId",
+        timestamps: false,
       });
     }
 

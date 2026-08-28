@@ -640,6 +640,29 @@ changed.
 
 ---
 
+### US-040 — Follow a tag
+*(REQ-089, REQ-090, REQ-091)*
+
+- **AC-120** — Given an authenticated user and an existing tag, when they
+  `POST /api/tags/:name/follow`, then the tag is added to their followed
+  tags (returned by `GET /api/tags/followed`); when they `DELETE
+  /api/tags/:name/follow` for a followed tag, then it is removed; given
+  no authenticated user, then either request is rejected with an
+  authentication-required error; given a tag name that does not exist,
+  then the request is rejected with a not-found error.
+- **AC-121** — Given an authenticated user who follows at least one
+  author and, separately, at least one tag, when they request their
+  personalized feed, then the feed includes published articles authored
+  by a followed author, published articles carrying a followed tag, or
+  both, newest first.
+- **AC-122** — Given an authenticated user who follows a tag but no
+  author, when they request their personalized feed, then the feed
+  includes published articles carrying that tag rather than being empty;
+  given an authenticated user who follows neither any author nor any
+  tag, then the feed is empty.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -732,3 +755,6 @@ changed.
 | REQ-086 | US-039 | AC-117 |
 | REQ-087 | US-039 | AC-118 |
 | REQ-088 | US-039 | AC-119 |
+| REQ-089 | US-040 | AC-120 |
+| REQ-090 | US-040 | AC-121 |
+| REQ-091 | US-040 | AC-122 |
