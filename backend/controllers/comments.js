@@ -4,7 +4,7 @@ const {
   FieldRequiredError,
   ForbiddenError,
 } = require("../helper/customErrors");
-const { appendFollowers } = require("../helper/helpers");
+const { appendFollowers, createNotification } = require("../helper/helpers");
 const { Article, Comment, User } = require("../models");
 
 // REQ-080/REQ-081: extract the unique `@username`-shaped tokens (without the
@@ -105,6 +105,17 @@ const createComment = async (req, res, next) => {
       articleId: article.id,
       userId: loggedUser.id,
       parentId: parentId || undefined,
+    });
+
+    // REQ-097: notify the article's author - covers both a top-level
+    // comment and a reply (any comment on their article), never the
+    // parent-comment author on a reply.
+    await createNotification({
+      recipientId: article.userId,
+      actorId: loggedUser.id,
+      type: "comment",
+      articleId: article.id,
+      commentId: comment.id,
     });
 
     delete loggedUser.dataValues.token;

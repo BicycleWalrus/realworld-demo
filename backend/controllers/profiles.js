@@ -1,5 +1,5 @@
 const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
-const { appendFollowers, appendAuthorStats } = require("../helper/helpers");
+const { appendFollowers, appendAuthorStats, createNotification } = require("../helper/helpers");
 const { User } = require("../models");
 const { Op } = require("sequelize");
 
@@ -62,6 +62,8 @@ const followToggler = async (req, res, next) => {
 
     if (req.method === "POST") {
       await profile.addFollower(loggedUser);
+      // REQ-097: notify the followed user - unfollowing does not retract it.
+      await createNotification({ recipientId: profile.id, actorId: loggedUser.id, type: "follow" });
     } else if (req.method === "DELETE") {
       await profile.removeFollower(loggedUser);
     }

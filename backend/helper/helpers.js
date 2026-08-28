@@ -86,6 +86,35 @@ const appendReactions = async (loggedUser, article) => {
     : null;
 };
 
+// REQ-097: notifications are a side effect of following, commenting on, or
+// favoriting another user's content - never a gate on that action. Any
+// failure here (including recipientId/actorId missing, or the Notification
+// model rejecting the write) is swallowed so the calling controller's own
+// action (REQ-022–028) always completes normally. Self-suppression (an
+// actor never gets notified of their own action) is enforced here too, so
+// every call site gets it for free.
+const createNotification = async ({
+  recipientId,
+  actorId,
+  type,
+  articleId = null,
+  commentId = null,
+}) => {
+  try {
+    if (!recipientId || !actorId || recipientId === actorId) return;
+
+    // Required lazily (not at module top level), same reasoning as
+    // appendReactions above: keeps this file loadable (e.g. by
+    // helpers.test.js's slugify tests) without pulling in a real Sequelize
+    // connection, and lets test files mock "../models" before this runs.
+    const { Notification } = require("../models");
+    await Notification.create({ recipientId, actorId, type, articleId, commentId });
+  } catch (error) {
+    // Notifications are a side effect; never let a notification failure
+    // break the follow/comment/favorite action that triggered it.
+  }
+};
+
 module.exports = {
   slugify,
   appendTagList,
@@ -93,5 +122,6 @@ module.exports = {
   appendFollowers,
   appendAuthorStats,
   appendReactions,
+  createNotification,
   REACTION_TYPES,
 };
