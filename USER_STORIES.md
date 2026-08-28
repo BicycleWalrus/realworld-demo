@@ -155,3 +155,9 @@ preference.
 **US-030** — As an author, I want to add a cover image to my article, so
 that it's more visually distinctive in listings and on its own page.
 *Related requirements: REQ-050*
+
+---
+
+**US-031** — As a reader, I want to see roughly how long an article will
+take to read, so that I can decide whether to read it now.
+*Related requirements: REQ-051*
