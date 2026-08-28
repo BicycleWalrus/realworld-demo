@@ -26,3 +26,17 @@ button:focus {
   justify-content: center;
   flex-direction: column;
 }
+
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  margin: 0.5rem 0;
+  color: #999;
+}
+
+.profile-stats li + li::before {
+  content: "\00b7";
+  margin: 0 0.5rem;
+}

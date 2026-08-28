@@ -6,14 +6,26 @@ mockRequire(require.resolve("../models"), { User });
 
 const { getProfile, followToggler } = require("./profiles");
 
-function makeProfile({ hasFollower = false, followersCount = 0 } = {}) {
+function makeProfile({
+  hasFollower = false,
+  followersCount = 0,
+  articlesCount = 0,
+  articleFavoritesCounts = [],
+  createdAt = "2020-01-01T00:00:00.000Z",
+} = {}) {
   return makeInstance(
-    { id: 1, username: "author" },
+    { id: 1, username: "author", createdAt },
     {
       hasFollower: vi.fn().mockResolvedValue(hasFollower),
       countFollowers: vi.fn().mockResolvedValue(followersCount),
       addFollower: vi.fn().mockResolvedValue(),
       removeFollower: vi.fn().mockResolvedValue(),
+      countArticles: vi.fn().mockResolvedValue(articlesCount),
+      getArticles: vi.fn().mockResolvedValue(
+        articleFavoritesCounts.map((count) =>
+          makeInstance({}, { countUsers: vi.fn().mockResolvedValue(count) }),
+        ),
+      ),
     },
   );
 }
@@ -46,6 +58,25 @@ describe("getProfile", () => {
     expect(res.json).toHaveBeenCalledWith({ profile });
     expect(profile.dataValues.following).toBe(false);
     expect(profile.dataValues.followersCount).toBe(5);
+  });
+
+  // AC-080/AC-081/AC-082: article count, total favorites across the
+  // author's articles, and member-since date are all present regardless of
+  // whether the caller is authenticated.
+  test("profile stats (article count, total favorites, member-since) are appended", async () => {
+    const profile = makeProfile({
+      articlesCount: 2,
+      articleFavoritesCounts: [3, 4],
+      createdAt: "2020-01-01T12:11:08.212Z",
+    });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser: undefined, params: { username: "author" } }, res, vi.fn());
+
+    expect(profile.dataValues.articlesCount).toBe(2);
+    expect(profile.dataValues.favoritesCount).toBe(7);
+    expect(profile.dataValues.memberSince).toBe("2020-01-01T12:11:08.212Z");
   });
 });
 

@@ -142,3 +142,11 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-029** — As a visitor, I want to see an author's article count, total
+favorites received, and member-since date on their profile, so that I can
+gauge who they are and how established they are on the platform before
+reading their work.
+*Related requirements: REQ-049*

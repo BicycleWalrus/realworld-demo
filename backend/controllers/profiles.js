@@ -1,5 +1,5 @@
 const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
-const { appendFollowers } = require("../helper/helpers");
+const { appendFollowers, appendProfileStats } = require("../helper/helpers");
 const { User } = require("../models");
 
 //? Profile
@@ -15,6 +15,7 @@ const getProfile = async (req, res, next) => {
     if (!profile) throw new NotFoundError("User profile");
 
     await appendFollowers(loggedUser, profile);
+    await appendProfileStats(profile);
 
     res.json({ profile });
   } catch (error) {
