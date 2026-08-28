@@ -212,3 +212,9 @@ multi-person discussion is easy to follow.
 **US-039** — As a user, I want to save an article to a personal reading
 list, so that I can find it again later without publicly favoriting it.
 *Related requirements: REQ-086, REQ-087, REQ-088*
+
+---
+
+**US-040** — As a user, I want to follow a topic tag so that my feed
+includes relevant articles even from authors I don't already follow.
+*Related requirements: REQ-089, REQ-090, REQ-091*

@@ -177,14 +177,40 @@ const articlesFeed = async (req, res, next) => {
 
     const { limit = 3, offset = 0 } = req.query;
     const authors = await loggedUser.getFollowing();
+    // REQ-090/REQ-091 (amends REQ-018): the feed is the union of articles by
+    // a followed author OR carrying a followed tag - not followed authors
+    // alone.
+    const followedTagList = await loggedUser.getFollowedTags();
+
+    const authorIds = authors.map((author) => author.id);
+    const tagNames = followedTagList.map((tag) => tag.name);
+
+    // REQ-091 (amends REQ-018): the feed is empty only when the user
+    // follows neither any author nor any tag.
+    if (authorIds.length === 0 && tagNames.length === 0) {
+      return res.json({ articles: [], articlesCount: 0 });
+    }
+
+    const orConditions = [];
+    if (authorIds.length > 0) orConditions.push({ userId: authorIds });
+    if (tagNames.length > 0) {
+      orConditions.push({ "$tagList.name$": { [Op.in]: tagNames } });
+    }
 
     const articles = await Article.findAndCountAll({
       include: includeOptions,
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
-      // REQ-070: drafts of followed authors never appear in the feed.
-      where: { userId: authors.map((author) => author.id), published: true },
+      // REQ-070: drafts never appear in the feed, regardless of whether the
+      // match is via followed author or followed tag.
+      where: { published: true, [Op.or]: orConditions },
+      // A to-many include ($tagList.name$) combined with limit/offset and
+      // findAndCountAll's COUNT needs subQuery:false + distinct:true to
+      // avoid duplicated/incorrect counts. Not exercised against a real DB
+      // in this environment - see report for caveat.
+      subQuery: false,
+      distinct: true,
     });
 
     for (const article of articles.rows) {
