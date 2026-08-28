@@ -10,6 +10,7 @@ import TableOfContents from "../../components/TableOfContents";
 import { useAuth } from "../../context/AuthContext";
 import getArticle from "../../services/getArticle";
 import { slugify } from "../../helpers/toc";
+import { addRecentlyViewed } from "../../helpers/recentlyViewed";
 
 // REQ-101: tags a rendered heading with an id matching the slug the table
 // of contents computes for the same heading text (see helpers/toc.js), so
@@ -68,6 +69,16 @@ function Article() {
         navigate("/not-found", { replace: true });
       });
   }, [isAuth, slug, headers, state, navigate]);
+
+  // REQ-107: recording a view is independent of the fetch/navigation-state
+  // effect above (REQ-043) - it does not alter that effect's deps or
+  // behavior, it only observes whichever article data is currently
+  // displayed (fetched or supplied via navigation state) and records it.
+  useEffect(() => {
+    if (!article?.slug) return;
+
+    addRecentlyViewed({ slug: article.slug, title: article.title });
+  }, [article?.slug, article?.title]);
 
   return (
     <div className="article-page">

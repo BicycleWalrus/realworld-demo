@@ -257,3 +257,9 @@ presences on my profile so that readers can find me elsewhere.
 **US-046** — As a reader, I want to download an article as a Markdown
 file so that I can save it or read it offline.
 *Related requirements: REQ-105, REQ-106*
+
+---
+
+**US-047** — As a user, I want to see articles I've recently viewed so
+that I can get back to one without searching.
+*Related requirements: REQ-107, REQ-108*

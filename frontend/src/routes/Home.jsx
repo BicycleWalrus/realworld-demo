@@ -5,6 +5,7 @@ import FeedToggler from "../components/FeedToggler";
 import { useAuth } from "../context/AuthContext";
 import FeedProvider from "../context/FeedContext";
 import PopularTags from "./../components/PopularTags";
+import RecentlyViewed from "../components/RecentlyViewed";
 
 function Home() {
   const { isAuth } = useAuth();
@@ -25,6 +26,10 @@ function Home() {
           </div>
 
           <PopularTags />
+          {/* REQ-108: renders nothing when there's no history, so the
+              layout is unchanged for visitors with no recently-viewed
+              articles. */}
+          <RecentlyViewed />
         </FeedProvider>
       </ContainerRow>
     </div>

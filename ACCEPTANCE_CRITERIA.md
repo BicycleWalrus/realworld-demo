@@ -789,6 +789,27 @@ changed.
 
 ---
 
+### US-047 — Recently viewed articles
+
+*(REQ-107, REQ-108)*
+
+- **AC-138** — Given any visitor, authenticated or anonymous, when they
+  open an article's detail page, then that article's slug and title are
+  recorded in a per-browser recently-viewed history stored in
+  localStorage, and the history can be read back; given the article
+  detail page's existing fetch/navigation-state behavior (REQ-043), then
+  recording a view does not change what data is displayed or whether the
+  page refetches from the server.
+- **AC-139** — Given a visitor's recently-viewed history, when the
+  Recently Viewed widget renders, then it lists the history most-recent
+  first as links back to each article; given an article already present
+  in the history is viewed again, then it moves to the top and no
+  duplicate entry is created; given more than 10 articles have been
+  viewed, then the history is capped at 10, dropping the oldest; given
+  the history is empty, then the widget renders nothing.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -899,3 +920,5 @@ changed.
 | REQ-104 | US-045 | AC-135 |
 | REQ-105 | US-046 | AC-136 |
 | REQ-106 | US-046 | AC-137 |
+| REQ-107 | US-047 | AC-138 |
+| REQ-108 | US-047 | AC-139 |
