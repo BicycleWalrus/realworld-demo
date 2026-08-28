@@ -661,6 +661,18 @@ changed.
   given an authenticated user who follows neither any author nor any
   tag, then the feed is empty.
 
+### Reading Time
+
+- **AC-123** — Given an article preview card or the article detail page
+  for an article with a known body word count, then it renders an
+  estimated reading time of "N min read" alongside the existing,
+  unaltered date; given a different body, then the rendered estimate
+  reflects that body's word count rather than the previous one.
+- **AC-124** — Given an article with an empty, whitespace-only, or
+  missing body, then the rendered reading time is "1 min read"; given a
+  very long body, then the rendered reading time is a finite "N min
+  read" and never `NaN`.
+
 ---
 
 ## Traceability Matrix
@@ -758,3 +770,5 @@ changed.
 | REQ-089 | US-040 | AC-120 |
 | REQ-090 | US-040 | AC-121 |
 | REQ-091 | US-040 | AC-122 |
+| REQ-092 | US-041 | AC-123 |
+| REQ-093 | US-041 | AC-124 |

@@ -218,3 +218,9 @@ list, so that I can find it again later without publicly favoriting it.
 **US-040** — As a user, I want to follow a topic tag so that my feed
 includes relevant articles even from authors I don't already follow.
 *Related requirements: REQ-089, REQ-090, REQ-091*
+
+---
+
+**US-041** — As a reader, I want to see roughly how long an article will
+take to read so that I can decide whether to read it now.
+*Related requirements: REQ-092, REQ-093*

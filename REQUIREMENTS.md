@@ -713,3 +713,21 @@ one. This is amended by REQ-090's union rule: the feed is empty only when
 the requesting user follows neither any author nor any tag. A user who
 follows at least one tag, even with no followed authors, receives any
 matching articles in their feed.
+
+---
+
+## Reading Time
+
+### REQ-092 — Article preview cards and the article detail page display an estimated reading time
+Both an article preview card and the article detail page display an
+estimated reading time derived from the article's body, at approximately
+200 words per minute, rendered as "N min read". This is shown alongside
+the existing date (REQ-040) without altering the date's formatting or
+rendering. Because the estimate is derived from the current body, it
+reflects edits made to the body.
+
+### REQ-093 — The reading-time estimate has a floor of one minute and is well-defined for any body
+The reading-time estimate is never less than "1 min read", including for
+an empty, whitespace-only, or missing body. The estimate is also
+well-defined for a very long body. The estimate never renders as `NaN`
+and never involves a division-by-zero.
