@@ -155,6 +155,50 @@ describe("createArticle", () => {
     expect(created.addTagList).toHaveBeenCalledTimes(2);
     expect(res.status).toHaveBeenCalledWith(201);
   });
+
+  // AC-092: `image` is optional - omitting it never blocks creation (REQ-015
+  // is unaffected), and providing it is passed through to Article.create.
+  test("omitting image does not throw and does not block creation", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+    const next = vi.fn();
+
+    await createArticle(
+      { loggedUser, body: { article: { title: "T", description: "d", body: "b", tagList: [] } } },
+      makeRes(),
+      next,
+    );
+
+    expect(next).not.toHaveBeenCalled();
+    expect(Article.create).toHaveBeenCalledWith(expect.objectContaining({ image: undefined }));
+  });
+
+  test("providing an image passes it through to Article.create", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+    const next = vi.fn();
+
+    await createArticle(
+      {
+        loggedUser,
+        body: {
+          article: {
+            title: "T",
+            description: "d",
+            body: "b",
+            tagList: [],
+            image: "https://example.com/cover.png",
+          },
+        },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(Article.create).toHaveBeenCalledWith(
+      expect.objectContaining({ image: "https://example.com/cover.png" }),
+    );
+  });
 });
 
 describe("updateArticle", () => {
@@ -236,6 +280,42 @@ describe("updateArticle", () => {
     expect(article.description).toBe("original description");
     expect(article.body).toBe("original body");
   });
+
+  // AC-093: a falsy `image` on update leaves the existing value unchanged,
+  // consistent with how description/body are already handled.
+  test("falsy image is left unchanged", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, image: "https://example.com/original.png" });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      { loggedUser: author, params: { slug: "a-slug" }, body: { article: { image: "" } } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.image).toBe("https://example.com/original.png");
+    expect(article.save).toHaveBeenCalled();
+  });
+
+  test("a truthy image is set and the article is saved", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      {
+        loggedUser: author,
+        params: { slug: "a-slug" },
+        body: { article: { image: "https://example.com/new.png" } },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.image).toBe("https://example.com/new.png");
+    expect(article.save).toHaveBeenCalled();
+  });
 });
 
 describe("deleteArticle", () => {
@@ -287,10 +367,15 @@ describe("singleArticle", () => {
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
   });
 
-  // AC-027: an existing slug returns the full article shape.
+  // AC-027 / AC-092: an existing slug returns the full article shape,
+  // including `image` once the model carries one.
   test("existing slug -> full article shape returned", async () => {
     const author = makeFollowableUser({ username: "jane" });
-    const article = makeArticle({ author, tags: [{ name: "dragons" }] });
+    const article = makeArticle({
+      author,
+      tags: [{ name: "dragons" }],
+      image: "https://example.com/cover.png",
+    });
     Article.findOne.mockResolvedValue(article);
     const res = makeRes();
 
@@ -304,6 +389,7 @@ describe("singleArticle", () => {
       body: "b",
       tagList: ["dragons"],
       slug: "a-slug",
+      image: "https://example.com/cover.png",
     });
     expect(plain.author.username).toBe("jane");
     expect(plain.createdAt).toBeInstanceOf(Date);

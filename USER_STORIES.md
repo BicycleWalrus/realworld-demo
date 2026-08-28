@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-032** — As an author, I want to attach an optional cover image URL
+to my article, so that my article previews and detail page have a
+visual identity.
+*Related requirements: REQ-052*

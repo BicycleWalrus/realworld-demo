@@ -18,6 +18,16 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
     articles.map((article) => {
       return (
         <div className="article-preview" key={article.slug}>
+          {article.image && (
+            <img
+              alt={article.title}
+              className="article-preview-image"
+              onError={(e) => {
+                e.target.style.display = "none";
+              }}
+              src={article.image}
+            />
+          )}
           <ArticleMeta author={article.author} createdAt={article.createdAt}>
             <FavButton
               favorited={article.favorited}
