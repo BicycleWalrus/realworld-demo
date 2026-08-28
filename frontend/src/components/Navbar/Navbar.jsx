@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NavItem from "../NavItem";
 import SourceCodeLink from "../SourceCodeLink";
+import ThemeToggle from "../ThemeToggle";
 import DropdownMenu from "./DropdownMenu";
 
 function Navbar() {
@@ -17,6 +18,7 @@ function Navbar() {
         <SourceCodeLink left />
 
         <ul className="nav navbar-nav pull-xs-right">
+          <ThemeToggle />
           <NavItem text="Home" icon="ion-compose" url="/" />
 
           {isAuth && (

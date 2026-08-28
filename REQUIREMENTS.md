@@ -405,3 +405,21 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-050 — Theme toggle switches appearance without a page reload
+A control available on every page lets the current visitor switch the
+site's overall appearance between a light and a dark theme at any time.
+Activating it applies the switch immediately, without a page reload. All
+existing pages and interface elements remain legible and usable when the
+dark theme is active — no element's text, borders, or icons become
+indistinguishable from their background as a result of this feature. When
+the dark theme is not the active theme, the site's appearance is
+unchanged from its appearance prior to this feature.
+
+### REQ-051 — Theme choice persists and defaults to OS/browser preference
+Once a visitor selects a theme via the toggle (REQ-050), that choice is
+retained in the browser and re-applied automatically on later page
+reloads and visits, without the visitor needing to reselect it. If a
+visitor has never made an explicit choice, the site's initial theme is
+determined by the visitor's OS/browser color-scheme preference where the
+browser exposes one, rather than always defaulting to light.
