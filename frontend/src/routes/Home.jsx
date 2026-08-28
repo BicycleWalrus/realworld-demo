@@ -1,4 +1,5 @@
 import { Outlet } from "react-router-dom";
+import ArticleSearch from "../components/ArticleSearch";
 import BannerContainer from "../components/BannerContainer";
 import ContainerRow from "../components/ContainerRow";
 import FeedToggler from "../components/FeedToggler";
@@ -21,6 +22,7 @@ function Home() {
         <FeedProvider>
           <div className="col-md-9">
             <FeedToggler />
+            <ArticleSearch />
             <Outlet />
           </div>
 

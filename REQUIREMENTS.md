@@ -405,3 +405,36 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-056 — Article listing supports keyword search across title, description, and body
+Article listing can additionally be filtered by a `keyword` value, matching
+only articles whose `title`, `description`, or `body` contains that value as
+a case-insensitive substring (a match against any one of the three fields is
+sufficient). The keyword is matched as a single, unsplit substring — it is
+not split into separate words for independent matching. Keyword search
+composes with the existing `author`, `tag`, and `favorited` filters
+(REQ-013): when a keyword is supplied alongside one or more of those filters,
+only articles satisfying all supplied filters are returned. An empty or
+whitespace-only `keyword` value is treated as if no keyword filter were
+supplied at all — the listing behaves exactly as it would without a
+`keyword` parameter, and no error is raised. Keyword search does not change
+the existing page size default (REQ-031) or result ordering (newest first,
+per REQ-013).
+
+**Boundary:** REQ-014's existing behavior — a `favorited` filter naming a
+nonexistent username causes a server error rather than an empty list — is
+unaffected by whether a `keyword` is also supplied; adding a keyword filter
+never suppresses or changes that error.
+
+### REQ-057 — Client-side keyword search input and active-filter display
+The client provides a search input, available alongside the existing
+feed/tag navigation, that lets a visitor submit a keyword to filter the
+article list via REQ-056. While a keyword filter is active, the client
+displays which filter(s) are currently applied — the keyword itself,
+together with any active tag/author/favorited context — and provides a
+control to clear the keyword filter. Clearing the keyword filter re-fetches
+the listing using only whichever other filters remain active, without
+altering them, and without requiring authentication (consistent with
+REQ-001's pattern for other read endpoints).

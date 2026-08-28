@@ -13,6 +13,7 @@ function FeedProvider({ children }) {
     tabName: isAuth ? "feed" : "global",
     tagName: "",
   });
+  const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
     setTab((tab) => ({ ...tab, tabName: isAuth ? "feed" : "global" }));
@@ -25,7 +26,9 @@ function FeedProvider({ children }) {
   };
 
   return (
-    <FeedContext.Provider value={{ changeTab, tabName, tagName }}>
+    <FeedContext.Provider
+      value={{ changeTab, keyword, setKeyword, tabName, tagName }}
+    >
       {children}
     </FeedContext.Provider>
   );

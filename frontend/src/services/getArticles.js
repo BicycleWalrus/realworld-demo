@@ -2,7 +2,7 @@ import axios from "axios";
 import errorHandler from "../helpers/errorHandler";
 
 // prettier-ignore
-async function getArticles({ headers, limit = 3, location, page = 0, tagName, username }) {
+async function getArticles({ headers, keyword, limit = 3, location, page = 0, tagName, username }) {
   try {
     const url = {
       favorites: `api/articles?favorited=${username}&&limit=${limit}&&offset=${page}`,
@@ -12,7 +12,16 @@ async function getArticles({ headers, limit = 3, location, page = 0, tagName, us
       tag: `api/articles?tag=${tagName}&&limit=${limit}&&offset=${page}`,
     };
 
-    const { data } = await axios({ url: url[location], headers });
+    // The personalized feed endpoint (REQ-018) is a separate backend route
+    // that doesn't implement keyword search (REQ-056 only covers article
+    // listing), so a keyword is never appended to it.
+    const trimmedKeyword = keyword?.trim();
+    const keywordParam =
+      trimmedKeyword && location !== "feed"
+        ? `&&keyword=${encodeURIComponent(trimmedKeyword)}`
+        : "";
+
+    const { data } = await axios({ url: `${url[location]}${keywordParam}`, headers });
 
     return data;
   } catch (error) {
