@@ -6,14 +6,27 @@ mockRequire(require.resolve("../models"), { User });
 
 const { getProfile, followToggler } = require("./profiles");
 
-function makeProfile({ hasFollower = false, followersCount = 0 } = {}) {
+function makeArticle(usersCount) {
+  return makeInstance({}, { countUsers: vi.fn().mockResolvedValue(usersCount) });
+}
+
+function makeProfile({
+  articles = [],
+  createdAt = "2024-01-15T00:00:00.000Z",
+  hasFollower = false,
+  followersCount = 0,
+} = {}) {
   return makeInstance(
-    { id: 1, username: "author" },
+    { id: 1, username: "author", createdAt },
     {
       hasFollower: vi.fn().mockResolvedValue(hasFollower),
       countFollowers: vi.fn().mockResolvedValue(followersCount),
       addFollower: vi.fn().mockResolvedValue(),
       removeFollower: vi.fn().mockResolvedValue(),
+      getArticles: vi.fn().mockResolvedValue(articles),
+      get(key) {
+        return this.dataValues[key];
+      },
     },
   );
 }
@@ -46,6 +59,45 @@ describe("getProfile", () => {
     expect(res.json).toHaveBeenCalledWith({ profile });
     expect(profile.dataValues.following).toBe(false);
     expect(profile.dataValues.followersCount).toBe(5);
+  });
+
+  // AC-084, AC-085, AC-086: article count, favorites summed across the
+  // author's articles, and member-since are attached — for a logged-in
+  // viewer.
+  test("logged-in viewer -> articleCount, summed favoritesCount, memberSince attached", async () => {
+    const articles = [makeArticle(2), makeArticle(3), makeArticle(0)];
+    const profile = makeProfile({
+      articles,
+      createdAt: "2023-06-01T00:00:00.000Z",
+    });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser, params: { username: "author" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ profile });
+    expect(profile.dataValues.articleCount).toBe(3);
+    expect(profile.dataValues.favoritesCount).toBe(5); // 2 + 3 + 0
+    expect(profile.dataValues.memberSince).toBe("2023-06-01T00:00:00.000Z");
+  });
+
+  // AC-084, AC-085, AC-086, AC-087: the same stats are attached, identically,
+  // for an anonymous viewer — stats do not depend on `loggedUser`.
+  test("anonymous viewer -> same articleCount, summed favoritesCount, memberSince attached", async () => {
+    const articles = [makeArticle(4), makeArticle(1)];
+    const profile = makeProfile({
+      articles,
+      createdAt: "2022-11-20T00:00:00.000Z",
+    });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser: undefined, params: { username: "author" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ profile });
+    expect(profile.dataValues.articleCount).toBe(2);
+    expect(profile.dataValues.favoritesCount).toBe(5); // 4 + 1
+    expect(profile.dataValues.memberSince).toBe("2022-11-20T00:00:00.000Z");
   });
 });
 

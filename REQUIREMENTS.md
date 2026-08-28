@@ -434,3 +434,29 @@ a page reload. When the dark theme is not selected (the OS-preference
 default resolves to light, or the visitor has explicitly chosen light),
 the rendered appearance is unchanged from the application's existing
 (pre-dark-theme) light appearance.
+
+---
+
+### REQ-053 — Profile shows the author's published article count
+An author's profile page (`/profile/:username`) shows the total number of
+articles that author has published.
+
+### REQ-054 — Profile shows total favorites summed across the author's articles
+An author's profile page shows the total number of favorites received
+across all of that author's articles, summed.
+
+### REQ-055 — Profile shows member-since date without widening the user payload
+An author's profile page shows the date the author's account was created
+("member since"), formatted the same way as other dates in the
+application (REQ-040). This date is exposed via a purpose-built field
+rather than by widening `User.toJSON()` — the existing exclusion of
+`createdAt` from a serialized `User` (used elsewhere in the application)
+is unchanged.
+
+### REQ-056 — Profile stats are visible to all visitors and correct on load
+The article count, summed favorites, and member-since date (REQ-053,
+REQ-054, REQ-055) are visible to both authenticated and anonymous
+visitors of a profile page, identically, and are correct as of the
+current data when the profile page loads — including when the page is
+reached via a link that supplies partial profile data that does not
+already include these stats.

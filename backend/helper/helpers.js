@@ -17,6 +17,24 @@ const appendFavorites = async (loggedUser, article) => {
   article.dataValues.favoritesCount = favoritesCount;
 };
 
+// REQ-053 / REQ-054 / REQ-055 / REQ-056: attaches an author's published
+// article count, total favorites summed across those articles, and their
+// member-since date, on `profile.dataValues`. Independent of `loggedUser`
+// so it is identical for authenticated and anonymous visitors.
+const appendAuthorStats = async (profile) => {
+  // getArticles() already returns the author's full article list, so its
+  // length is the article count — no separate countArticles() query needed.
+  const articles = await profile.getArticles();
+  const favoritesCounts = await Promise.all(
+    articles.map((article) => article.countUsers()),
+  );
+  const favoritesCount = favoritesCounts.reduce((sum, count) => sum + count, 0);
+
+  profile.dataValues.articleCount = articles.length;
+  profile.dataValues.favoritesCount = favoritesCount;
+  profile.dataValues.memberSince = profile.get("createdAt");
+};
+
 const appendFollowers = async (loggedUser, toAppend) => {
   //
   if (toAppend?.author) {
@@ -39,4 +57,10 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendAuthorStats,
+};
