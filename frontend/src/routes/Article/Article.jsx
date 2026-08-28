@@ -5,6 +5,7 @@ import ArticleMeta from "../../components/ArticleMeta";
 import ArticlesButtons from "../../components/ArticlesButtons";
 import ArticleTags from "../../components/ArticleTags";
 import BannerContainer from "../../components/BannerContainer";
+import DownloadArticle from "../../components/DownloadArticle";
 import TableOfContents from "../../components/TableOfContents";
 import { useAuth } from "../../context/AuthContext";
 import getArticle from "../../services/getArticle";
@@ -81,6 +82,11 @@ function Article() {
         <div className="row article-content">
           <div className="col-md-12">
             {image && <img src={image} alt="" className="article-cover" />}
+            {/* REQ-105/REQ-106: visible to every viewer who can already
+                read this article - authed or anonymous, author or not -
+                since downloading is purely client-side and grants no
+                additional access. */}
+            <DownloadArticle article={article} />
             <TableOfContents body={body} />
             {body && <Markdown options={mdOptions}>{body}</Markdown>}
             <ArticleTags tagList={tagList} />

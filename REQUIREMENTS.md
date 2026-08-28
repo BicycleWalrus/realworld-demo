@@ -833,3 +833,21 @@ A user's public profile displays a link for each of website, github, and
 twitter that is currently set on that account, each pointing to the
 provided URL. A profile with none of these links set renders with no
 links section and no placeholder in its place.
+
+---
+
+## Article Download
+
+### REQ-105 — The article detail page can download the article as Markdown
+The article detail page provides a control that downloads the currently
+displayed article as a standalone `.md` file. The file's content is the
+article's title rendered as a Markdown H1, followed by its body. The file
+is generated entirely client-side; no backend endpoint or service call is
+involved in producing it.
+
+### REQ-106 — The downloaded filename is derived from the article's slug, and the control requires no additional access
+The downloaded file's name is derived from the article's slug as
+`<slug>.md`. The control is available to any viewer who can already read
+the article - authenticated or anonymous, author or not - and neither
+grants nor requires any access beyond what viewing the article already
+allows.
