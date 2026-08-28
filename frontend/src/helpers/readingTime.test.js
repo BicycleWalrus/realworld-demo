@@ -13,6 +13,12 @@ describe("readingTime", () => {
     expect(readingTime("A short article.")).toBe("1 min read");
   });
 
+  it("stays at 1 minute exactly at the 200-word boundary", () => {
+    const body = new Array(200).fill("word").join(" ");
+
+    expect(readingTime(body)).toBe("1 min read");
+  });
+
   it("rounds up to the next whole minute", () => {
     const body = new Array(201).fill("word").join(" ");
 

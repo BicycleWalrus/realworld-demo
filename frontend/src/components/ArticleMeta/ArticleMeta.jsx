@@ -23,7 +23,7 @@ function ArticleMeta({ author, body, children, createdAt }) {
           {username}
         </Link>
         <span className="date">{dateFormatter(createdAt)}</span>
-        <span className="date">{readingTime(body)}</span>
+        <span className="date reading-time">{readingTime(body)}</span>
       </div>
       {children}
     </div>
