@@ -568,6 +568,24 @@ changed.
 - **AC-119** — Given a visitor with no recently-viewed articles, when
   they visit the home page, then no recently-viewed widget is displayed.
 
+### US-039 — User directory page
+*(REQ-059)*
+
+- **AC-120** — Given the directory page, when rendered, then it lists
+  user profiles (username, avatar, bio snippet) with pagination,
+  reachable without authentication.
+- **AC-121** — Given a directory entry, when clicked, then it links to
+  that user's full profile.
+- **AC-122** — Given a directory request with no limit specified, when
+  the page loads, then a default, bounded page size is used rather than
+  the entire user table.
+- **AC-123** — Given a directory request with an oversized, negative, or
+  non-numeric limit or offset, when submitted, then the request falls
+  back to safe defaults instead of an unbounded or malformed query.
+- **AC-124** — Given a bio containing a multi-byte character (e.g. an
+  emoji) at the truncation cutoff, when the snippet is rendered, then
+  the character is not split into a broken glyph.
+
 ---
 
 ## Traceability Matrix
@@ -632,3 +650,4 @@ changed.
 | REQ-056 | US-036 | AC-107–AC-110 |
 | REQ-057 | US-037 | AC-111–AC-115 |
 | REQ-058 | US-038 | AC-116–AC-119 |
+| REQ-059 | US-039 | AC-120–AC-124 |

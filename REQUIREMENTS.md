@@ -545,3 +545,15 @@ article is later renamed; the link itself always points to the correct,
 current article regardless. This feature is purely additive and does
 not change the article detail page's existing fetch/navigation-state
 behavior (REQ-043).
+
+### REQ-059 — Browsable, paginated user directory
+A page lists all user accounts (username, avatar, bio snippet),
+reachable without authentication, backed by a paginated endpoint
+(`GET /api/users/directory`) that returns only username/image/bio for a
+bounded page of users at a time — never the whole user table in one
+response. The page size defaults to 20 and is capped at 100 regardless
+of what is requested; an invalid (missing, non-numeric, or negative)
+limit or offset falls back to the default rather than an unbounded or
+malformed query. Each entry links to that user's full profile. This is a
+distinct endpoint from the existing username-search endpoints built for
+@mention autocomplete (REQ-057) — it is not a repurposing of them.

@@ -209,3 +209,10 @@ jump to their profile.
 viewed, so that I can easily get back to something I was reading without
 searching for it again.
 *Related requirements: REQ-058*
+
+---
+
+**US-039** — As a user, I want to browse a directory of all authors, so
+that I can discover new people to follow without already knowing their
+username.
+*Related requirements: REQ-059*

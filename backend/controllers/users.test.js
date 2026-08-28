@@ -190,6 +190,7 @@ describe("verifyUsernames", () => {
 });
 
 describe("directory", () => {
+  // AC-120
   test("returns a paginated page of users with only username, image, and bio", async () => {
     User.findAndCountAll.mockResolvedValue({
       rows: [makeInstance({ username: "jane", image: null, bio: "hi" })],
@@ -207,6 +208,7 @@ describe("directory", () => {
     expect(attributes).toEqual(["username", "image", "bio"]);
   });
 
+  // AC-120
   test("does not require authentication (no loggedUser check)", async () => {
     User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
     const res = makeRes();
@@ -227,6 +229,7 @@ describe("directory", () => {
     expect(offset).toBe(10);
   });
 
+  // AC-122
   test("defaults to a page size of 20 when no limit is given", async () => {
     User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
     const res = makeRes();
@@ -239,6 +242,7 @@ describe("directory", () => {
 
   // No-auth, full-table-enumeration endpoint - a huge, negative, or
   // non-numeric limit/offset must not reach the database unclamped.
+  // AC-123
   test("clamps an oversized limit instead of dumping the whole table in one request", async () => {
     User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
     const res = makeRes();

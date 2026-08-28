@@ -14,6 +14,7 @@ function renderDirectory() {
 }
 
 describe("UserDirectory", () => {
+  // AC-120, AC-121
   it("renders each author with a link to their profile and a bio snippet", async () => {
     getUserDirectory.mockResolvedValue({
       users: [
@@ -60,6 +61,7 @@ describe("UserDirectory", () => {
   // The truncation cutoff can land exactly on a multi-byte character (e.g.
   // an emoji, which is a UTF-16 surrogate pair) - it must not be split in
   // half into a broken/unpaired-surrogate glyph.
+  // AC-124
   it("truncates without splitting a multi-byte character at the cutoff", async () => {
     const bioWithEmoji = `${"a".repeat(99)}😀 more text past the cutoff`;
     getUserDirectory.mockResolvedValue({
