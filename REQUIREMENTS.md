@@ -546,6 +546,31 @@ current article regardless. This feature is purely additive and does
 not change the article detail page's existing fetch/navigation-state
 behavior (REQ-043).
 
+### REQ-059 — Browsable, paginated user directory
+A page lists all user accounts (username, avatar, bio snippet),
+reachable without authentication, backed by a paginated endpoint
+(`GET /api/users/directory`) that returns only username/image/bio for a
+bounded page of users at a time — never the whole user table in one
+response. The page size defaults to 20 and is capped at 100 regardless
+of what is requested; an invalid (missing, non-numeric, or negative)
+limit or offset falls back to the default rather than an unbounded or
+malformed query. Each entry links to that user's full profile. This is a
+distinct endpoint from the existing username-search endpoints built for
+@mention autocomplete (REQ-057) — it is not a repurposing of them.
+
+### REQ-060 — Trending / Top Articles feed tab
+A "Top Articles" feed tab is available alongside "Your Feed"/"Global
+Feed" and "Tag", selectable by any visitor regardless of authentication.
+Selecting it lists articles ordered by favorite count, highest first,
+with ties broken by newest first; the favorite count for this ordering
+is computed via a single aggregate query over the matching set, not one
+query per article. This sort composes with the existing author/tag/
+favorited filters (REQ-013) rather than being ignored when any of them
+are present, and uses the same pagination page size as other listings
+(REQ-031). Switching to or from this tab behaves the same as switching
+between the existing tabs (no stale cross-tab data). The default tab
+selection logic for "Your Feed"/"Global Feed" (REQ-030) is unaffected.
+
 ### REQ-061 — Private read-later / bookmark list
 An authenticated user can save or unsave an article to a personal "read
 later" list, distinct from favoriting (REQ-025/REQ-026) — a separate

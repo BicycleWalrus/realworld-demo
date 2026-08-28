@@ -568,6 +568,42 @@ changed.
 - **AC-119** — Given a visitor with no recently-viewed articles, when
   they visit the home page, then no recently-viewed widget is displayed.
 
+### US-039 — User directory page
+*(REQ-059)*
+
+- **AC-120** — Given the directory page, when rendered, then it lists
+  user profiles (username, avatar, bio snippet) with pagination,
+  reachable without authentication.
+- **AC-121** — Given a directory entry, when clicked, then it links to
+  that user's full profile.
+- **AC-122** — Given a directory request with no limit specified, when
+  the page loads, then a default, bounded page size is used rather than
+  the entire user table.
+- **AC-123** — Given a directory request with an oversized, negative, or
+  non-numeric limit or offset, when submitted, then the request falls
+  back to safe defaults instead of an unbounded or malformed query.
+- **AC-124** — Given a bio containing a multi-byte character (e.g. an
+  emoji) at the truncation cutoff, when the snippet is rendered, then
+  the character is not split into a broken glyph.
+
+### US-040 — Trending / Top Articles feed tab
+*(REQ-060)*
+
+- **AC-125** — Given the feed tabs, when viewed by any visitor
+  (authenticated or not), then a "Top Articles" tab is available
+  alongside the existing tabs.
+- **AC-126** — Given the "Top Articles" tab is selected, when articles
+  are listed, then they are ordered by favorite count, highest first,
+  with equal counts broken by newest first.
+- **AC-127** — Given the "Top Articles" tab combined with a tag, author,
+  or favorited filter, when articles are listed, then the sort applies
+  to that filtered set rather than being silently ignored.
+- **AC-128** — Given the "Top Articles" tab, when articles are listed,
+  then the same pagination page size as other listings is used.
+- **AC-129** — Given a switch to or from the "Top Articles" tab, when
+  the new tab renders, then no stale data from the previous tab is
+  shown.
+
 ### US-041 — Private read-later / bookmark list
 *(REQ-061)*
 
@@ -651,4 +687,6 @@ changed.
 | REQ-056 | US-036 | AC-107–AC-110 |
 | REQ-057 | US-037 | AC-111–AC-115 |
 | REQ-058 | US-038 | AC-116–AC-119 |
+| REQ-059 | US-039 | AC-120–AC-124 |
+| REQ-060 | US-040 | AC-125–AC-129 |
 | REQ-061 | US-041 | AC-130–AC-134 |

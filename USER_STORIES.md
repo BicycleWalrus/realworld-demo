@@ -212,6 +212,20 @@ searching for it again.
 
 ---
 
+**US-039** — As a user, I want to browse a directory of all authors, so
+that I can discover new people to follow without already knowing their
+username.
+*Related requirements: REQ-059*
+
+---
+
+**US-040** — As a user, I want to browse articles sorted by how many
+favorites they've received, so that I can discover the most well-received
+content on the platform.
+*Related requirements: REQ-060*
+
+---
+
 **US-041** — As a user, I want to save an article to a personal reading
 list, so that I can find it again later without publicly favoriting it.
 *Related requirements: REQ-061*

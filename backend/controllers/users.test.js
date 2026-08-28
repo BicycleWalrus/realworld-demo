@@ -10,15 +10,21 @@ const {
 const { bcryptHash } = require("../helper/bcrypt");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn(), create: vi.fn(), findAll: vi.fn() };
+const User = {
+  findOne: vi.fn(),
+  create: vi.fn(),
+  findAll: vi.fn(),
+  findAndCountAll: vi.fn(),
+};
 mockRequire(require.resolve("../models"), { User });
 
-const { signUp, signIn, searchUsers, verifyUsernames } = require("./users");
+const { signUp, signIn, searchUsers, verifyUsernames, directory } = require("./users");
 
 beforeEach(() => {
   User.findOne.mockReset();
   User.create.mockReset();
   User.findAll.mockReset();
+  User.findAndCountAll.mockReset();
 });
 
 describe("signUp", () => {
@@ -180,5 +186,90 @@ describe("verifyUsernames", () => {
 
     const [{ where }] = User.findAll.mock.calls[0];
     expect(where[Op.or]).toHaveLength(20);
+  });
+});
+
+describe("directory", () => {
+  // AC-120
+  test("returns a paginated page of users with only username, image, and bio", async () => {
+    User.findAndCountAll.mockResolvedValue({
+      rows: [makeInstance({ username: "jane", image: null, bio: "hi" })],
+      count: 1,
+    });
+    const res = makeRes();
+
+    await directory({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({
+      users: [expect.objectContaining({ username: "jane" })],
+      usersCount: 1,
+    });
+    const [{ attributes }] = User.findAndCountAll.mock.calls[0];
+    expect(attributes).toEqual(["username", "image", "bio"]);
+  });
+
+  // AC-120
+  test("does not require authentication (no loggedUser check)", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: [], usersCount: 0 });
+  });
+
+  test("applies limit and offset from the query, defaulting to page size 20", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: { limit: "5", offset: "2" } }, res, vi.fn());
+
+    const [{ limit, offset }] = User.findAndCountAll.mock.calls[0];
+    expect(limit).toBe(5);
+    expect(offset).toBe(10);
+  });
+
+  // AC-122
+  test("defaults to a page size of 20 when no limit is given", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: {} }, res, vi.fn());
+
+    const [{ limit }] = User.findAndCountAll.mock.calls[0];
+    expect(limit).toBe(20);
+  });
+
+  // No-auth, full-table-enumeration endpoint - a huge, negative, or
+  // non-numeric limit/offset must not reach the database unclamped.
+  // AC-123
+  test("clamps an oversized limit instead of dumping the whole table in one request", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: { limit: "999999" } }, res, vi.fn());
+
+    const [{ limit }] = User.findAndCountAll.mock.calls[0];
+    expect(limit).toBe(100);
+  });
+
+  test("falls back to the default for a non-numeric or negative limit", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+
+    await directory({ query: { limit: "abc" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[0][0].limit).toBe(20);
+
+    await directory({ query: { limit: "-5" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[1][0].limit).toBe(20);
+  });
+
+  test("falls back to offset 0 for a non-numeric or negative offset", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+
+    await directory({ query: { offset: "abc" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[0][0].offset).toBe(0);
+
+    await directory({ query: { offset: "-1" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[1][0].offset).toBe(0);
   });
 });
