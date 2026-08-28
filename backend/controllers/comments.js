@@ -22,11 +22,28 @@ const allComments = async (req, res, next) => {
       ],
     });
 
+    // Threaded replies (REQ-064): top-level comments are returned as
+    // before, each now carrying its replies (newest-last, same order
+    // they arrive in) nested under it. A comment with no parent is
+    // unaffected by this grouping.
+    const repliesByParentId = new Map();
+    const topLevel = [];
     for (const comment of comments) {
       await appendFollowers(loggedUser, comment);
+
+      if (comment.parentCommentId) {
+        const replies = repliesByParentId.get(comment.parentCommentId) ?? [];
+        replies.push(comment);
+        repliesByParentId.set(comment.parentCommentId, replies);
+      } else {
+        topLevel.push(comment);
+      }
+    }
+    for (const parent of topLevel) {
+      parent.dataValues.replies = repliesByParentId.get(parent.id) ?? [];
     }
 
-    res.json({ comments });
+    res.json({ comments: topLevel });
   } catch (error) {
     next(error);
   }
@@ -38,21 +55,35 @@ const createComment = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { body } = req.body.comment;
+    const { body, parentCommentId } = req.body.comment;
     if (!body) throw new FieldRequiredError("Comment body");
 
     const { slug } = req.params;
     const article = await Article.findOne({ where: { slug: slug } });
     if (!article) throw new NotFoundError("Article");
 
+    // A reply must attach to a comment on the same article. Nesting is
+    // one level deep (REQ-064): replying to a reply attaches under the
+    // same top-level parent rather than nesting deeper.
+    let parentCommentIdToCreate;
+    if (parentCommentId !== undefined && parentCommentId !== null) {
+      const parent = await Comment.findByPk(parentCommentId);
+      if (!parent || parent.articleId !== article.id) {
+        throw new NotFoundError("Parent comment");
+      }
+      parentCommentIdToCreate = parent.parentCommentId ?? parent.id;
+    }
+
     const comment = await Comment.create({
       body: body,
       articleId: article.id,
       userId: loggedUser.id,
+      ...(parentCommentIdToCreate && { parentCommentId: parentCommentIdToCreate }),
     });
 
     delete loggedUser.dataValues.token;
     comment.dataValues.author = loggedUser;
+    comment.dataValues.replies = [];
     await appendFollowers(loggedUser, loggedUser);
 
     res.status(201).json({ comment });

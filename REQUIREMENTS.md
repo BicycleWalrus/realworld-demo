@@ -612,3 +612,20 @@ In the web client a comma-separated tags input sits beside the keyword
 search above the feed; while it is set it supplies the tag parameters
 (taking the place of a sidebar single-tag tab), and it persists across
 feed views and pagination.
+
+### REQ-064 — Threaded comment replies
+An authenticated user can reply to a specific top-level comment, and
+replies are visibly nested under their parent in the article's comment
+listing. Nesting is exactly one level deep: a reply carries a reference
+to its top-level parent, and replying to a reply attaches under that
+reply's top-level parent rather than nesting deeper. A reply must
+attach to a comment on the same article; referencing a comment from
+another article, or a nonexistent comment, is rejected as not found.
+Replying follows the same authentication rules as posting a top-level
+comment, and a comment's Reply control is offered only to authenticated
+visitors. Deleting a comment cascade-deletes its replies (including
+replies written by others), while deletion itself remains restricted to
+the deleted comment's own author (REQ-023). Comments with no parent
+keep their existing creation, listing, and deletion behavior; in the
+listing each top-level comment additionally carries its (possibly
+empty) list of replies.

@@ -32,6 +32,10 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
       },
       body: DataTypes.TEXT,
+      // Self-reference threading replies to a top-level comment; the
+      // database-level ON DELETE CASCADE deletes a comment's replies
+      // with it (REQ-064).
+      parentCommentId: DataTypes.INTEGER,
     },
     {
       sequelize,

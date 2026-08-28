@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import getComments from "../../services/getComments";
+import postComment from "../../services/postComment";
 import searchUsers from "../../services/searchUsers";
 import updateComment from "../../services/updateComment";
 import verifyUsernames from "../../services/verifyUsernames";
@@ -9,6 +10,7 @@ import CommentList from "./CommentList";
 
 vi.mock("../../context/AuthContext");
 vi.mock("../../services/getComments");
+vi.mock("../../services/postComment");
 vi.mock("../../services/updateComment");
 vi.mock("../../services/deleteComment");
 vi.mock("../../services/searchUsers");
@@ -155,5 +157,82 @@ describe("CommentList", () => {
     await screen.findByText("hi", { exact: false });
 
     expect(screen.queryByRole("link", { name: "@ghost" })).not.toBeInTheDocument();
+  });
+});
+
+// Threaded replies (REQ-064).
+describe("CommentList threaded replies", () => {
+  // AC-145: the Reply control follows the same auth rules as posting a
+  // top-level comment — available signed in, absent signed out.
+  it("shows a reply control to an authenticated visitor", async () => {
+    mockAuth({ isAuth: true, username: "someone-else" });
+    renderList();
+
+    await screen.findByText("original comment");
+
+    expect(
+      screen.getByRole("button", { name: "Reply to comment" }),
+    ).toBeInTheDocument();
+  });
+
+  it("does not show a reply control to an unauthenticated visitor", async () => {
+    mockAuth({ isAuth: false });
+    renderList();
+
+    await screen.findByText("original comment");
+
+    expect(
+      screen.queryByRole("button", { name: "Reply to comment" }),
+    ).not.toBeInTheDocument();
+  });
+
+  // AC-146: submitting the reply form posts with the parent's id and
+  // hands the server's response to updateComments (which refetches).
+  it("posts a reply with the parent comment id and closes the form", async () => {
+    mockAuth({ isAuth: true, username: "jane" });
+    const posted = makeComment({ id: 2, body: "a reply" });
+    postComment.mockResolvedValue(posted);
+    const updateComments = vi.fn();
+    renderList({ updateComments });
+    await screen.findByText("original comment");
+
+    fireEvent.click(screen.getByRole("button", { name: "Reply to comment" }));
+    fireEvent.change(screen.getByRole("textbox"), {
+      target: { value: "a reply" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Post Reply" }));
+
+    await waitFor(() => {
+      expect(updateComments).toHaveBeenCalledWith(posted);
+    });
+    expect(postComment).toHaveBeenCalledWith(
+      expect.objectContaining({ body: "a reply", parentCommentId: 1 }),
+    );
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  // AC-146/AC-147: server-nested replies render under their parent, and
+  // only top-level comments carry Reply controls (one nesting level).
+  it("renders server-nested replies under their parent", async () => {
+    mockAuth({ isAuth: true, username: "jane" });
+    getComments.mockResolvedValue([
+      makeComment({
+        id: 1,
+        replies: [
+          makeComment({
+            id: 2,
+            body: "a nested reply",
+            author: { username: "bob", bio: null, image: null, following: false },
+          }),
+        ],
+      }),
+    ]);
+    renderList();
+
+    await screen.findByText("a nested reply");
+
+    expect(
+      screen.getAllByRole("button", { name: "Reply to comment" }),
+    ).toHaveLength(1);
   });
 });

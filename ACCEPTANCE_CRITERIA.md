@@ -658,6 +658,24 @@ changed.
   author, favorited, or keyword-search filters, when the listing is
   requested, then only articles satisfying both the tag set and those
   filters are returned.
+- **AC-145** — Given an authenticated visitor viewing an article's
+  comments, when a top-level comment is displayed, then it offers a
+  Reply control; an unauthenticated visitor is offered no Reply
+  control, matching the rules for posting a top-level comment.
+- **AC-146** — Given an authenticated visitor, when a reply is
+  submitted for a specific comment, then the created comment is
+  associated with that parent and appears nested under it in
+  subsequent listings of the article's comments.
+- **AC-147** — Given a reply to a reply, when it is created, then it
+  nests under the same top-level parent comment (nesting is exactly
+  one level deep).
+- **AC-148** — Given a parent comment with replies, when its author
+  deletes it, then its replies are deleted with it (cascade); deletion
+  remains restricted to the comment's own author per REQ-023.
+- **AC-149** — Given comments with no parent, when they are created,
+  listed, or deleted, then each of those operations behaves exactly as
+  before this feature, with the listing additionally carrying an empty
+  replies list per top-level comment.
 
 ---
 
@@ -728,3 +746,4 @@ changed.
 | REQ-061 | US-041 | AC-130–AC-134 |
 | REQ-062 | US-042 | AC-135–AC-139 |
 | REQ-063 | US-043 | AC-140–AC-144 |
+| REQ-064 | US-044 | AC-145–AC-149 |
