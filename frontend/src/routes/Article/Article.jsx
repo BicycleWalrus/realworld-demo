@@ -10,6 +10,7 @@ import { useAuth } from "../../context/AuthContext";
 import extractHeadings, {
   createHeadingSlugger,
 } from "../../helpers/extractHeadings";
+import { recordView } from "../../helpers/recentlyViewed";
 import getArticle from "../../services/getArticle";
 
 function Article() {
@@ -35,6 +36,12 @@ function Article() {
         navigate("/not-found", { replace: true });
       });
   }, [isAuth, slug, headers, state, navigate]);
+
+  useEffect(() => {
+    if (!title) return;
+
+    recordView({ slug, title });
+  }, [slug, title]);
 
   return (
     <div className="article-page">
