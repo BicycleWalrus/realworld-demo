@@ -1,19 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const { Tag } = require("../models");
-const { appendTagList } = require("../helper/helpers");
+const verifyToken = require("../middleware/authentication");
+const { allTags, tagFollowToggler } = require("../controllers/tags");
 
-// All Tags
-router.get("/", async (req, res, next) => {
-  try {
-    const tagList = await Tag.findAll();
-
-    const tags = appendTagList(tagList);
-
-    res.json({ tags });
-  } catch (error) {
-    next(error);
-  }
-});
+//? All Tags
+router.get("/", verifyToken, allTags);
+//* Follow Tag
+router.post("/:name/follow", verifyToken, tagFollowToggler);
+//* Unfollow Tag
+router.delete("/:name/follow", verifyToken, tagFollowToggler);
 
 module.exports = router;

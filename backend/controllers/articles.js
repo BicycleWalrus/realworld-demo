@@ -126,16 +126,37 @@ const articlesFeed = async (req, res, next) => {
 
     const { limit = 3, offset = 0 } = req.query;
     const authors = await loggedUser.getFollowing();
+    const followedTags = await loggedUser.getFollowedTags();
 
-    const articles = await Article.findAndCountAll({
+    const byAuthor = await Article.findAll({
       include: includeOptions,
-      limit: parseInt(limit),
-      offset: offset * limit,
       order: [["createdAt", "DESC"]],
       where: { userId: authors.map((author) => author.id) },
     });
 
-    for (const article of articles.rows) {
+    const byTag = followedTags.length
+      ? await Article.findAll({
+          include: [
+            {
+              model: Tag,
+              as: "tagList",
+              attributes: ["name"],
+              where: { name: followedTags.map((followedTag) => followedTag.name) },
+            },
+            { model: User, as: "author", attributes: { exclude: ["email"] } },
+          ],
+          order: [["createdAt", "DESC"]],
+        })
+      : [];
+
+    const merged = [...byAuthor, ...byTag]
+      .filter((article, index, all) => all.findIndex((a) => a.slug === article.slug) === index)
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    const articlesCount = merged.length;
+    const articleRows = merged.slice(offset * limit, offset * limit + parseInt(limit));
+
+    for (const article of articleRows) {
       const articleTags = await article.getTagList();
 
       appendTagList(articleTags, article);
@@ -143,7 +164,7 @@ const articlesFeed = async (req, res, next) => {
       await appendFavorites(loggedUser, article);
     }
 
-    res.json({ articles: articles.rows, articlesCount: articles.count });
+    res.json({ articles: articleRows, articlesCount });
   } catch (error) {
     next(error);
   }

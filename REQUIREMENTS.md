@@ -405,3 +405,26 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-058 — Following/unfollowing a tag requires authentication and an existing tag
+Following or unfollowing a tag requires a resolved, authenticated user
+and requires the target tag (identified by name) to exist; otherwise the
+request is rejected — mirroring the equivalent rule for following a user
+(REQ-027). This amends REQ-021 (tag listing): each tag returned by the
+tag list now includes a `followed` flag reflecting the requesting user's
+own follow status for that tag, in addition to its name; for an
+unauthenticated request, `followed` is always `false` for every tag,
+consistent with how other anonymous-viewer flags behave elsewhere
+(REQ-026, REQ-028). The tag list itself is still returned in full,
+without authentication, and without pagination, exactly as REQ-021
+already states.
+
+### REQ-059 — Personalized feed also includes followed-tag articles
+The personalized article feed additionally includes any article
+carrying a tag the requesting user follows, regardless of who authored
+it. An article is included in the feed if it satisfies either
+condition — authored by a followed user, or carrying a followed tag (or
+both); the two conditions are combined with OR, not AND. This amends
+REQ-018's statement that "if the user follows no one, the feed returns
+no articles": a user who follows zero authors but follows at least one
+tag with a matching article now receives a non-empty feed.

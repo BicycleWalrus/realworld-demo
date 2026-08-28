@@ -7,7 +7,7 @@ const {
 } = require("../helper/customErrors");
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
+const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), create: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
 mockRequire(require.resolve("../models"), { Article, Tag, User });
@@ -64,7 +64,10 @@ function fakeArticleList(seedRows) {
 
     const tagFilter = include.find((i) => i.as === "tagList")?.where?.name;
     const authorFilter = include.find((i) => i.as === "author")?.where?.username;
-    if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
+    if (tagFilter) {
+      const tagNames = Array.isArray(tagFilter) ? tagFilter : [tagFilter];
+      rows = rows.filter((r) => r.tagList.some((t) => tagNames.includes(t.name)));
+    }
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
 
@@ -74,9 +77,24 @@ function fakeArticleList(seedRows) {
   };
 }
 
+// Reuses fakeArticleList's filtering logic for articlesFeed's two `findAll`
+// queries, which return a plain array (pagination now happens in JS across
+// the merged author+tag result sets, not per-query).
+function fakeArticleFindAll(seedRows) {
+  return async (options) => {
+    const { rows } = await fakeArticleList(seedRows)({
+      ...options,
+      limit: seedRows.length,
+      offset: 0,
+    });
+    return rows;
+  };
+}
+
 beforeEach(() => {
   Article.findOne.mockReset();
   Article.findAndCountAll.mockReset();
+  Article.findAll.mockReset();
   Article.create.mockReset();
   Tag.findByPk.mockReset();
   Tag.create.mockReset();
@@ -446,6 +464,16 @@ describe("articlesFeed", () => {
     expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
   });
 
+  function makeFeedUser(overrides = {}) {
+    return makeInstance(
+      { id: 99, ...overrides },
+      {
+        getFollowing: vi.fn().mockResolvedValue([]),
+        getFollowedTags: vi.fn().mockResolvedValue([]),
+      },
+    );
+  }
+
   // AC-034: only articles by followed authors are returned, newest first.
   test("returns only followed authors' articles, newest first", async () => {
     const followedAuthor = makeFollowableUser({ id: 10, username: "followed" });
@@ -455,11 +483,9 @@ describe("articlesFeed", () => {
       makeArticle({ id: 2, slug: "new", author: followedAuthor, createdAt: new Date("2020-01-05") }),
       makeArticle({ id: 3, slug: "not-followed", author: otherAuthor, createdAt: new Date("2020-01-06") }),
     ];
-    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
-    const loggedUser = makeInstance(
-      { id: 99 },
-      { getFollowing: vi.fn().mockResolvedValue([{ id: 10 }]) },
-    );
+    Article.findAll.mockImplementation(fakeArticleFindAll(seed));
+    const loggedUser = makeFeedUser();
+    loggedUser.getFollowing = vi.fn().mockResolvedValue([{ id: 10 }]);
     const res = makeRes();
 
     await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
@@ -469,11 +495,12 @@ describe("articlesFeed", () => {
     expect(articles.map((a) => a.slug)).toEqual(["new", "old"]);
   });
 
-  // AC-035: following no one returns zero articles, not an error.
-  test("following no one -> empty feed, not an error", async () => {
+  // AC-035: following no one and no followed tags returns zero articles,
+  // not an error.
+  test("following no one, no followed tags -> empty feed, not an error", async () => {
     const seed = [makeArticle({ author: makeFollowableUser() })];
-    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
-    const loggedUser = makeInstance({ id: 99 }, { getFollowing: vi.fn().mockResolvedValue([]) });
+    Article.findAll.mockImplementation(fakeArticleFindAll(seed));
+    const loggedUser = makeFeedUser();
     const res = makeRes();
     const next = vi.fn();
 
@@ -483,5 +510,82 @@ describe("articlesFeed", () => {
     const { articles, articlesCount } = res.json.mock.calls[0][0];
     expect(articles).toEqual([]);
     expect(articlesCount).toBe(0);
+  });
+
+  // AC-123: a followed tag surfaces matching articles even from an
+  // author the user doesn't follow.
+  test("a followed tag surfaces matching articles from a non-followed author", async () => {
+    const otherAuthor = makeFollowableUser({ id: 20, username: "other" });
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "tagged",
+        author: otherAuthor,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({ id: 2, slug: "untagged", author: otherAuthor, createdAt: new Date("2020-01-02") }),
+    ];
+    Article.findAll.mockImplementation(fakeArticleFindAll(seed));
+    const loggedUser = makeFeedUser();
+    loggedUser.getFollowedTags = vi.fn().mockResolvedValue([{ name: "dragons" }]);
+    const res = makeRes();
+
+    await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["tagged"]);
+  });
+
+  // AC-124: this is the REQ-018 amendment case - following zero authors but
+  // following a tag with a matching article still returns a non-empty feed.
+  test("zero followed authors + a matching followed tag -> non-empty feed", async () => {
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "tagged",
+        author: makeFollowableUser({ id: 30, username: "stranger" }),
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+    ];
+    Article.findAll.mockImplementation(fakeArticleFindAll(seed));
+    const loggedUser = makeFeedUser();
+    loggedUser.getFollowedTags = vi.fn().mockResolvedValue([{ name: "dragons" }]);
+    const res = makeRes();
+    const next = vi.fn();
+
+    await articlesFeed({ loggedUser, query: {} }, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles.map((a) => a.slug)).toEqual(["tagged"]);
+  });
+
+  // No duplicate when an article satisfies both the followed-author and
+  // followed-tag conditions at once.
+  test("an article matching both a followed author and a followed tag is not duplicated", async () => {
+    const followedAuthor = makeFollowableUser({ id: 10, username: "followed" });
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "both",
+        author: followedAuthor,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+    ];
+    Article.findAll.mockImplementation(fakeArticleFindAll(seed));
+    const loggedUser = makeFeedUser();
+    loggedUser.getFollowing = vi.fn().mockResolvedValue([{ id: 10 }]);
+    loggedUser.getFollowedTags = vi.fn().mockResolvedValue([{ name: "dragons" }]);
+    const res = makeRes();
+
+    await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles).toHaveLength(1);
   });
 });
