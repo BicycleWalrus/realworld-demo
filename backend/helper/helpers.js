@@ -39,4 +39,15 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+const appendTagFollow = async (loggedUser, tag) => {
+  const followed = await tag.hasFollower(loggedUser ? loggedUser : null);
+  tag.dataValues.followed = loggedUser ? followed : false;
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendTagFollow,
+};

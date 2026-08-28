@@ -1,9 +1,9 @@
 import axios from "axios";
 import errorHandler from "../helpers/errorHandler";
 
-async function getTags() {
+async function getTags({ headers } = {}) {
   try {
-    const { data } = await axios({ url: "/api/tags" });
+    const { data } = await axios({ headers, url: "/api/tags" });
 
     return data.tags;
   } catch (error) {

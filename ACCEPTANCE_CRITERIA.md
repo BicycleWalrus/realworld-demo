@@ -404,6 +404,29 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-036 — Follow tags to personalize the feed
+*(REQ-058, REQ-059)*
+
+- **AC-118** — Given an unauthenticated request, when it attempts to
+  follow or unfollow a tag, then it is rejected with an authorization
+  error.
+- **AC-119** — Given a tag name that doesn't correspond to any existing
+  tag, when an authenticated user attempts to follow or unfollow it, then
+  the request fails with a not-found error.
+- **AC-120** — Given a tag not yet followed by a user, when that user
+  follows it, then the tag is added to that user's followed tags.
+- **AC-121** — Given a tag followed by a user, when that user unfollows
+  it, then the tag is removed from that user's followed tags.
+- **AC-122** — Given a user who follows a tag but not any author, when
+  their feed is requested, then published articles carrying that tag
+  appear, even if authored by someone the user doesn't follow.
+- **AC-123** — Given a user who follows zero authors and at least one tag
+  with a matching article, when their feed is requested, then the feed
+  is non-empty.
+- **AC-124** — Given the tag list is requested, when returned, then each
+  tag includes a `followed` flag reflecting the requesting user's own
+  follow status, forced to `false` for an unauthenticated request.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +481,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-058 | US-036 | AC-118–AC-121, AC-124 |
+| REQ-059 | US-036 | AC-122–AC-123 |
