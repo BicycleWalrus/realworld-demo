@@ -251,3 +251,9 @@ that I can jump straight to a section I care about.
 **US-045** — As a user, I want to list links to my other online
 presences on my profile so that readers can find me elsewhere.
 *Related requirements: REQ-103, REQ-104*
+
+---
+
+**US-046** — As a reader, I want to download an article as a Markdown
+file so that I can save it or read it offline.
+*Related requirements: REQ-105, REQ-106*

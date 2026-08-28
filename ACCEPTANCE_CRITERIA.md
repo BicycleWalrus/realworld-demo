@@ -773,6 +773,22 @@ changed.
 
 ---
 
+### US-046 — Download an article as Markdown
+*(REQ-105, REQ-106)*
+
+- **AC-136** — Given the article detail page for an article the viewer
+  can already read, when the download control is activated, then a `.md`
+  file is generated client-side whose content is the article's title as
+  a Markdown H1 followed by its body, with no request made to any
+  backend endpoint to produce it.
+- **AC-137** — Given the same article, when the download control is
+  activated, then the downloaded file's name is `<slug>.md` derived from
+  the article's slug; given the viewer is anonymous or not the article's
+  author, then the control is present and works the same as it does for
+  the author, granting and requiring no additional access.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -881,3 +897,5 @@ changed.
 | REQ-102 | US-044 | AC-133 |
 | REQ-103 | US-045 | AC-134 |
 | REQ-104 | US-045 | AC-135 |
+| REQ-105 | US-046 | AC-136 |
+| REQ-106 | US-046 | AC-137 |
