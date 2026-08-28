@@ -1,4 +1,5 @@
 const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
+const { appendTagList, appendFollowers, appendFavorites } = require("../helper/helpers");
 const { Article, Tag, User, sequelize } = require("../models");
 
 //* Save/Un-save an article for later
@@ -44,6 +45,16 @@ const readLaterList = async (req, res, next) => {
     });
     const articlesById = new Map(articles.map((article) => [article.id, article]));
     const orderedArticles = articleIds.map((id) => articlesById.get(id));
+
+    for (const article of orderedArticles) {
+      const articleTags = await article.getTagList();
+
+      appendTagList(articleTags, article);
+      await appendFollowers(loggedUser, article);
+      await appendFavorites(loggedUser, article);
+
+      delete article.dataValues.Favorites;
+    }
 
     res.json({ articles: orderedArticles, articlesCount: orderedArticles.length });
   } catch (error) {

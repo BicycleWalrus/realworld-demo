@@ -2,13 +2,11 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import toggleReadLater from "../../services/toggleReadLater";
 
-// Whether an article is already on the viewer's read-later list isn't
-// fetched when the article loads (a per-article existence check on every
-// page view would add a request the ticket doesn't require) - the button
-// reflects the toggle response for the current session, starting from
-// "not saved" on a fresh page load.
-function SaveLaterButton({ slug }) {
-  const [isSaved, setIsSaved] = useState(false);
+// isSaved reflects the article's actual saved-for-later state (appended
+// server-side by appendSavedForLater, same pattern as favorited/
+// appendFavorites), not local-only state - so it's already correct on a
+// fresh page load, not just after a click in the current session.
+function SaveLaterButton({ isSaved, handler, slug }) {
   const [loading, setLoading] = useState(false);
   const { headers, isAuth } = useAuth();
 
@@ -18,7 +16,7 @@ function SaveLaterButton({ slug }) {
     setLoading(true);
 
     toggleReadLater({ slug, isSaved, headers })
-      .then((article) => setIsSaved(article.isSaved))
+      .then(handler)
       .catch(console.error)
       .finally(() => setLoading(false));
   };

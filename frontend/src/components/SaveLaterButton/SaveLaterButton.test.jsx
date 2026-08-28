@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { useAuth } from "../../context/AuthContext";
 import toggleReadLater from "../../services/toggleReadLater";
 import SaveLaterButton from "./SaveLaterButton";
@@ -15,18 +15,30 @@ describe("SaveLaterButton", () => {
     useAuth.mockReturnValue({ headers: null, isAuth: false });
     window.alert = vi.fn();
 
-    render(<SaveLaterButton slug="a-slug" />);
+    render(<SaveLaterButton isSaved={false} handler={vi.fn()} slug="a-slug" />);
     fireEvent.click(screen.getByRole("button"));
 
     expect(window.alert).toHaveBeenCalledWith("You need to login first");
     expect(toggleReadLater).not.toHaveBeenCalled();
   });
 
-  it("saves the article and updates its label when clicked", async () => {
+  // isSaved is the article's actual saved state (from the parent's own
+  // data, appended server-side) - correct from the first render, not
+  // just after a click, unlike the button's own local state before.
+  it("reflects the isSaved prop on first render, before any click", () => {
+    useAuth.mockReturnValue({ headers: {}, isAuth: true });
+
+    render(<SaveLaterButton isSaved={true} handler={vi.fn()} slug="a-slug" />);
+
+    expect(screen.getByRole("button", { name: /saved/i })).toBeInTheDocument();
+  });
+
+  it("toggles and hands the server's response to the handler when clicked", async () => {
     useAuth.mockReturnValue({ headers: {}, isAuth: true });
     toggleReadLater.mockResolvedValue({ slug: "a-slug", isSaved: true });
+    const handler = vi.fn();
 
-    render(<SaveLaterButton slug="a-slug" />);
+    render(<SaveLaterButton isSaved={false} handler={handler} slug="a-slug" />);
     expect(screen.getByRole("button", { name: /read later/i })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button"));
@@ -36,6 +48,8 @@ describe("SaveLaterButton", () => {
       isSaved: false,
       headers: {},
     });
-    expect(await screen.findByRole("button", { name: /saved/i })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(handler).toHaveBeenCalledWith({ slug: "a-slug", isSaved: true }),
+    );
   });
 });

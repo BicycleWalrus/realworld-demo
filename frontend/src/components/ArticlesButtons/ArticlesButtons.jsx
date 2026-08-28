@@ -19,6 +19,10 @@ function ArticlesButtons({ article, setArticle }) {
     setArticle((prev) => ({ ...prev, favorited, favoritesCount }));
   };
 
+  const handleSaveLater = ({ isSaved }) => {
+    setArticle((prev) => ({ ...prev, isSaved }));
+  };
+
   return (
     <>
       {loggedUser.username === username ? (
@@ -30,7 +34,7 @@ function ArticlesButtons({ article, setArticle }) {
         </>
       )}
       <DownloadArticleButton {...article} slug={slug} />
-      <SaveLaterButton slug={slug} />
+      <SaveLaterButton isSaved={article?.isSaved} handler={handleSaveLater} slug={slug} />
     </>
   );
 }

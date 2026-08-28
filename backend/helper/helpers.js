@@ -17,6 +17,11 @@ const appendFavorites = async (loggedUser, article) => {
   article.dataValues.favoritesCount = favoritesCount;
 };
 
+const appendSavedForLater = async (loggedUser, article) => {
+  const isSaved = await article.hasSavedByUser(loggedUser ? loggedUser : null);
+  article.dataValues.isSaved = loggedUser ? isSaved : false;
+};
+
 const appendFollowers = async (loggedUser, toAppend) => {
   //
   if (toAppend?.author) {
@@ -61,4 +66,5 @@ module.exports = {
   appendFavorites,
   appendFollowers,
   appendAuthorStats,
+  appendSavedForLater,
 };

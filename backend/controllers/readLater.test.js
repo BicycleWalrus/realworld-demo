@@ -23,6 +23,27 @@ function makeArticle({ id = 1, slug = "a-slug", isSaved = false } = {}) {
   );
 }
 
+// readLaterList runs each returned article through the same
+// appendTagList/appendFollowers/appendFavorites post-processing every
+// other listing endpoint does (so tags/favorited/following aren't
+// missing on this page) - these mocks give a fetched article everything
+// that post-processing calls.
+function makeListedArticle({ id, slug }) {
+  const author = makeInstance(
+    { username: "author" },
+    { hasFollower: vi.fn().mockResolvedValue(false), countFollowers: vi.fn().mockResolvedValue(0) },
+  );
+  return makeInstance(
+    { id, slug, author },
+    {
+      getTagList: vi.fn().mockResolvedValue([]),
+      getAuthor: vi.fn().mockResolvedValue(author),
+      hasUser: vi.fn().mockResolvedValue(false),
+      countUsers: vi.fn().mockResolvedValue(0),
+    },
+  );
+}
+
 const loggedUser = makeInstance({ id: 2, username: "reader" });
 
 beforeEach(() => {
@@ -105,8 +126,8 @@ describe("readLaterList", () => {
 
   test("returns saved articles, most recently saved first", async () => {
     ReadLater.findAll.mockResolvedValue([{ articleId: 2 }, { articleId: 1 }]);
-    const article1 = makeInstance({ id: 1, slug: "first-saved" });
-    const article2 = makeInstance({ id: 2, slug: "second-saved" });
+    const article1 = makeListedArticle({ id: 1, slug: "first-saved" });
+    const article2 = makeListedArticle({ id: 2, slug: "second-saved" });
     // findAll doesn't guarantee row order for an IN-clause, so return them
     // out of order here to prove the controller re-sorts by save order.
     Article.findAll.mockResolvedValue([article1, article2]);
@@ -122,6 +143,25 @@ describe("readLaterList", () => {
       articles: [article2, article1],
       articlesCount: 2,
     });
+  });
+
+  // Each returned article gets the same tagList/favorited/following
+  // fields every other listing endpoint appends - a prior version of
+  // this controller skipped this step, which crashed the read-later
+  // page's rendering for any saved article with tags.
+  test("appends tagList/favorited/following to each returned article", async () => {
+    ReadLater.findAll.mockResolvedValue([{ articleId: 1 }]);
+    const article = makeListedArticle({ id: 1, slug: "a-slug" });
+    Article.findAll.mockResolvedValue([article]);
+    const res = makeRes();
+
+    await readLaterList({ loggedUser }, res, vi.fn());
+
+    expect(article.getTagList).toHaveBeenCalled();
+    expect(article.dataValues.tagList).toEqual([]);
+    expect(article.dataValues.favorited).toBe(false);
+    expect(article.dataValues.favoritesCount).toBe(0);
+    expect(article.author.dataValues.following).toBe(false);
   });
 
   test("empty read-later list -> empty array, not an error", async () => {
