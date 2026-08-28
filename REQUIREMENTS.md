@@ -611,3 +611,25 @@ those layouts render exactly as they did before this requirement — no
 placeholder element and no layout shift. An invalid or unreachable image
 URL results, at most, in a broken image element; it does not prevent
 article creation, update, or rendering from succeeding.
+
+---
+
+### REQ-079 — Comment @mention autocomplete
+While composing a comment, typing `@` followed by one or more characters
+offers matching existing-username suggestions — matched by case-insensitive
+username prefix — that can be selected to complete the mention. MVP scope:
+suggestions are offered only for the mention token currently being typed at
+the end of the textarea's value; a partial mention elsewhere in the body is
+not offered suggestions.
+
+### REQ-080 — Valid @mentions render as profile links
+In a rendered comment body, an `@username` token that corresponds to an
+existing user is displayed as a link to that user's profile at
+`/profile/:username`. This resolution happens at render time (when
+comments are listed), so it applies to both newly created comments and
+comments that already existed before this requirement.
+
+### REQ-081 — Unmatched @mentions render as plain text
+An `@something` token in a rendered comment body that matches no existing
+username is displayed as plain text, not a link. Mention resolution does
+not alter the stored comment body or its REQ-022 validation.

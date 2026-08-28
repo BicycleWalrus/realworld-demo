@@ -107,6 +107,36 @@ describe("CommentList edit control visibility", () => {
   });
 });
 
+// AC-111/AC-112: a comment's `@username` tokens link to that user's
+// profile only when the username appears in the comment's `mentions`
+// (server-resolved, valid usernames) - any other `@word` stays plain text.
+describe("CommentList — @mention rendering", () => {
+  test("a mentioned, valid username links to their profile; an unmatched one stays plain text", async () => {
+    getComments.mockResolvedValue([
+      { ...comment, body: "hey @jane and @ghost", mentions: ["jane"] },
+    ]);
+    useAuth.mockReturnValue({
+      headers: null,
+      isAuth: false,
+      loggedUser: { username: "" },
+    });
+
+    const { container } = renderCommentList();
+
+    await waitFor(() => expect(container.querySelector(".card-text")).not.toBeNull());
+
+    const cardText = container.querySelector(".card-text");
+    expect(cardText.textContent).toBe("hey @jane and @ghost");
+
+    const mentionLink = cardText.querySelector("a.mention");
+    expect(mentionLink).toHaveAttribute("href", "/profile/jane");
+    expect(mentionLink).toHaveTextContent("@jane");
+
+    // "@ghost" matches no user, so it must not be wrapped in a link.
+    expect(cardText.querySelectorAll("a.mention")).toHaveLength(1);
+  });
+});
+
 describe("CommentList editing flow (author)", () => {
   beforeEach(() => {
     useAuth.mockReturnValue({

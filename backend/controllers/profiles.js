@@ -1,6 +1,7 @@
 const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
 const { appendFollowers, appendAuthorStats } = require("../helper/helpers");
 const { User } = require("../models");
+const { Op } = require("sequelize");
 
 //? Profile
 const getProfile = async (req, res, next) => {
@@ -26,13 +27,17 @@ const getProfile = async (req, res, next) => {
 //? User Directory (REQ-074, REQ-075, REQ-076)
 const listProfiles = async (req, res, next) => {
   try {
-    const { limit = 10, offset = 0 } = req.query;
+    const { limit = 10, offset = 0, username } = req.query;
 
     const profiles = await User.findAndCountAll({
       attributes: { exclude: ["email"] },
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["username", "ASC"]],
+      // REQ-079: optional case-insensitive username-prefix filter reused by
+      // comment @mention autocomplete. Additive - omitted/empty leaves this
+      // endpoint's default (unfiltered) directory listing unchanged.
+      ...(username && { where: { username: { [Op.iLike]: `${username}%` } } }),
     });
 
     res.json({ profiles: profiles.rows, profilesCount: profiles.count });

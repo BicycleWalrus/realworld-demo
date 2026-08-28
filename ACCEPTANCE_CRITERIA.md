@@ -574,6 +574,27 @@ changed.
 
 ---
 
+### US-037 — Comment @mentions
+*(REQ-079, REQ-080, REQ-081)*
+
+- **AC-110** — Given a user typing a comment whose textarea value ends
+  with `@` followed by one or more characters, when that value changes,
+  then a list of existing usernames matching that text as a case-
+  insensitive prefix is offered, and selecting one completes the mention
+  in the textarea; given the partial mention is not at the end of the
+  textarea's value, then no suggestions are offered for it (MVP scope).
+- **AC-111** — Given a rendered comment body containing `@username` where
+  `username` matches an existing user, when the comment is displayed
+  (whether newly created or pre-existing), then that token is rendered as
+  a link to `/profile/username`.
+- **AC-112** — Given a rendered comment body containing `@something`
+  where `something` does not match any existing username, when the
+  comment is displayed, then that token is rendered as plain text, not a
+  link, and the comment's stored body and REQ-022 validation are
+  unaffected.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -656,3 +677,6 @@ changed.
 | REQ-076 | US-035 | AC-107 |
 | REQ-077 | US-036 | AC-108 |
 | REQ-078 | US-036 | AC-109 |
+| REQ-079 | US-037 | AC-110 |
+| REQ-080 | US-037 | AC-111 |
+| REQ-081 | US-037 | AC-112 |
