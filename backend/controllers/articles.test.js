@@ -28,7 +28,7 @@ function makeFollowableUser(overrides = {}) {
   );
 }
 
-function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, ...data }) {
+function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, reactions = [], ...data }) {
   return makeInstance(
     {
       id: 1,
@@ -48,6 +48,7 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
       setAuthor: vi.fn(),
       hasUser: vi.fn().mockResolvedValue(hasUser),
       countUsers: vi.fn().mockResolvedValue(favoritesCount),
+      getReactions: vi.fn().mockResolvedValue(reactions),
       save: vi.fn().mockResolvedValue(),
       destroy: vi.fn().mockResolvedValue(),
     },
@@ -307,6 +308,40 @@ describe("singleArticle", () => {
     });
     expect(plain.author.username).toBe("jane");
     expect(plain.createdAt).toBeInstanceOf(Date);
+  });
+
+  // AC-091: every article representation includes per-reaction-type
+  // counts and the viewer's own reaction (or null for anonymous viewers).
+  test("article representation includes reaction counts and the viewer's own reaction", async () => {
+    const author = makeFollowableUser({ id: 1, username: "jane" });
+    const reader = makeFollowableUser({ id: 2, username: "reader" });
+    const article = makeArticle({
+      author,
+      reactions: [
+        { type: "like", userId: 2 },
+        { type: "like", userId: 3 },
+        { type: "insightful", userId: 4 },
+      ],
+    });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: reader, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.reactions).toEqual({ like: 2, insightful: 1, celebrate: 0 });
+    expect(article.dataValues.myReaction).toBe("like");
+  });
+
+  test("anonymous viewer sees accurate counts but myReaction forced null", async () => {
+    const author = makeFollowableUser({ id: 1, username: "jane" });
+    const article = makeArticle({ author, reactions: [{ type: "celebrate", userId: 2 }] });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.reactions).toEqual({ like: 0, insightful: 0, celebrate: 1 });
+    expect(article.dataValues.myReaction).toBe(null);
   });
 
   // AC-050 / AC-054 (article half) and AC-006 (author half): an anonymous

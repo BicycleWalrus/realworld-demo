@@ -404,6 +404,34 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-030 — Multi-reaction articles
+*(REQ-051, REQ-052)*
+
+- **AC-088** — Given an authenticated user with no existing reaction on
+  an article, when they set a reaction of a valid type, then that
+  reaction is recorded and its count increases by one.
+- **AC-089** — Given an authenticated user with an existing reaction on
+  an article, when they set a different valid reaction type, then their
+  previous reaction is replaced (its count decreases, the new type's
+  count increases) rather than adding a second reaction.
+- **AC-090** — Given an authenticated user with an existing reaction on
+  an article, when they remove it, then the reaction is deleted and its
+  count decreases by one.
+- **AC-091** — Given any article representation, when returned, then it
+  includes a count for each fixed reaction type and the requesting
+  user's own current reaction (or none for an anonymous request), while
+  the counts themselves always reflect the true totals.
+- **AC-092** — Given a reaction type outside the fixed set, when
+  submitted, then the request is rejected and no reaction is recorded or
+  changed.
+- **AC-093** — Given an anonymous visitor, when they attempt to set or
+  remove a reaction, then the request is rejected with an authorization
+  error, consistent with the same rule for favoriting.
+- **AC-094** — Given an article's existing favorite count and any user's
+  favorited flag, when a reaction is set, changed, or removed on that
+  article, then neither the favorite count nor any favorited flag
+  changes as a result.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +486,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-051 | US-030 | AC-088–AC-090, AC-092–AC-094 |
+| REQ-052 | US-030 | AC-091 |

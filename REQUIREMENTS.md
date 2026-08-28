@@ -405,3 +405,22 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-051 — Articles support one reaction per user from a fixed set, independent of favoriting
+An authenticated user may set at most one reaction on an article, chosen
+from a fixed set (`like`, `insightful`, `celebrate`); setting a
+different reaction replaces the previous one, and the reaction can also
+be removed entirely. This requires a resolved, authenticated user and
+requires the target article to exist (identified by slug), mirroring
+REQ-025's requirements for favoriting. Reactions are a distinct concept
+from favoriting: they use their own table, and do not read, write, or
+otherwise alter the `Favorites` table, the favorite count, or the
+favorited flag on any article. REQ-025 and REQ-026 are unchanged by this
+requirement.
+
+### REQ-052 — Reaction counts and the viewer's own reaction are always represented
+Any article representation returned by the API includes a count for
+each of the fixed reaction types and the requesting user's own current
+reaction (or none). For anonymous requests, the own-reaction value is
+always absent/null, while the per-type counts still reflect the true
+totals — mirroring REQ-026's equivalent pattern for favorites.

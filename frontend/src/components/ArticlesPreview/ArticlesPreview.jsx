@@ -2,9 +2,20 @@ import { Link } from "react-router-dom";
 import ArticleMeta from "../ArticleMeta";
 import ArticleTags from "../ArticleTags";
 import FavButton from "../FavButton";
+import ReactionBar from "../ReactionBar";
 
 function ArticlesPreview({ articles, loading, updateArticles }) {
   const handleFav = (article) => {
+    const items = [...articles];
+
+    const updatedArticles = items.map((item) =>
+      item.slug === article.slug ? { ...item, ...article } : item,
+    );
+
+    updateArticles((prev) => ({ ...prev, articles: updatedArticles }));
+  };
+
+  const handleReaction = (article) => {
     const items = [...articles];
 
     const updatedArticles = items.map((item) =>
@@ -24,6 +35,12 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
               favoritesCount={article.favoritesCount}
               handler={handleFav}
               right
+              slug={article.slug}
+            />
+            <ReactionBar
+              myReaction={article.myReaction}
+              reactions={article.reactions}
+              handler={handleReaction}
               slug={article.slug}
             />
           </ArticleMeta>

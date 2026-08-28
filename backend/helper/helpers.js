@@ -39,4 +39,28 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+const REACTION_TYPES = ["like", "insightful", "celebrate"];
+
+const appendReactions = async (loggedUser, article) => {
+  const allReactions = await article.getReactions();
+
+  const reactions = {};
+  for (const type of REACTION_TYPES) {
+    reactions[type] = allReactions.filter((reaction) => reaction.type === type).length;
+  }
+  article.dataValues.reactions = reactions;
+
+  const myReaction = loggedUser
+    ? allReactions.find((reaction) => reaction.userId === loggedUser.id)?.type || null
+    : null;
+  article.dataValues.myReaction = myReaction;
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendReactions,
+  REACTION_TYPES,
+};
