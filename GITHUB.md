@@ -215,13 +215,14 @@ gh issue view 12               # read one issue's full body
 gh issue view 12 --web         # open it in the browser instead
 ```
 
-Then include a closing keyword referencing that number in your PR's
-**body** (not the title) — GitHub will automatically close the issue when
-the PR merges into `main`:
+Prefix the PR **title** with `Issue-<number>: ` so it's identifiable at a
+glance in the PR list, and include a closing keyword referencing that
+number in the PR's **body** — GitHub will automatically close the issue
+when the PR merges into `main`:
 
 ```bash
 gh pr create --base main \
-  --title "Add dark mode toggle" \
+  --title "Issue-1: Add dark mode toggle" \
   --body "Implements #1.
 
 - Adds a light/dark theme toggle in the navbar
@@ -232,7 +233,7 @@ Closes #1"
 ```
 
 Any of `close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`,
-`resolves`, `resolved` followed by `#<number>` works.
+`resolves`, `resolved` followed by `#<number>` works in the body.
 
 ### Before opening the PR
 
@@ -314,14 +315,48 @@ the user has explicitly asked for it — do not do so proactively.
 
    The `--body` should summarize the change as bullet points and include a
    test plan, per section 5. If the work closes one of the tracked backlog
-   issues (`ISSUES.md`), include `Closes #<number>` in the body per the
-   "If your PR closes one of the backlog issues" guidance above — check
-   with the user for the issue number if it isn't already clear from the
-   task. Do not use `--draft` unless asked.
+   issues (`ISSUES.md`), prefix the `--title` with `Issue-<number>: ` and
+   include `Closes #<number>` in the body, per the "If your PR closes one
+   of the backlog issues" guidance above — check with the user for the
+   issue number if it isn't already clear from the task. Do not use
+   `--draft` unless asked.
 
 6. **Report the PR URL back to the user.** Do not merge the PR, delete
    branches, or force-push unless the user explicitly asks — those are
    destructive/shared-state actions that require confirmation first.
+
+## Known CLI gotchas in this environment
+
+Two failures showed up repeatedly while working the `ISSUES.md` backlog
+(first hit on the Issue 1 dark-mode PR) that look like they should work
+but don't, in this sandboxed shell:
+
+- **An apostrophe inside a heredoc `-m`/`--body`/`--body-file` string
+  breaks the shell** with `unexpected EOF while looking for matching`.
+  This happens even inside a `<<'EOF'`-quoted heredoc, which should treat
+  the content as fully literal. Workaround: avoid apostrophes/contractions
+  in commit messages and PR bodies ("the ticket's" → "the ticket",
+  "doesn't" → "does not"), or write the message to a file with `Write`
+  first and pass it via `-F`/`--body-file`/`git commit -F <file>` instead
+  of an inline heredoc. This failure doesn't always surface immediately as
+  a syntax error — an apostrophe-containing heredoc passed to `gh pr
+  create --body "$(cat <<'EOF' ... EOF)"` has instead been observed to
+  just hang with no output until it's killed, rather than erroring. Don't
+  wait it out: for any commit message or PR body longer than a short
+  one-liner, write it with `Write` and pass `-F`/`--body-file` up front,
+  rather than reaching for an inline heredoc and only switching after
+  hitting a failure.
+- **`gh pr edit` intermittently fails** with `GraphQL: Projects (classic)
+  is being deprecated ... (repository.pullRequest.projectCards)`, even for
+  an edit that has nothing to do with project boards, and even though the
+  edit did not actually apply. Workaround: use the REST API directly
+  instead, which doesn't hit the Projects-classic GraphQL field:
+
+  ```bash
+  gh api repos/<owner>/<repo>/pulls/<number> -X PATCH -f title="New title"
+  # for a body with special characters, write it to a file first and use --input:
+  gh api repos/<owner>/<repo>/pulls/<number> -X PATCH --input payload.json
+  ```
 
 ## Notes
 
