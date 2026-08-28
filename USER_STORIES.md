@@ -167,3 +167,10 @@ can find content without already knowing the author or tag.
 **US-032** — As a user, I want articles sorted by favorites so I can
 discover the most well-received content.
 *Related requirements: REQ-061, REQ-062, REQ-063, REQ-064*
+
+---
+
+**US-033** — As a comment author, I want to edit my own comment's body
+after posting it, so that I can fix or clarify what I wrote without
+deleting it and losing its place in the thread.
+*Related requirements: REQ-065, REQ-066, REQ-067, REQ-068*

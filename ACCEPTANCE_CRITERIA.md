@@ -488,6 +488,32 @@ changed.
 
 ---
 
+### US-033 — Edit own comment
+*(REQ-065, REQ-066, REQ-067, REQ-068)*
+
+- **AC-096** — Given a comment, when its author submits an edit to the
+  comment's body, then the request succeeds and the comment's body is
+  updated; given a user who is not the comment's author, when they attempt
+  to edit it, then the request is rejected with an authorization (403)
+  error; given no `Authorization` header, when a comment-edit request is
+  made, then it is rejected with an authentication-required (401) error.
+- **AC-097** — Given the comment's author submitting an edit with an empty
+  `body` directly to the API, when submitted, then a field-required error
+  is returned and the comment's stored body is unchanged; given a
+  whitespace-only body entered in the client's edit control, when the
+  author attempts to save it, then the client does not send a request to
+  the server.
+- **AC-098** — Given the comment's author successfully edits a comment's
+  body, when the article's comments are subsequently loaded again (e.g.
+  after the edit, or on a later page view), then the updated body is what
+  is returned and displayed, not the original text.
+- **AC-099** — Given a rendered comment, when it is viewed by its author,
+  then an edit control is shown; when it is viewed by any other
+  authenticated user, or by an anonymous visitor, then no edit control is
+  shown for that comment.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -556,3 +582,7 @@ changed.
 | REQ-062 | US-032 | AC-093 |
 | REQ-063 | US-032 | AC-094 |
 | REQ-064 | US-032 | AC-095 |
+| REQ-065 | US-033 | AC-096 |
+| REQ-066 | US-033 | AC-097 |
+| REQ-067 | US-033 | AC-098 |
+| REQ-068 | US-033 | AC-099 |
