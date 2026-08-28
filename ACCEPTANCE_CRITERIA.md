@@ -404,6 +404,23 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-029 — Dark theme toggle
+*(REQ-049)*
+
+- **AC-080** — Given any page of the application, when the visitor clicks
+  the theme toggle control, then the application switches between light
+  and dark themes immediately, without a page reload.
+- **AC-081** — Given a visitor has chosen a theme, when they reload the
+  page or return in a new visit in the same browser, then the previously
+  chosen theme is applied automatically.
+- **AC-082** — Given a visitor who has never chosen a theme in this
+  browser, when the page loads, then the application applies the dark
+  theme if the browser reports a `prefers-color-scheme: dark` preference,
+  and the light theme otherwise.
+- **AC-083** — Given a visitor has previously chosen a theme, when the
+  page loads, then that stored choice is applied regardless of the
+  browser's current `prefers-color-scheme` preference.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +475,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-083 |
