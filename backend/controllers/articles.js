@@ -11,7 +11,16 @@ const {
   appendTagList,
   slugify,
 } = require("../helper/helpers");
-const { Article, Tag, User } = require("../models");
+const { Article, Tag, User, sequelize } = require("../models");
+
+// Correlated subquery used to sort by favorite count (REQ-049) without
+// touching the `include` array — favoritesCount isn't a plain column, and
+// this avoids the join/group-by complexity (and findAndCountAll's known
+// count unreliability under `group`) that an aggregate-attribute approach
+// would need.
+const favoritesCountOrder = sequelize.literal(
+  '(SELECT COUNT(*) FROM "Favorites" WHERE "Favorites"."articleId" = "Article"."id")',
+);
 
 const includeOptions = [
   { model: Tag, as: "tagList", attributes: ["name"] },
@@ -23,7 +32,7 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, sort, limit = 3, offset = 0 } = req.query;
     const searchOptions = {
       include: [
         {
@@ -41,7 +50,10 @@ const allArticles = async (req, res, next) => {
       ],
       limit: parseInt(limit),
       offset: offset * limit,
-      order: [["createdAt", "DESC"]],
+      order:
+        sort === "top"
+          ? [[favoritesCountOrder, "DESC"], ["createdAt", "DESC"]]
+          : [["createdAt", "DESC"]],
     };
 
     let articles = { rows: [], count: 0 };

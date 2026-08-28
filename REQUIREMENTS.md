@@ -405,3 +405,21 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Top Articles feed tab
+The article listing endpoint (`GET /api/articles`, REQ-013) accepts a
+`sort` query parameter. When `sort=top`, results are ordered by favorite
+count, highest first, tie-broken by newest first among equal counts;
+otherwise (no `sort`, or any other value) ordering is unchanged — newest
+first, as REQ-013 already describes. `sort=top` respects the existing
+pagination page size (REQ-031) and is available to any visitor,
+authenticated or not, the same as the rest of article listing (REQ-001).
+
+On the client, a "Top Articles" tab is available on the Home page
+alongside the existing "Your Feed"/"Global Feed" tabs, selectable by any
+visitor. Selecting it behaves like any other feed tab switch — no stale
+data is shown across tabs. This does not change the default tab selected
+on load (REQ-030): "Top Articles" is never selected automatically, only
+by explicit choice.
