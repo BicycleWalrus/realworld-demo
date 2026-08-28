@@ -11,7 +11,7 @@ const {
   appendTagList,
   slugify,
 } = require("../helper/helpers");
-const { Article, Tag, User } = require("../models");
+const { Article, Tag, User, sequelize } = require("../models");
 
 const includeOptions = [
   { model: Tag, as: "tagList", attributes: ["name"] },
@@ -23,7 +23,7 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, limit = 3, offset = 0, sort } = req.query;
     const searchOptions = {
       include: [
         {
@@ -45,7 +45,57 @@ const allArticles = async (req, res, next) => {
     };
 
     let articles = { rows: [], count: 0 };
-    if (favorited) {
+    if (sort === "trending") {
+      // Favorite-count sort can't be expressed as a plain column ORDER BY
+      // on Article itself, so this fetches every matching article
+      // (favorited-by-user or filtered-by-tag/author, same as the
+      // non-trending paths below, just unpaginated) and sorts by a
+      // favorite count fetched in a single aggregate query - not one
+      // query per article - before paginating. A stable sort preserves
+      // the original newest-first order as the tie-break for equal
+      // counts. Composes with `favorited` rather than silently ignoring
+      // it, consistent with REQ-013's "mutually independent filters".
+      const { limit: _limit, offset: _offset, ...unpaginated } = searchOptions;
+
+      let matching;
+      if (favorited) {
+        const user = await User.findOne({ where: { username: favorited } });
+        matching = await user.getFavorites(unpaginated);
+      } else {
+        matching = await Article.findAll(unpaginated);
+      }
+
+      const articleIds = matching.map((article) => article.id);
+      const favoriteCounts = articleIds.length
+        ? await sequelize.models.Favorites.findAll({
+            attributes: [
+              "articleId",
+              [sequelize.fn("COUNT", sequelize.col("userId")), "favoritesCount"],
+            ],
+            where: { articleId: articleIds },
+            group: ["articleId"],
+            raw: true,
+          })
+        : [];
+      const countByArticleId = new Map(
+        favoriteCounts.map(({ articleId, favoritesCount }) => [
+          articleId,
+          parseInt(favoritesCount, 10),
+        ]),
+      );
+
+      const withCounts = matching.map((article) => ({
+        article,
+        favoritesCount: countByArticleId.get(article.id) || 0,
+      }));
+      withCounts.sort((a, b) => b.favoritesCount - a.favoritesCount);
+
+      const from = offset * limit;
+      articles.count = withCounts.length;
+      articles.rows = withCounts
+        .slice(from, from + parseInt(limit))
+        .map(({ article }) => article);
+    } else if (favorited) {
       const user = await User.findOne({ where: { username: favorited } });
 
       articles.rows = await user.getFavorites(searchOptions);

@@ -586,6 +586,24 @@ changed.
   emoji) at the truncation cutoff, when the snippet is rendered, then
   the character is not split into a broken glyph.
 
+### US-040 — Trending / Top Articles feed tab
+*(REQ-060)*
+
+- **AC-125** — Given the feed tabs, when viewed by any visitor
+  (authenticated or not), then a "Top Articles" tab is available
+  alongside the existing tabs.
+- **AC-126** — Given the "Top Articles" tab is selected, when articles
+  are listed, then they are ordered by favorite count, highest first,
+  with equal counts broken by newest first.
+- **AC-127** — Given the "Top Articles" tab combined with a tag, author,
+  or favorited filter, when articles are listed, then the sort applies
+  to that filtered set rather than being silently ignored.
+- **AC-128** — Given the "Top Articles" tab, when articles are listed,
+  then the same pagination page size as other listings is used.
+- **AC-129** — Given a switch to or from the "Top Articles" tab, when
+  the new tab renders, then no stale data from the previous tab is
+  shown.
+
 ---
 
 ## Traceability Matrix
@@ -651,3 +669,4 @@ changed.
 | REQ-057 | US-037 | AC-111–AC-115 |
 | REQ-058 | US-038 | AC-116–AC-119 |
 | REQ-059 | US-039 | AC-120–AC-124 |
+| REQ-060 | US-040 | AC-125–AC-129 |

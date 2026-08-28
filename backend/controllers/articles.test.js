@@ -7,10 +7,16 @@ const {
 } = require("../helper/customErrors");
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
+const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), create: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Tag, User });
+const Favorites = { findAll: vi.fn() };
+const sequelize = {
+  models: { Favorites },
+  fn: (fnName, col) => ({ fnName, col }),
+  col: (name) => ({ col: name }),
+};
+mockRequire(require.resolve("../models"), { Article, Tag, User, sequelize });
 
 const {
   allArticles,
@@ -25,6 +31,18 @@ function makeFollowableUser(overrides = {}) {
   return makeInstance(
     { id: 1, username: "author", ...overrides },
     { hasFollower: vi.fn().mockResolvedValue(false), countFollowers: vi.fn().mockResolvedValue(0) },
+  );
+}
+
+// Mocks the aggregate favorite-count query the trending sort issues,
+// as raw {articleId, favoritesCount} rows (favoritesCount as a string,
+// matching Postgres's actual COUNT() return type via `raw: true`).
+function mockFavoriteCounts(countsByArticleId) {
+  Favorites.findAll.mockResolvedValue(
+    Object.entries(countsByArticleId).map(([articleId, favoritesCount]) => ({
+      articleId: Number(articleId),
+      favoritesCount: String(favoritesCount),
+    })),
   );
 }
 
@@ -77,10 +95,12 @@ function fakeArticleList(seedRows) {
 beforeEach(() => {
   Article.findOne.mockReset();
   Article.findAndCountAll.mockReset();
+  Article.findAll.mockReset();
   Article.create.mockReset();
   Tag.findByPk.mockReset();
   Tag.create.mockReset();
   User.findOne.mockReset();
+  Favorites.findAll.mockReset();
 });
 
 describe("createArticle", () => {
@@ -514,6 +534,155 @@ describe("allArticles", () => {
     const error = next.mock.calls[0][0];
     expect(error).not.toBeInstanceOf(NotFoundError);
     expect(error).not.toBeInstanceOf(FieldRequiredError);
+  });
+
+  // Trending sort: ordered by favorite count, highest first. Equal counts
+  // keep the newest-first order the underlying query already returns them
+  // in (a stable sort's tie-break), matching how every other listing
+  // orders newest first by default.
+  // AC-126
+  test("sort=trending -> ordered by favorite count, highest first, newest-first tie-break", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({ id: 1, slug: "c-newer-tied", author, favoritesCount: 2, createdAt: new Date("2020-01-03") }),
+      makeArticle({ id: 2, slug: "a-most-favorited", author, favoritesCount: 5, createdAt: new Date("2020-01-01") }),
+      makeArticle({ id: 3, slug: "b-older-tied", author, favoritesCount: 2, createdAt: new Date("2020-01-02") }),
+    ];
+    // findAll is only ever called with `order: [["createdAt", "DESC"]]`
+    // (mirroring the default listing query), so the mock returns rows in
+    // that same newest-first order for the controller to sort further.
+    Article.findAll.mockResolvedValue(
+      [...seed].sort((a, b) => b.dataValues.createdAt - a.dataValues.createdAt),
+    );
+    // Favorite counts come from one aggregate query, not one per article -
+    // mirrors each article's own `favoritesCount` given to makeArticle above.
+    mockFavoriteCounts({ 1: 2, 2: 5, 3: 2 });
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual([
+      "a-most-favorited",
+      "c-newer-tied",
+      "b-older-tied",
+    ]);
+  });
+
+  // The favorite-count aggregate query runs once for the whole matching
+  // set, not once per article - locks in the fix for the N+1 cost this
+  // sort mode would otherwise have on a large, unpaginated article table.
+  // With 5 matching articles and a page size of 3, `countUsers` should
+  // only be called for the 3 articles that make the final page (via the
+  // existing, unrelated appendFavorites post-processing loop every
+  // listing path already goes through) - never once per matching article
+  // during the sort itself.
+  test("sort=trending -> fetches favorite counts in a single aggregate query, not one per article", async () => {
+    const author = makeFollowableUser();
+    const seed = Array.from({ length: 5 }, (_, i) =>
+      makeArticle({ id: i + 1, slug: `article-${i + 1}`, author, favoritesCount: 5 - i }),
+    );
+    Article.findAll.mockResolvedValue(seed);
+    mockFavoriteCounts({ 1: 5, 2: 4, 3: 3, 4: 2, 5: 1 });
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending" } }, makeRes(), vi.fn());
+
+    expect(Favorites.findAll).toHaveBeenCalledTimes(1);
+    const countUsersCalls = seed.filter((article) => article.countUsers.mock.calls.length > 0);
+    expect(countUsersCalls).toHaveLength(3);
+  });
+
+  // Trending composes with tag/author filtering rather than only sorting
+  // an unfiltered set.
+  // AC-127
+  test("sort=trending -> composes with a tag filter instead of sorting the whole table", async () => {
+    const author = makeFollowableUser();
+    const seed = [makeArticle({ id: 1, slug: "tagged", author, favoritesCount: 1, tags: ["node"] })];
+    Article.findAll.mockResolvedValue(seed);
+    mockFavoriteCounts({ 1: 1 });
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending", tag: "node" } }, makeRes(), vi.fn());
+
+    const [{ include }] = Article.findAll.mock.calls[0];
+    expect(include[0]).toMatchObject({ where: { name: "node" } });
+  });
+
+  // Trending composes with `favorited` (sorts that user's favorited
+  // articles by count) rather than silently ignoring `sort` whenever
+  // `favorited` is present.
+  // AC-127
+  test("sort=trending -> composes with favorited instead of silently ignoring the sort", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({ id: 1, slug: "less-favorited", author, favoritesCount: 1 }),
+      makeArticle({ id: 2, slug: "most-favorited", author, favoritesCount: 9 }),
+    ];
+    const favoritedByUser = makeInstance(
+      { username: "jane" },
+      { getFavorites: vi.fn().mockResolvedValue(seed) },
+    );
+    User.findOne.mockResolvedValue(favoritedByUser);
+    mockFavoriteCounts({ 1: 1, 2: 9 });
+
+    const res = makeRes();
+    await allArticles(
+      { loggedUser: undefined, query: { sort: "trending", favorited: "jane" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["most-favorited", "less-favorited"]);
+    expect(favoritedByUser.getFavorites).toHaveBeenCalled();
+  });
+
+  // Trending sort still uses this app's standard page size and reports the
+  // true total count across all matches, same as the default listing.
+  // AC-128
+  test("sort=trending -> paginates at the standard page size with a true total count", async () => {
+    const author = makeFollowableUser();
+    const seed = Array.from({ length: 5 }, (_, i) =>
+      makeArticle({
+        id: i + 1,
+        slug: `article-${i + 1}`,
+        author,
+        favoritesCount: 5 - i,
+        createdAt: new Date(`2020-01-0${i + 1}`),
+      }),
+    );
+    Article.findAll.mockResolvedValue(seed);
+    mockFavoriteCounts({ 1: 5, 2: 4, 3: 3, 4: 2, 5: 1 });
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(5);
+    expect(articles).toHaveLength(3);
+    expect(articles.map((a) => a.slug)).toEqual(["article-1", "article-2", "article-3"]);
+  });
+
+  // Trending sort's second page picks up where the first left off, using
+  // the same offset*limit paging math as the default listing.
+  test("sort=trending -> second page continues from the first", async () => {
+    const author = makeFollowableUser();
+    const seed = Array.from({ length: 5 }, (_, i) =>
+      makeArticle({
+        id: i + 1,
+        slug: `article-${i + 1}`,
+        author,
+        favoritesCount: 5 - i,
+        createdAt: new Date(`2020-01-0${i + 1}`),
+      }),
+    );
+    Article.findAll.mockResolvedValue(seed);
+    mockFavoriteCounts({ 1: 5, 2: 4, 3: 3, 4: 2, 5: 1 });
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "trending", offset: 1 } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["article-4", "article-5"]);
   });
 });
 

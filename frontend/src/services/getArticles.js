@@ -10,6 +10,7 @@ async function getArticles({ headers, limit = 3, location, page = 0, tagName, us
       global: `api/articles?limit=${limit}&&offset=${page}`,
       profile: `api/articles?author=${username}&&limit=${limit}&&offset=${page}`,
       tag: `api/articles?tag=${tagName}&&limit=${limit}&&offset=${page}`,
+      trending: `api/articles?sort=trending&&limit=${limit}&&offset=${page}`,
     };
 
     const { data } = await axios({ url: url[location], headers });
