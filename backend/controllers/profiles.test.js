@@ -60,6 +60,7 @@ describe("getProfile", () => {
 
   // AC: article count, total favorites (summed across articles), and
   // member-since date are attached to the profile response.
+  // AC-107, AC-108
   test("attaches article count, total favorites across all articles, and member-since date", async () => {
     const profile = makeProfile({
       articles: [makeArticle(3), makeArticle(0), makeArticle(2)],
@@ -76,6 +77,7 @@ describe("getProfile", () => {
   });
 
   // Zero-state: an author with no articles yet.
+  // AC-107
   test("author with no articles -> articleCount and totalFavoritesCount are 0", async () => {
     const profile = makeProfile({ articles: [] });
     User.findOne.mockResolvedValue(profile);
@@ -88,6 +90,7 @@ describe("getProfile", () => {
   });
 
   // Stats must be visible to anonymous and authenticated visitors alike.
+  // AC-109
   test("stats are attached the same way for an authenticated viewer", async () => {
     const profile = makeProfile({ articles: [makeArticle(1)] });
     User.findOne.mockResolvedValue(profile);

@@ -1,7 +1,10 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import AuthProvider from "../../context/AuthContext";
+import getProfile from "../../services/getProfile";
 import AuthorInfo from "./AuthorInfo";
+
+vi.mock("../../services/getProfile");
 
 function renderProfile(authorState) {
   return render(
@@ -82,6 +85,7 @@ it("renders all three social links when all are set", () => {
   );
 });
 
+// AC-107, AC-108
 it("renders the author's article count, total favorites, and member-since date", () => {
   renderProfile(
     makeAuthorState({
@@ -96,6 +100,7 @@ it("renders the author's article count, total favorites, and member-since date",
   expect(screen.getByText(/Member since June 15, 2019/)).toBeInTheDocument();
 });
 
+// AC-107
 it("renders a zero-state for an author with no articles or favorites yet", () => {
   renderProfile(
     makeAuthorState({ articleCount: 0, totalFavoritesCount: 0 }),
@@ -103,4 +108,25 @@ it("renders a zero-state for an author with no articles or favorites yet", () =>
 
   expect(screen.getByText(/0 Articles/)).toBeInTheDocument();
   expect(screen.getByText(/0 Favorites/)).toBeInTheDocument();
+});
+
+// AC-110
+it("backfills stats with one fetch when nav-state doesn't include them, without a second one", async () => {
+  const stateWithoutStats = makeAuthorState();
+  delete stateWithoutStats.articleCount;
+  delete stateWithoutStats.totalFavoritesCount;
+  delete stateWithoutStats.memberSince;
+
+  getProfile.mockResolvedValue({
+    ...stateWithoutStats,
+    articleCount: 3,
+    totalFavoritesCount: 7,
+    memberSince: "2021-03-01T00:00:00.000Z",
+  });
+
+  renderProfile(stateWithoutStats);
+
+  expect(await screen.findByText(/3 Articles/)).toBeInTheDocument();
+  expect(screen.getByText(/7 Favorites/)).toBeInTheDocument();
+  expect(getProfile).toHaveBeenCalledTimes(1);
 });
