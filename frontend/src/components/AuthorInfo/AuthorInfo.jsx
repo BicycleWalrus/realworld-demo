@@ -2,6 +2,7 @@ import Markdown from "markdown-to-jsx";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import isSafeUrl from "../../helpers/isSafeUrl";
 import getProfile from "../../services/getProfile";
 import Avatar from "../Avatar";
 import FollowButton from "../FollowButton";
@@ -38,23 +39,23 @@ function AuthorInfo() {
 
       {bio && <Markdown options={{ forceBlock: true }}>{bio}</Markdown>}
 
-      {(website || github || twitter) && (
+      {[website, github, twitter].some(isSafeUrl) && (
         <ul className="social-links">
-          {website && (
+          {isSafeUrl(website) && (
             <li>
               <a href={website} target="_blank" rel="noreferrer">
                 <i className="ion-earth"></i> Website
               </a>
             </li>
           )}
-          {github && (
+          {isSafeUrl(github) && (
             <li>
               <a href={github} target="_blank" rel="noreferrer">
                 <i className="ion-social-github"></i> GitHub
               </a>
             </li>
           )}
-          {twitter && (
+          {isSafeUrl(twitter) && (
             <li>
               <a href={twitter} target="_blank" rel="noreferrer">
                 <i className="ion-social-twitter"></i> Twitter

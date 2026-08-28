@@ -1,4 +1,4 @@
-const { UnauthorizedError } = require("../helper/customErrors");
+const { UnauthorizedError, ValidationError } = require("../helper/customErrors");
 const { bcryptCompare } = require("../helper/bcrypt");
 const { makeInstance, makeRes } = require("../test-utils/fakeModels");
 const { currentUser, updateUser } = require("./user");
@@ -122,5 +122,21 @@ describe("updateUser", () => {
     await updateUser(req, makeRes(), vi.fn());
 
     expect(loggedUser.website).toBe("https://jane.dev");
+  });
+
+  test("a social link with a non-http(s) scheme is rejected and nothing is saved", async () => {
+    const save = vi.fn().mockResolvedValue();
+    const loggedUser = makeInstance({ username: "jane", website: null }, { save });
+    const req = {
+      loggedUser,
+      body: { user: { website: "javascript:alert(1)" } },
+    };
+    const next = vi.fn();
+
+    await updateUser(req, makeRes(), next);
+
+    expect(next).toHaveBeenCalledWith(expect.any(ValidationError));
+    expect(save).not.toHaveBeenCalled();
+    expect(loggedUser.website).toBe(null);
   });
 });
