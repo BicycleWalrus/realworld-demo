@@ -23,6 +23,24 @@ const getProfile = async (req, res, next) => {
   }
 };
 
+//? User Directory (REQ-074, REQ-075, REQ-076)
+const listProfiles = async (req, res, next) => {
+  try {
+    const { limit = 10, offset = 0 } = req.query;
+
+    const profiles = await User.findAndCountAll({
+      attributes: { exclude: ["email"] },
+      limit: parseInt(limit),
+      offset: offset * limit,
+      order: [["username", "ASC"]],
+    });
+
+    res.json({ profiles: profiles.rows, profilesCount: profiles.count });
+  } catch (error) {
+    next(error);
+  }
+};
+
 //* Follow/Unfollow Profile
 const followToggler = async (req, res, next) => {
   try {
@@ -51,4 +69,4 @@ const followToggler = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, followToggler };
+module.exports = { getProfile, listProfiles, followToggler };

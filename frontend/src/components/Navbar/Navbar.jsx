@@ -19,6 +19,7 @@ function Navbar() {
 
         <ul className="nav navbar-nav pull-xs-right">
           <NavItem text="Home" icon="ion-compose" url="/" />
+          <NavItem text="Directory" icon="ion-person-stalker" url="/directory" />
 
           {isAuth && (
             <>
