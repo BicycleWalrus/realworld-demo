@@ -405,3 +405,23 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Multi-tag (AND) article filtering
+The article listing endpoint (`GET /api/articles`, REQ-013) accepts more
+than one `tag` value (via a repeated query parameter, e.g.
+`?tag=a&tag=b`) and, in that case, returns only articles carrying **all**
+of the given tags. A single `tag` value continues to use the same
+mechanism as before (an inner-join filter on the tag include) and behaves
+identically to today; a nonexistent tag among several requested means no
+article can satisfy the filter, since it can't carry a tag that doesn't
+exist. Multi-tag filtering combines with the existing `author`/
+`favorited` filters and respects the existing pagination page size
+(REQ-031).
+
+On the client, a plain click on a tag pill continues to replace the
+active filter with just that one tag, exactly as before. Shift-clicking
+an additional tag pill adds it to (or, if already selected,
+removes it from) a multi-tag filter set instead — a distinct, additive
+interaction that leaves the plain-click behavior unchanged.

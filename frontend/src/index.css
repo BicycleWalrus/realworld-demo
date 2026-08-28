@@ -26,3 +26,9 @@ button:focus {
   justify-content: center;
   flex-direction: column;
 }
+
+.tag-pill.active {
+  background-color: #5cb85c;
+  border-color: #5cb85c;
+  color: #fff;
+}

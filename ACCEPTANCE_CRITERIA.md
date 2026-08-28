@@ -406,6 +406,29 @@ changed.
 
 ---
 
+### US-029 — Multi-tag (AND) filtering
+*(REQ-049)*
+
+- **AC-080** — Given a single `tag` value, when articles are listed, then
+  the same include-based filter mechanism as today is used and results
+  are identical to before multi-tag support existed.
+- **AC-081** — Given two or more `tag` values, when articles are listed,
+  then only articles carrying every one of them are returned; if any
+  requested tag doesn't exist, no article can satisfy the filter (empty
+  result, not an error).
+- **AC-082** — Given a multi-tag filter combined with `author` (or
+  `favorited`), when articles are listed, then only articles satisfying
+  both conditions are returned.
+- **AC-083** — Given no `tag` filter at all, when articles are listed,
+  then behavior is unaffected.
+- **AC-084** — Given the Home page's popular-tags sidebar, when a visitor
+  plain-clicks a tag pill, then it replaces the filter with just that tag
+  (unchanged); when they shift-click another tag pill, then it's added
+  to (or, if already selected, removed from) the active filter set
+  instead, without disturbing plain-click behavior.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +481,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-084 |
