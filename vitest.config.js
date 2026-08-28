@@ -1,26 +1,38 @@
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
-import esbuild from "esbuild";
 
 export default defineConfig({
   plugins: [
     react(),
-    // @vitejs/plugin-react-swc only transforms JSX in .jsx/.tsx files, so
-    // .test.js files that use JSX (a common testing-library convention)
-    // fail Vite's import-analysis parse step. Pre-transform just those
-    // files with esbuild's JSX loader before the rest of the pipeline runs.
+    // @vitejs/plugin-react-swc's own `config()` hook (apply: "serve", which
+    // covers Vitest) unconditionally sets `esbuild: false` to disable
+    // Vite's default esbuild transform in dev/test mode. That hook runs
+    // after ours and its `false` wins the config merge, so a top-level
+    // `esbuild: { include, loader }` here is silently discarded (verified:
+    // resolveConfig(..., "serve").esbuild === false even with that option
+    // set). This tiny `enforce: "post"` plugin re-applies the native
+    // esbuild option after react-swc's hook has run, restoring JSX support
+    // for .test.js files (a testing-library convention not covered by
+    // react-swc, which only transforms .jsx/.tsx/.ts/.mdx) with Vite's
+    // built-in esbuild loader mechanism rather than a manual transform.
     {
-      name: "jsx-in-test-js",
-      enforce: "pre",
-      async transform(code, id) {
-        if (!id.endsWith(".test.js")) return null;
-        const result = await esbuild.transform(code, {
+      name: "restore-esbuild-jsx-for-test-js",
+      enforce: "post",
+      config: () => ({
+        esbuild: {
+          include: /\.test\.js$/,
+          // Vite's esbuild plugin defaults `exclude` to /\.js$/, which
+          // would otherwise still exclude our .test.js files even though
+          // they match `include` above (createFilter requires matching
+          // include AND not matching exclude).
+          exclude: [],
           loader: "jsx",
+          // esbuild's JSX default is the classic transform, which expects
+          // `React` in scope. This project's components use the automatic
+          // runtime (via @vitejs/plugin-react-swc), so match that here too.
           jsx: "automatic",
-          sourcefile: id,
-        });
-        return { code: result.code, map: result.map };
-      },
+        },
+      }),
     },
   ],
   test: {
