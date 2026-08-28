@@ -404,6 +404,37 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-033 — Search articles by keyword
+*(REQ-056, REQ-057)*
+
+- **AC-096** — Given a `keyword` value that appears in an existing article's
+  title, description, or body, when the article list is requested, then that
+  article is included in the results.
+- **AC-097** — Given a `keyword` value that does not appear as a substring in
+  any article's title, description, or body, when the article list is
+  requested, then no articles are returned for that keyword.
+- **AC-098** — Given a `keyword` combined with a `tag`, `author`, and/or
+  `favorited` value, when the article list is requested, then only articles
+  satisfying the keyword match and every other supplied filter are returned.
+- **AC-099** — Given an empty string or a whitespace-only `keyword` value,
+  when the article list is requested, then the request succeeds and returns
+  the same results as if no `keyword` had been supplied, with no error.
+- **AC-100** — Given a `keyword` differing only in letter case from the
+  stored text it matches, when the article list is requested, then the match
+  still succeeds.
+- **AC-101** — Given a `favorited` value naming a nonexistent username
+  combined with any `keyword` value, when the article list is requested,
+  then the request still fails with a server error (500), per REQ-014,
+  regardless of the keyword supplied.
+- **AC-102** — Given the client's search input, when a visitor submits a
+  keyword while a tag/author/favorited filter is already active, then the
+  article list re-fetches with both filters applied and the client displays
+  that both the keyword and the other active filter are currently applied.
+- **AC-103** — Given an active keyword filter shown in the client, when the
+  visitor uses the clear control, then the keyword filter is removed and the
+  list re-fetches using only whatever other filters remain active, without
+  an error.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +489,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-056 | US-033 | AC-096–AC-101 |
+| REQ-057 | US-033 | AC-102, AC-103 |

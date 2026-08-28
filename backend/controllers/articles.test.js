@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const {
   AlreadyTakenError,
   ForbiddenError,
@@ -54,6 +55,21 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
   );
 }
 
+// Mirrors the `Op.or`/`Op.iLike` shape allArticles builds for a keyword
+// filter, so fakes can decide whether a seed row matches without needing a
+// real database.
+function matchesKeywordFilter(where, row) {
+  const keywordConditions = where?.[Op.or];
+  if (!keywordConditions) return true;
+
+  return keywordConditions.some((condition) => {
+    const [field] = Object.keys(condition);
+    const pattern = condition[field][Op.iLike];
+    const needle = pattern.slice(1, -1).toLowerCase();
+    return String(row[field]).toLowerCase().includes(needle);
+  });
+}
+
 // Minimal stand-in for Sequelize's real filtering/pagination, scoped to just
 // the query shapes allArticles/articlesFeed actually construct, so list
 // behavior can be asserted on the returned response body rather than on
@@ -67,6 +83,7 @@ function fakeArticleList(seedRows) {
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+    rows = rows.filter((r) => matchesKeywordFilter(where, r));
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -429,6 +446,163 @@ describe("allArticles", () => {
     const next = vi.fn();
 
     await allArticles({ loggedUser: undefined, query: { favorited: "ghost" } }, makeRes(), next);
+
+    expect(next).toHaveBeenCalled();
+    const error = next.mock.calls[0][0];
+    expect(error).not.toBeInstanceOf(NotFoundError);
+    expect(error).not.toBeInstanceOf(FieldRequiredError);
+  });
+
+  function makeKeywordSeed() {
+    return [
+      makeArticle({
+        id: 1,
+        slug: "dragon-tale",
+        title: "The Dragons of Winter",
+        description: "an adventure",
+        body: "just a story",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "cooking-basics",
+        title: "Cooking Basics",
+        description: "a beginner's guide about dragons",
+        body: "flour, water, salt",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        tags: [],
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "space-travel",
+        title: "Space Travel",
+        description: "beyond the stars",
+        body: "how rockets carrying dragons might work one day",
+        author: makeFollowableUser({ id: 2, username: "bob" }),
+        tags: [],
+        createdAt: new Date("2020-01-03"),
+      }),
+      makeArticle({
+        id: 4,
+        slug: "gardening",
+        title: "Gardening Tips",
+        description: "grow your own vegetables",
+        body: "soil, sun, water",
+        author: makeFollowableUser({ id: 2, username: "bob" }),
+        tags: [],
+        createdAt: new Date("2020-01-04"),
+      }),
+    ];
+  }
+
+  // AC-096: a keyword matching title, description, or body (individually)
+  // includes that article in the results.
+  test("keyword filter -> matches across title, description, and body", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeKeywordSeed()));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { keyword: "dragons" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug).sort()).toEqual(["cooking-basics", "dragon-tale", "space-travel"]);
+  });
+
+  // AC-097: a keyword matching nothing returns an empty list, not an error.
+  test("keyword filter with no matches -> empty list, no error", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeKeywordSeed()));
+    const res = makeRes();
+    const next = vi.fn();
+
+    await allArticles({ loggedUser: undefined, query: { keyword: "unicorns" } }, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articles).toEqual([]);
+    expect(articlesCount).toBe(0);
+  });
+
+  // AC-098: keyword composes with the existing tag/author filters -
+  // only articles satisfying every supplied filter are returned.
+  test("keyword combined with tag and author filters -> intersection of all filters", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeKeywordSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { keyword: "dragons", author: "jane" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug).sort()).toEqual(["cooking-basics", "dragon-tale"]);
+  });
+
+  // AC-098 (favorited branch): keyword composes with the favorited filter
+  // via the same shared searchOptions object.
+  test("keyword combined with favorited filter -> only that user's favorites matching the keyword", async () => {
+    const seed = makeKeywordSeed();
+    const fan = makeInstance(
+      { id: 5, username: "fan" },
+      {
+        getFavorites: vi
+          .fn()
+          .mockImplementation(({ where } = {}) => Promise.resolve(seed.filter((r) => matchesKeywordFilter(where, r)))),
+        countFavorites: vi.fn().mockResolvedValue(seed.length),
+      },
+    );
+    User.findOne.mockResolvedValue(fan);
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { favorited: "fan", keyword: "dragons" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug).sort()).toEqual(["cooking-basics", "dragon-tale", "space-travel"]);
+  });
+
+  // AC-099: an empty or whitespace-only keyword is treated as though no
+  // keyword had been supplied at all.
+  test.each([[""], ["   "]])("keyword %j -> same result as no keyword", async (keyword) => {
+    const seed = makeKeywordSeed();
+
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const withKeyword = makeRes();
+    await allArticles({ loggedUser: undefined, query: { keyword } }, withKeyword, vi.fn());
+
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const withoutKeyword = makeRes();
+    await allArticles({ loggedUser: undefined, query: {} }, withoutKeyword, vi.fn());
+
+    const withKeywordBody = withKeyword.json.mock.calls[0][0];
+    const withoutKeywordBody = withoutKeyword.json.mock.calls[0][0];
+    expect(withKeywordBody.articlesCount).toBe(withoutKeywordBody.articlesCount);
+    expect(withKeywordBody.articles.map((a) => a.slug)).toEqual(withoutKeywordBody.articles.map((a) => a.slug));
+  });
+
+  // AC-100: keyword matching differs only by letter case still succeeds.
+  test("keyword matching differs only in case -> still matches", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeKeywordSeed()));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { keyword: "DrAgOnS" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug).sort()).toEqual(["cooking-basics", "dragon-tale", "space-travel"]);
+  });
+
+  // AC-101: a `favorited` filter naming a nonexistent user still fails with
+  // a server error when a keyword is also supplied.
+  test("favorited filter for a nonexistent user with a keyword -> still a generic error", async () => {
+    User.findOne.mockResolvedValue(null);
+    const next = vi.fn();
+
+    await allArticles(
+      { loggedUser: undefined, query: { favorited: "ghost", keyword: "dragons" } },
+      makeRes(),
+      next,
+    );
 
     expect(next).toHaveBeenCalled();
     const error = next.mock.calls[0][0];

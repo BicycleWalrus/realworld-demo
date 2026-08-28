@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const {
   AlreadyTakenError,
   FieldRequiredError,
@@ -23,7 +24,8 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, keyword, limit = 3, offset = 0 } = req.query;
+    const trimmedKeyword = keyword?.trim();
     const searchOptions = {
       include: [
         {
@@ -42,6 +44,15 @@ const allArticles = async (req, res, next) => {
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
+      ...(trimmedKeyword && {
+        where: {
+          [Op.or]: [
+            { title: { [Op.iLike]: `%${trimmedKeyword}%` } },
+            { description: { [Op.iLike]: `%${trimmedKeyword}%` } },
+            { body: { [Op.iLike]: `%${trimmedKeyword}%` } },
+          ],
+        },
+      }),
     };
 
     let articles = { rows: [], count: 0 };

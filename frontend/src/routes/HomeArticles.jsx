@@ -4,9 +4,10 @@ import { useFeedContext } from "../context/FeedContext";
 import useArticleList from "../hooks/useArticles";
 
 function HomeArticles() {
-  const { tabName, tagName } = useFeedContext();
+  const { keyword, tabName, tagName } = useFeedContext();
 
   const { articles, articlesCount, loading, setArticlesData } = useArticleList({
+    keyword,
     location: tabName,
     tabName,
     tagName,
@@ -26,6 +27,7 @@ function HomeArticles() {
 
       <ArticlesPagination
         articlesCount={articlesCount}
+        keyword={keyword}
         location={tabName}
         tagName={tagName}
         updateArticles={setArticlesData}
