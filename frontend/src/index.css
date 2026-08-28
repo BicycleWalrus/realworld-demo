@@ -70,6 +70,16 @@ button:focus {
   padding: 0;
 }
 
+.recently-viewed {
+  margin-top: 1rem;
+}
+
+.recently-viewed ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}
+
 .mention-suggestions {
   border: 1px solid #ddd;
   border-top: none;

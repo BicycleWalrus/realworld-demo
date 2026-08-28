@@ -552,6 +552,22 @@ changed.
   submitted, then its body validation (non-empty body) is unaffected by
   the presence of any `@mention` pattern.
 
+### US-038 — Recently viewed articles widget
+*(REQ-058)*
+
+- **AC-116** — Given a visitor opens an article's detail page, when the
+  page loads, then that article is recorded as their most recently
+  viewed.
+- **AC-117** — Given a visitor with at least one recently-viewed
+  article, when they visit the home page, then a list of their
+  recently-viewed articles is displayed, most recent first, linking to
+  each article.
+- **AC-118** — Given a visitor views an already-recorded article again,
+  when the list is next displayed, then that article moves to the front
+  rather than appearing twice.
+- **AC-119** — Given a visitor with no recently-viewed articles, when
+  they visit the home page, then no recently-viewed widget is displayed.
+
 ---
 
 ## Traceability Matrix
@@ -615,3 +631,4 @@ changed.
 | REQ-055 | US-035 | AC-102–AC-106 |
 | REQ-056 | US-036 | AC-107–AC-110 |
 | REQ-057 | US-037 | AC-111–AC-115 |
+| REQ-058 | US-038 | AC-116–AC-119 |

@@ -202,3 +202,10 @@ platform before reading their work.
 by username, so that the comment clearly references them and readers can
 jump to their profile.
 *Related requirements: REQ-057*
+
+---
+
+**US-038** — As a user, I want to see a list of articles I've recently
+viewed, so that I can easily get back to something I was reading without
+searching for it again.
+*Related requirements: REQ-058*

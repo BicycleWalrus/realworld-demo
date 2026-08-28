@@ -1,7 +1,12 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import AuthProvider from "../../context/AuthContext";
+import { getRecentlyViewed } from "../../helpers/recentlyViewed";
 import Article from "./Article";
+
+beforeEach(() => {
+  localStorage.clear();
+});
 
 function renderArticle(articleState) {
   return render(
@@ -59,4 +64,13 @@ it("renders no table of contents when the article has no headings", () => {
   expect(
     screen.queryByRole("navigation", { name: "Table of contents" }),
   ).not.toBeInTheDocument();
+});
+
+// AC-116
+it("records the article as recently viewed when opened", () => {
+  renderArticle(makeArticleState());
+
+  expect(getRecentlyViewed()).toEqual([
+    { slug: "a-slug", title: "A title" },
+  ]);
 });
