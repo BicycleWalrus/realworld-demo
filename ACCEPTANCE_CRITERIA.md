@@ -514,6 +514,25 @@ changed.
   cleared; given the field is instead omitted from the submission, then
   the previously stored value is left unchanged.
 
+### US-036 — Author profile stats
+*(REQ-056)*
+
+- **AC-107** — Given a profile page, when rendered, then it displays the
+  author's total published article count and the total favorite count
+  summed across all their articles, including zero for an author with
+  none.
+- **AC-108** — Given a profile page, when rendered, then it displays a
+  member-since date, formatted consistently with existing date displays
+  elsewhere in the app.
+- **AC-109** — Given an anonymous (unauthenticated) visitor, when they
+  view a profile page, then the article count, favorites count, and
+  member-since date are all displayed.
+- **AC-110** — Given a profile reached via an in-app link whose
+  navigation state doesn't include the stats fields, when the page
+  loads, then exactly one additional fetch populates them, without
+  changing the existing "skip refetch when bio matches" behavior for
+  the rest of the profile data.
+
 ---
 
 ## Traceability Matrix
@@ -575,3 +594,4 @@ changed.
 | REQ-053 | US-033 | AC-093–AC-097 |
 | REQ-054 | US-034 | AC-098–AC-101 |
 | REQ-055 | US-035 | AC-102–AC-106 |
+| REQ-056 | US-036 | AC-107–AC-110 |

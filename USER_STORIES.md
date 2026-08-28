@@ -187,3 +187,11 @@ that I can quickly jump to the section I'm interested in.
 presences on my profile, so that readers who like my writing can find me
 elsewhere.
 *Related requirements: REQ-055*
+
+---
+
+**US-036** — As a visitor, I want to see an author's article count,
+total favorites received, and member-since date on their profile, so
+that I can gauge who they are and how established they are on the
+platform before reading their work.
+*Related requirements: REQ-056*

@@ -2,6 +2,7 @@ import Markdown from "markdown-to-jsx";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import dateFormatter from "../../helpers/dateFormatter";
 import isSafeUrl from "../../helpers/isSafeUrl";
 import getProfile from "../../services/getProfile";
 import Avatar from "../Avatar";
@@ -10,7 +11,18 @@ import FollowButton from "../FollowButton";
 function AuthorInfo() {
   const { state } = useLocation();
   const [
-    { bio, followersCount, following, github, image, twitter, website },
+    {
+      articleCount,
+      bio,
+      followersCount,
+      following,
+      github,
+      image,
+      memberSince,
+      totalFavoritesCount,
+      twitter,
+      website,
+    },
     setAuthor,
   ] = useState(state || {});
   const { headers, loggedUser } = useAuth();
@@ -28,6 +40,25 @@ function AuthorInfo() {
       });
   }, [username, headers, state, navigate]);
 
+  // Independent of the fetch-or-skip decision above (which stays exactly
+  // as REQ-043 documents it): nav-state never carries the author-stats
+  // fields, so when that shortcut is taken, backfill just the stats with
+  // one additional fetch rather than changing the shortcut's own condition.
+  useEffect(() => {
+    if (!state || state.bio !== bio || articleCount !== undefined) return;
+
+    getProfile({ headers, username })
+      .then(({ articleCount, memberSince, totalFavoritesCount }) =>
+        setAuthor((prev) => ({
+          ...prev,
+          articleCount,
+          memberSince,
+          totalFavoritesCount,
+        })),
+      )
+      .catch(console.error);
+  }, [username, headers, state, bio, articleCount]);
+
   const followHandler = ({ followersCount, following }) => {
     setAuthor((prev) => ({ ...prev, followersCount, following }));
   };
@@ -36,6 +67,13 @@ function AuthorInfo() {
     <div className="col-xs-12 col-md-10 offset-md-1">
       <Avatar alt={username} className="user-img" src={image} />
       <h4>{username}</h4>
+
+      {memberSince && (
+        <p className="author-stats">
+          {articleCount} Articles · {totalFavoritesCount} Favorites · Member
+          since {dateFormatter(memberSince)}
+        </p>
+      )}
 
       {bio && <Markdown options={{ forceBlock: true }}>{bio}</Markdown>}
 
