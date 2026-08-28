@@ -404,6 +404,36 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-032 — Browse and follow from the user directory
+*(REQ-052, REQ-053, REQ-054, REQ-055)*
+
+- **AC-089** — Given no `Authorization` header, when the user directory
+  list is requested, then the request succeeds and each returned profile
+  has `following: false` while its follower count reflects the true
+  total.
+- **AC-090** — Given an authenticated caller who follows some but not all
+  listed users, when the user directory list is requested, then each
+  returned profile's `following` flag accurately reflects whether that
+  caller currently follows it.
+- **AC-091** — Given no explicit page size is provided, when the user
+  directory list is requested, then results are limited to 12 items per
+  page, ordered by username in ascending order.
+- **AC-092** — Given the directory page, when it renders, then each user
+  is shown as a card with avatar (or the default placeholder image per
+  REQ-033 when unset), username, and bio snippet, and clicking a card
+  navigates to that user's full profile page.
+- **AC-093** — Given an authenticated visitor on the directory page, when
+  they activate a card's follow control for a user they don't already
+  follow, then that card's control updates to reflect the followed state
+  and incremented follower count without navigating away from the
+  directory page.
+- **AC-094** — Given an unauthenticated visitor on the directory page,
+  when they view a card's follow control, then it displays only the
+  follower count and does not perform a follow action if activated.
+- **AC-095** — Given the main navigation header, when inspected by an
+  authenticated or unauthenticated visitor, then it includes a link to
+  the directory page.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +488,7 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-052 | US-032 | AC-089–AC-091 |
+| REQ-053 | US-032 | AC-092 |
+| REQ-054 | US-032 | AC-093, AC-094 |
+| REQ-055 | US-032 | AC-095 |

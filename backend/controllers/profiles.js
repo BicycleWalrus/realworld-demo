@@ -2,6 +2,29 @@ const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
 const { appendFollowers } = require("../helper/helpers");
 const { User } = require("../models");
 
+//? Profile Directory - paginated list of all profiles
+const listProfiles = async (req, res, next) => {
+  try {
+    const { loggedUser } = req;
+    const { limit = 12, offset = 0 } = req.query;
+
+    const profiles = await User.findAndCountAll({
+      attributes: { exclude: "email" },
+      limit: parseInt(limit),
+      offset: offset * limit,
+      order: [["username", "ASC"]],
+    });
+
+    for (let profile of profiles.rows) {
+      await appendFollowers(loggedUser, profile);
+    }
+
+    res.json({ profiles: profiles.rows, profilesCount: profiles.count });
+  } catch (error) {
+    next(error);
+  }
+};
+
 //? Profile
 const getProfile = async (req, res, next) => {
   try {
@@ -50,4 +73,4 @@ const followToggler = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, followToggler };
+module.exports = { listProfiles, getProfile, followToggler };

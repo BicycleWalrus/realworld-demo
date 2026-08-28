@@ -1,14 +1,14 @@
 const { NotFoundError, UnauthorizedError } = require("../helper/customErrors");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn() };
+const User = { findOne: vi.fn(), findAndCountAll: vi.fn() };
 mockRequire(require.resolve("../models"), { User });
 
-const { getProfile, followToggler } = require("./profiles");
+const { listProfiles, getProfile, followToggler } = require("./profiles");
 
-function makeProfile({ hasFollower = false, followersCount = 0 } = {}) {
+function makeProfile({ username = "author", hasFollower = false, followersCount = 0 } = {}) {
   return makeInstance(
-    { id: 1, username: "author" },
+    { id: 1, username },
     {
       hasFollower: vi.fn().mockResolvedValue(hasFollower),
       countFollowers: vi.fn().mockResolvedValue(followersCount),
@@ -18,10 +18,77 @@ function makeProfile({ hasFollower = false, followersCount = 0 } = {}) {
   );
 }
 
+// Mirrors the real `findAndCountAll` shape used by allArticles' equivalent
+// tests: sorts by username, then applies limit/offset, returning the true
+// total count alongside the sliced page.
+function fakeProfileList(seedRows) {
+  return ({ limit, offset } = {}) => {
+    let rows = [...seedRows].sort((a, b) => a.username.localeCompare(b.username));
+    const count = rows.length;
+    rows = rows.slice(offset, offset + limit);
+    return Promise.resolve({ rows, count });
+  };
+}
+
 const loggedUser = makeInstance({ id: 2, username: "reader" });
 
 beforeEach(() => {
   User.findOne.mockReset();
+  User.findAndCountAll.mockReset();
+});
+
+describe("listProfiles", () => {
+  // AC-089: an anonymous caller sees following: false on every profile,
+  // while each profile's follower count still reflects the true total.
+  test("no loggedUser -> following forced false on every profile, followersCount true totals", async () => {
+    const seed = [
+      makeProfile({ username: "amy", hasFollower: true, followersCount: 2 }),
+      makeProfile({ username: "bob", hasFollower: true, followersCount: 5 }),
+    ];
+    User.findAndCountAll.mockImplementation(fakeProfileList(seed));
+    const res = makeRes();
+
+    await listProfiles({ loggedUser: undefined, query: {} }, res, vi.fn());
+
+    const { profiles } = res.json.mock.calls[0][0];
+    expect(profiles.every((p) => p.dataValues.following === false)).toBe(true);
+    expect(profiles.map((p) => p.dataValues.followersCount)).toEqual([2, 5]);
+  });
+
+  // AC-090: an authenticated caller's following flag is accurate per
+  // profile, not forced to a single value across the whole list.
+  test("loggedUser -> following flag reflects each profile independently", async () => {
+    const seed = [
+      makeProfile({ username: "amy", hasFollower: true, followersCount: 2 }),
+      makeProfile({ username: "bob", hasFollower: false, followersCount: 5 }),
+    ];
+    User.findAndCountAll.mockImplementation(fakeProfileList(seed));
+    const res = makeRes();
+
+    await listProfiles({ loggedUser, query: {} }, res, vi.fn());
+
+    const { profiles } = res.json.mock.calls[0][0];
+    expect(profiles.map((p) => p.username)).toEqual(["amy", "bob"]);
+    expect(profiles.map((p) => p.dataValues.following)).toEqual([true, false]);
+  });
+
+  // AC-091: with no explicit limit/offset, results are capped at 12 per
+  // page, ordered by username ascending, while the count reflects every
+  // matching profile.
+  test("default pagination -> 12 per page, ordered by username, true total count", async () => {
+    const seed = Array.from({ length: 13 }, (_, i) =>
+      makeProfile({ username: `user${String(i).padStart(2, "0")}` }),
+    );
+    User.findAndCountAll.mockImplementation(fakeProfileList(seed));
+    const res = makeRes();
+
+    await listProfiles({ loggedUser: undefined, query: {} }, res, vi.fn());
+
+    const { profiles, profilesCount } = res.json.mock.calls[0][0];
+    expect(profilesCount).toBe(13);
+    expect(profiles).toHaveLength(12);
+    expect(profiles[0].username).toBe("user00");
+  });
 });
 
 describe("getProfile", () => {
