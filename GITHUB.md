@@ -325,6 +325,32 @@ the user has explicitly asked for it — do not do so proactively.
    branches, or force-push unless the user explicitly asks — those are
    destructive/shared-state actions that require confirmation first.
 
+## Known CLI gotchas in this environment
+
+Two failures showed up repeatedly while working the `ISSUES.md` backlog
+(first hit on the Issue 1 dark-mode PR) that look like they should work
+but don't, in this sandboxed shell:
+
+- **An apostrophe inside a heredoc `-m`/`--body`/`--body-file` string
+  breaks the shell** with `unexpected EOF while looking for matching`.
+  This happens even inside a `<<'EOF'`-quoted heredoc, which should treat
+  the content as fully literal. Workaround: avoid apostrophes/contractions
+  in commit messages and PR bodies ("the ticket's" → "the ticket",
+  "doesn't" → "does not"), or write the message to a file with `Write`
+  first and pass it via `-F`/`--body-file`/`git commit -F <file>` instead
+  of an inline heredoc.
+- **`gh pr edit` intermittently fails** with `GraphQL: Projects (classic)
+  is being deprecated ... (repository.pullRequest.projectCards)`, even for
+  an edit that has nothing to do with project boards, and even though the
+  edit did not actually apply. Workaround: use the REST API directly
+  instead, which doesn't hit the Projects-classic GraphQL field:
+
+  ```bash
+  gh api repos/<owner>/<repo>/pulls/<number> -X PATCH -f title="New title"
+  # for a body with special characters, write it to a file first and use --input:
+  gh api repos/<owner>/<repo>/pulls/<number> -X PATCH --input payload.json
+  ```
+
 ## Notes
 
 - Classic tokens are being phased in favor of fine-grained PATs by GitHub,
