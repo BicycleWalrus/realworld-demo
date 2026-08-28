@@ -113,6 +113,17 @@ landed on `main` in the meantime and took your numbers (check
 - Append it under the `## Amendments` heading at the end of
   `REQUIREMENTS.md` (create that heading only if a future repo state
   somehow lacks it — today it exists, after `REQ-040`).
+- **Get the insertion point right on the first try.** A pre-commit guard
+  in this repo blocks any edit that would remove or alter an existing
+  `REQ-###` entry's text — including moving it to fix ordering after the
+  fact, even within the same uncommitted change. Before inserting, run
+  `grep -n '^### REQ-' REQUIREMENTS.md | tail -1` to find the true last
+  entry, and anchor your `Edit`'s `old_string` on text *after* that
+  entry's full body ends (not on that entry's heading, which would insert
+  before it instead of after). If you land an entry out of numeric order
+  by mistake, do not try to fix it with a follow-up edit — the guard will
+  reject it as "removing" the entry; leave the ordering as-is and flag it
+  in your message back to the user instead.
 
 ## Step 5 — Draft the US entry
 

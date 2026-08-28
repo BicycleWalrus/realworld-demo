@@ -35,13 +35,16 @@ lsof -ti:2224 -sTCP:LISTEN | xargs -r kill   # frontend (Vite)
 lsof -ti:3001 -sTCP:LISTEN | xargs -r kill   # backend (Express)
 ```
 
-Then start both, backgrounded, and poll rather than sleeping a fixed time:
+Then start both, backgrounded, and poll rather than sleeping a fixed time.
+**Gotcha:** `timeout` is a GNU coreutils command and is not installed by
+default on macOS/BSD — `timeout 30 ...` fails with `command not found`
+there. Use a manual retry loop instead, which works on both:
 
 ```bash
 (npm run dev -w backend > /tmp/backend-dev.log 2>&1 &)
 (npm run dev -w frontend > /tmp/frontend-dev.log 2>&1 &)
-timeout 30 bash -c 'until curl -sf http://localhost:3001/api/articles >/dev/null; do sleep 1; done'
-timeout 30 bash -c 'until curl -sf http://localhost:2224/ >/dev/null; do sleep 1; done'
+for i in $(seq 1 30); do curl -sf http://localhost:3001/api/articles >/dev/null && break; sleep 1; done
+for i in $(seq 1 30); do curl -sf http://localhost:2224/ >/dev/null && break; sleep 1; done
 ```
 
 Check `/tmp/backend-dev.log` if the backend curl never succeeds — the most
