@@ -405,3 +405,27 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — Theme toggle with persisted preference and OS-preference default
+A control in the navbar, present on every page for both authenticated and
+unauthenticated visitors, toggles the application's visual theme between
+light and dark. On initial load, the theme is selected in the following
+priority order: (1) a previously stored preference in `localStorage` under
+the `theme` key, if its value is exactly `"light"` or `"dark"`; (2) if no
+valid stored preference exists, the OS/browser's reported color-scheme
+preference via `window.matchMedia('(prefers-color-scheme: dark)')` — dark
+if it matches; (3) light, if neither of the above yields a preference.
+Whenever the theme changes (via the toggle), the new value is written back
+to `localStorage` under the `theme` key, so it is used on subsequent page
+loads and visits. The active theme is applied by setting or removing a
+`data-theme="dark"` attribute on the document's root element, which
+switches CSS custom-property values consumed by global styles (navbar,
+buttons, forms, cards, list groups, tabs, links, borders, and muted text)
+across all pages. No separate stylesheet, navigation, or page reload is
+involved, so the switch takes effect immediately.
+
+**Boundary:** a stored `theme` value other than exactly `"light"` or
+`"dark"` (including its absence) is treated as if no preference were
+stored, falling through to the OS-preference check. Similarly, if
+`window.matchMedia` is unavailable in the browser, the OS-preference check
+is skipped and the theme defaults to light.

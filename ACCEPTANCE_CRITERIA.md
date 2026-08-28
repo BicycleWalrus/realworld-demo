@@ -404,6 +404,28 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-029 — Toggle between light and dark themes
+*(REQ-049)*
+
+- **AC-080** — Given no stored `theme` preference in `localStorage` and the
+  OS/browser reports a dark color-scheme preference (`matchMedia`
+  matches), when the app loads, then the theme defaults to dark.
+- **AC-081** — Given a stored `theme` value of `"dark"` in `localStorage`,
+  when the app loads, then dark theme is applied regardless of the current
+  OS/browser color-scheme preference.
+- **AC-082** — Given no stored `theme` preference and either `matchMedia`
+  reports no dark preference or `window.matchMedia` is unavailable, when
+  the app loads, then the theme defaults to light.
+- **AC-083** — Given the theme toggle control in the navbar, when clicked,
+  then the theme switches immediately between light and dark with no page
+  reload or navigation, and the new preference is saved to `localStorage`
+  so it is applied again on the next page load or visit.
+- **AC-084** — Given dark theme is active, when any page is viewed
+  (navbar, buttons, forms, cards, list items, tabs, links, borders, muted
+  text), then those elements render using the dark-theme CSS-variable
+  values rather than the light-theme defaults, keeping text legible
+  against its background.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +480,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-084 |
