@@ -702,6 +702,39 @@ changed.
 
 ---
 
+### US-043 — Notifications for follows, comments, and favorites
+*(REQ-097, REQ-098, REQ-099, REQ-100)*
+
+- **AC-128** — Given two different users, when one follows the other,
+  comments (top-level or reply) on an article the other authored, or
+  favorites an article the other authored, then a notification is created
+  for the article's author or the followed user, of type `follow`,
+  `comment`, or `favorite` respectively, carrying the acting user and, for
+  comment/favorite, the article (and, for comment, the comment); given a
+  user performs one of these actions against their own account or their
+  own article, then no notification is created; given a user unfollows,
+  unfavorites, or deletes the comment, then any notification already
+  created by the original action is not removed; given the notification
+  write itself fails, then the underlying follow/comment/favorite action
+  still succeeds unaffected.
+- **AC-129** — Given an authenticated user with existing notifications,
+  when they retrieve their notifications, then the response contains
+  those notifications ordered newest first, each carrying its type, the
+  actor, and, where applicable, the related article and/or comment; given
+  no authenticated user, then the request is rejected with an
+  authentication-required error.
+- **AC-130** — Given an authenticated user with unread notifications, when
+  they mark a single notification read by id, then only that notification
+  is marked read; when they mark all notifications read, then every one
+  of their notifications is marked read; either request also returns the
+  user's current unread count.
+- **AC-131** — Given two different authenticated users, when one retrieves
+  their notifications or marks one read by id, then the request is scoped
+  to that user's own notifications only - it cannot retrieve or mark read
+  a notification belonging to the other user.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -802,3 +835,7 @@ changed.
 | REQ-094 | US-042 | AC-125 |
 | REQ-095 | US-042 | AC-126 |
 | REQ-096 | US-042 | AC-127 |
+| REQ-097 | US-043 | AC-128 |
+| REQ-098 | US-043 | AC-129 |
+| REQ-099 | US-043 | AC-130 |
+| REQ-100 | US-043 | AC-131 |

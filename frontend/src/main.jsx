@@ -15,6 +15,7 @@ import Home from "./routes/Home";
 import HomeArticles from "./routes/HomeArticles";
 import Login from "./routes/Login";
 import NotFound from "./routes/NotFound";
+import Notifications from "./routes/Notifications";
 import Profile from "./routes/Profile/Profile";
 import ProfileArticles from "./routes/Profile/ProfileArticles";
 import ProfileFavArticles from "./routes/Profile/ProfileFavArticles";
@@ -39,6 +40,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="directory" element={<Directory />} />
 
               <Route path="read-later" element={<ReadLater />} />
+
+              <Route path="notifications" element={<Notifications />} />
 
               <Route path="settings" element={<Settings />} />
 

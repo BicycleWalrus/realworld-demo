@@ -9,7 +9,8 @@ const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels
 const Article = { findOne: vi.fn() };
 const Comment = { create: vi.fn(), findByPk: vi.fn() };
 const User = { findAll: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Comment, User });
+const Notification = { create: vi.fn() };
+mockRequire(require.resolve("../models"), { Article, Comment, User, Notification });
 
 const { allComments, createComment, deleteComment, updateComment } = require("./comments");
 
@@ -32,6 +33,7 @@ beforeEach(() => {
   Comment.create.mockReset();
   Comment.findByPk.mockReset();
   User.findAll.mockReset();
+  Notification.create.mockReset();
 });
 
 describe("allComments", () => {
@@ -262,6 +264,100 @@ describe("createComment", () => {
 
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
     expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  // AC-128/REQ-097: commenting on someone else's article notifies that
+  // article's author, carrying the acting user, the article, and the
+  // comment.
+  test("top-level comment on another user's article -> Notification.create called with type comment", async () => {
+    const article = makeInstance({ id: 10, userId: 99 });
+    Article.findOne.mockResolvedValue(article);
+    Comment.create.mockResolvedValue(makeInstance({ id: 42, body: "hi" }));
+    const loggedUser = makeFollowableUser({ id: 2 });
+    const res = makeRes();
+
+    await createComment(
+      { loggedUser, body: { comment: { body: "hi" } }, params: { slug: "a" } },
+      res,
+      vi.fn(),
+    );
+
+    expect(Notification.create).toHaveBeenCalledWith({
+      recipientId: 99,
+      actorId: 2,
+      type: "comment",
+      articleId: 10,
+      commentId: 42,
+    });
+  });
+
+  // AC-128/REQ-097: a reply is a comment on the article too - it notifies
+  // the article's author, never the parent comment's author.
+  test("reply on another user's article -> Notification.create targets the article author, not the parent comment author", async () => {
+    const article = makeInstance({ id: 10, userId: 99 });
+    Article.findOne.mockResolvedValue(article);
+    const parent = makeInstance({ id: 5, articleId: 10, parentId: null, userId: 777 });
+    Comment.findByPk.mockResolvedValue(parent);
+    Comment.create.mockResolvedValue(makeInstance({ id: 43, body: "a reply" }));
+    const loggedUser = makeFollowableUser({ id: 2 });
+    const res = makeRes();
+
+    await createComment(
+      {
+        loggedUser,
+        body: { comment: { body: "a reply", parentId: 5 } },
+        params: { slug: "a" },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(Notification.create).toHaveBeenCalledWith({
+      recipientId: 99,
+      actorId: 2,
+      type: "comment",
+      articleId: 10,
+      commentId: 43,
+    });
+  });
+
+  // AC-128/REQ-097: commenting on your own article never notifies yourself
+  // (self-suppression).
+  test("comment on your own article -> Notification.create is not called", async () => {
+    const loggedUser = makeFollowableUser({ id: 9 });
+    const article = makeInstance({ id: 10, userId: 9 });
+    Article.findOne.mockResolvedValue(article);
+    Comment.create.mockResolvedValue(makeInstance({ id: 44, body: "hi" }));
+    const res = makeRes();
+
+    await createComment(
+      { loggedUser, body: { comment: { body: "hi" } }, params: { slug: "a" } },
+      res,
+      vi.fn(),
+    );
+
+    expect(Notification.create).not.toHaveBeenCalled();
+  });
+
+  // AC-128/REQ-097: the comment action itself must never fail because
+  // notification creation failed - notifications are a side effect only.
+  test("Notification.create rejecting does not break comment creation", async () => {
+    const article = makeInstance({ id: 10, userId: 99 });
+    Article.findOne.mockResolvedValue(article);
+    Comment.create.mockResolvedValue(makeInstance({ id: 45, body: "hi" }));
+    Notification.create.mockRejectedValue(new Error("db down"));
+    const loggedUser = makeFollowableUser({ id: 2 });
+    const res = makeRes();
+    const next = vi.fn();
+
+    await createComment(
+      { loggedUser, body: { comment: { body: "hi" } }, params: { slug: "a" } },
+      res,
+      next,
+    );
+
+    expect(next).not.toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(201);
   });
 });
 

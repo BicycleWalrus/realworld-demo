@@ -231,3 +231,11 @@ take to read so that I can decide whether to read it now.
 kind of response, not just a generic favorite, so that I can express how
 it landed for me.
 *Related requirements: REQ-094, REQ-095, REQ-096*
+
+---
+
+**US-043** — As a user, I want to be notified when someone follows me,
+comments on my article, or favorites my article, so that I know when
+someone has engaged with me or my content without having to check
+manually.
+*Related requirements: REQ-097, REQ-098, REQ-099, REQ-100*

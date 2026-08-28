@@ -3,7 +3,8 @@ const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels
 const { Op } = require("sequelize");
 
 const User = { findOne: vi.fn(), findAndCountAll: vi.fn() };
-mockRequire(require.resolve("../models"), { User });
+const Notification = { create: vi.fn() };
+mockRequire(require.resolve("../models"), { User, Notification });
 
 const { getProfile, listProfiles, followToggler } = require("./profiles");
 
@@ -37,6 +38,7 @@ const loggedUser = makeInstance({ id: 2, username: "reader" });
 beforeEach(() => {
   User.findOne.mockReset();
   User.findAndCountAll.mockReset();
+  Notification.create.mockReset();
 });
 
 describe("getProfile", () => {
@@ -227,6 +229,40 @@ describe("followToggler", () => {
     expect(profile.dataValues.followersCount).toBe(3);
   });
 
+  // AC-128/REQ-097: following another user creates a "follow" notification
+  // for the followed user, naming the follower as actor.
+  test("POST on a not-yet-followed account -> Notification.create called with type follow", async () => {
+    const profile = makeProfile({ hasFollower: true, followersCount: 3 });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await followToggler({ loggedUser, params: { username: "author" }, method: "POST" }, res, vi.fn());
+
+    expect(Notification.create).toHaveBeenCalledWith({
+      recipientId: profile.id,
+      actorId: loggedUser.id,
+      type: "follow",
+      articleId: null,
+      commentId: null,
+    });
+  });
+
+  // AC-128/REQ-097: the follow action itself must never fail because
+  // notification creation failed - notifications are a side effect only.
+  test("Notification.create rejecting does not break the follow action", async () => {
+    const profile = makeProfile({ hasFollower: true, followersCount: 3 });
+    User.findOne.mockResolvedValue(profile);
+    Notification.create.mockRejectedValue(new Error("db down"));
+    const res = makeRes();
+    const next = vi.fn();
+
+    await followToggler({ loggedUser, params: { username: "author" }, method: "POST" }, res, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(profile.addFollower).toHaveBeenCalledWith(loggedUser);
+    expect(res.json).toHaveBeenCalledWith({ profile });
+  });
+
   // AC-052: unfollowing a currently-followed account.
   test("DELETE on a followed account -> removeFollower called, following false", async () => {
     const profile = makeProfile({ hasFollower: false, followersCount: 2 });
@@ -238,5 +274,16 @@ describe("followToggler", () => {
     expect(profile.removeFollower).toHaveBeenCalledWith(loggedUser);
     expect(profile.dataValues.following).toBe(false);
     expect(profile.dataValues.followersCount).toBe(2);
+  });
+
+  // AC-128/REQ-097: unfollowing does not retract or create any notification.
+  test("DELETE (unfollow) -> Notification.create is not called", async () => {
+    const profile = makeProfile({ hasFollower: false, followersCount: 2 });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await followToggler({ loggedUser, params: { username: "author" }, method: "DELETE" }, res, vi.fn());
+
+    expect(Notification.create).not.toHaveBeenCalled();
   });
 });

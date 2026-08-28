@@ -761,3 +761,36 @@ changing, or removing a reaction never creates, removes, or otherwise
 affects a Favorites relation, and never changes the article's favorite
 count (REQ-025/REQ-026); those remain governed entirely by REQ-025 and
 REQ-026, unamended by this feature.
+
+---
+
+## Notifications
+
+### REQ-097 — A notification is a side effect of a follow, a comment, or a favorite, and never gates that action
+When another user follows the current user, comments (top-level or reply)
+on one of the current user's articles, or favorites one of the current
+user's articles, a notification is generated for the current user. This
+is strictly additive: creating a notification never blocks, delays, or
+otherwise changes the outcome of the underlying follow, comment, or
+favorite action (REQ-022–028 remain unchanged, unamended by this
+feature). No notification is created when the acting user and the
+recipient are the same user. Unfollowing, unfavoriting, or deleting a
+comment does not retract a notification already created by the
+corresponding follow, favorite, or comment.
+
+### REQ-098 — A user can retrieve their own notifications, newest first, with identifying context
+An authenticated user can retrieve their own notifications. Each
+notification carries its type (`follow`, `comment`, or `favorite`), the
+actor who triggered it, and, where applicable, the article and/or comment
+involved, so the notification is identifiable without a further lookup.
+Notifications are returned newest first.
+
+### REQ-099 — A user can mark notifications read, individually or all at once, and see an unread count
+An authenticated user can mark a single notification read by id, or mark
+all of their notifications read at once. The count of the user's unread
+notifications is available so a client can render an at-a-glance badge.
+
+### REQ-100 — Notifications are private to their recipient
+Retrieving notifications and marking them read are both scoped to the
+requesting user: a user can only ever see or mark read their own
+notifications, never another user's.
