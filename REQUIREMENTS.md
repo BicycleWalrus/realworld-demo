@@ -498,6 +498,40 @@ visitor already holding an older snapshot may continue to see the
 pre-change links until an unrelated bio change, or a page load without
 navigation state, triggers a real refetch.
 
+### REQ-056 — Author profile stats
+A profile page (`/profile/:username`) displays three additional stats
+for that author: the total number of articles they have published, the
+total favorite count summed across all of those articles, and a
+member-since date derived from their account's creation date. These
+stats are computed on each profile load (not cached or live-updating
+within an open page) and are visible to both anonymous and authenticated
+visitors. The member-since date is exposed only as part of this profile
+response, via a dedicated field separate from `createdAt` —
+`User.toJSON()`'s existing stripping of `createdAt` on other responses is
+unaffected. Existing "My Articles"/"Favorited Articles" tab behavior on
+the profile page is unchanged.
+
+**Boundary:** the profile page's existing navigation-state shortcut
+(REQ-043) still skips a refetch exactly when its own bio-comparison
+condition is met; because navigation state never carries these new stats
+fields, a profile reached via that shortcut performs one additional,
+independent fetch to populate them, without altering the shortcut's own
+bio-based condition.
+
+### REQ-057 — @mentions in comments
+Typing `@username` in a comment (on creation or edit) offers
+matching-username suggestions as the user types, sourced from a
+case-insensitive username prefix search capped at 5 results. Once posted
+(or edited), any `@word` in a comment's body that exactly matches an
+existing username (case-insensitive) is rendered as a link to that
+user's profile, using the username's canonically stored casing; a
+`@word` that matches no existing user is rendered as plain text. This
+resolution happens at render time against whichever comments are
+currently loaded, not stored at comment-creation time, so it applies
+retroactively to comments that existed before this feature. Comment body
+validation (REQ-022) is unaffected — mentions are a display/UX layer
+over the existing free-text body.
+
 ### REQ-058 — Recently viewed articles widget
 Opening an article's detail page records it, in the visitor's browser
 (via `localStorage`, available to both authenticated and anonymous

@@ -2,13 +2,17 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import getComments from "../../services/getComments";
+import searchUsers from "../../services/searchUsers";
 import updateComment from "../../services/updateComment";
+import verifyUsernames from "../../services/verifyUsernames";
 import CommentList from "./CommentList";
 
 vi.mock("../../context/AuthContext");
 vi.mock("../../services/getComments");
 vi.mock("../../services/updateComment");
 vi.mock("../../services/deleteComment");
+vi.mock("../../services/searchUsers");
+vi.mock("../../services/verifyUsernames");
 
 function makeComment(overrides = {}) {
   return {
@@ -46,6 +50,8 @@ function renderList({ updateComments = () => {} } = {}) {
 beforeEach(() => {
   vi.clearAllMocks();
   getComments.mockResolvedValue([makeComment()]);
+  searchUsers.mockResolvedValue([]);
+  verifyUsernames.mockResolvedValue([]);
 });
 
 // AC-097
@@ -123,5 +129,31 @@ describe("CommentList", () => {
     expect(updateComment).not.toHaveBeenCalled();
     expect(screen.getByText("original comment")).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  // Mentions are resolved at render time against whichever comments are
+  // currently loaded, so this applies retroactively to pre-existing
+  // comments too - there's no separate "mentions" field stored on a
+  // comment from creation time.
+  // AC-112, AC-114
+  it("linkifies an @mention that matches a real user, in a pre-existing comment", async () => {
+    mockAuth({ isAuth: true, username: "jane" });
+    getComments.mockResolvedValue([makeComment({ body: "hi @bob!" })]);
+    verifyUsernames.mockResolvedValue(["bob"]);
+    renderList();
+
+    const link = await screen.findByRole("link", { name: "@bob" });
+    expect(link).toHaveAttribute("href", "/profile/bob");
+  });
+
+  it("leaves an @mention with no matching user as plain text", async () => {
+    mockAuth({ isAuth: true, username: "jane" });
+    getComments.mockResolvedValue([makeComment({ body: "hi @ghost!" })]);
+    verifyUsernames.mockResolvedValue([]);
+    renderList();
+
+    await screen.findByText("hi", { exact: false });
+
+    expect(screen.queryByRole("link", { name: "@ghost" })).not.toBeInTheDocument();
   });
 });

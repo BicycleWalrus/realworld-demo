@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import dateFormatter from "../../helpers/dateFormatter";
+import useMentionAutocomplete from "../../hooks/useMentionAutocomplete";
+import useMentionUsers from "../../hooks/useMentionUsers";
 import deleteComment from "../../services/deleteComment";
 import getComments from "../../services/getComments";
 import updateComment from "../../services/updateComment";
+import MentionSuggestions from "../MentionSuggestions";
+import MentionText from "../MentionText";
 import CommentAuthor from "./CommentAuthor";
 
 function CommentList({ triggerUpdate, updateComments }) {
@@ -13,6 +17,9 @@ function CommentList({ triggerUpdate, updateComments }) {
   const [editBody, setEditBody] = useState("");
   const { headers, isAuth, loggedUser } = useAuth();
   const { slug } = useParams();
+  const knownUsernames = useMentionUsers(comments);
+  const { suggestions, updateQuery, applyMention } = useMentionAutocomplete();
+  const editCursorRef = useRef(0);
 
   useEffect(() => {
     getComments({ slug }).then(setComments).catch(console.error);
@@ -50,6 +57,17 @@ function CommentList({ triggerUpdate, updateComments }) {
       .catch(console.error);
   };
 
+  const handleEditChange = (e) => {
+    setEditBody(e.target.value);
+    editCursorRef.current = e.target.selectionStart;
+    updateQuery(e.target.value, e.target.selectionStart);
+  };
+
+  const handleSelectEditMention = (mentionUsername) => {
+    const { text } = applyMention(editBody, editCursorRef.current, mentionUsername);
+    setEditBody(text);
+  };
+
   return comments?.length > 0 ? (
     comments.map(({ author, author: { username }, body, createdAt, id }) => {
       const isAuthor = isAuth && loggedUser.username === username;
@@ -59,14 +77,20 @@ function CommentList({ triggerUpdate, updateComments }) {
         <div className="card" key={id}>
           <div className="card-block">
             {isEditing ? (
-              <textarea
-                className="form-control"
-                onChange={(e) => setEditBody(e.target.value)}
-                rows="3"
-                value={editBody}
-              ></textarea>
+              <>
+                <textarea
+                  className="form-control"
+                  onChange={handleEditChange}
+                  rows="3"
+                  value={editBody}
+                ></textarea>
+                <MentionSuggestions
+                  suggestions={suggestions}
+                  onSelect={handleSelectEditMention}
+                />
+              </>
             ) : (
-              <p className="card-text">{body}</p>
+              <MentionText body={body} knownUsernames={knownUsernames} />
             )}
           </div>
           <div className="card-footer">
