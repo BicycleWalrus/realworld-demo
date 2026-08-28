@@ -40,6 +40,8 @@ function renderCommentList({ isAuth = true, loggedUser = author } = {}) {
 
 beforeEach(() => {
   getComments.mockResolvedValue([{ ...comment }]);
+  editComment.mockReset();
+  deleteComment.mockReset();
 });
 
 // Edit control is only shown to the comment's author.
@@ -90,4 +92,43 @@ test("editing a comment calls editComment and triggers a refetch", async () => {
     );
     expect(updateComments).toHaveBeenCalled();
   });
+});
+
+// Mirrors CommentEditor's existing client-side guard against posting a
+// whitespace-only body - clearing the draft and saving must not call the
+// service, and should leave the edit form open rather than silently
+// discarding the edit with no feedback.
+test("saving an empty/whitespace draft does not call editComment", async () => {
+  const { updateComments } = renderCommentList({
+    isAuth: true,
+    loggedUser: { username: "jane" },
+  });
+
+  await screen.findByText("original text");
+  await userEvent.click(document.querySelector(".ion-edit").closest("button"));
+
+  const textarea = screen.getByRole("textbox");
+  await userEvent.clear(textarea);
+  await userEvent.type(textarea, "   ");
+  await userEvent.click(screen.getByText("Save"));
+
+  expect(editComment).not.toHaveBeenCalled();
+  expect(updateComments).not.toHaveBeenCalled();
+  expect(screen.getByRole("textbox")).toBeInTheDocument();
+});
+
+// Cancel discards the draft without calling the service.
+test("cancel discards the edit without calling editComment", async () => {
+  renderCommentList({ isAuth: true, loggedUser: { username: "jane" } });
+
+  await screen.findByText("original text");
+  await userEvent.click(document.querySelector(".ion-edit").closest("button"));
+
+  const textarea = screen.getByRole("textbox");
+  await userEvent.clear(textarea);
+  await userEvent.type(textarea, "unsaved change");
+  await userEvent.click(screen.getByText("Cancel"));
+
+  expect(editComment).not.toHaveBeenCalled();
+  expect(screen.getByText("original text")).toBeInTheDocument();
 });

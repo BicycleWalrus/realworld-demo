@@ -40,6 +40,8 @@ function CommentList({ triggerUpdate, updateComments }) {
   };
 
   const saveEditing = (commentId) => {
+    if (draft.trim() === "") return;
+
     editComment({ body: draft, commentId, headers, slug })
       .then(updateComments)
       .catch(console.error);
