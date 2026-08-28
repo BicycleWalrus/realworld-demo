@@ -60,7 +60,7 @@ module.exports = (sequelize, DataTypes) => {
       title: DataTypes.STRING,
       description: DataTypes.TEXT,
       body: DataTypes.TEXT,
-      published: DataTypes.BOOLEAN,
+      published: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
       image: DataTypes.TEXT,
     },
     {
