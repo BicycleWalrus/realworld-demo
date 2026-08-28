@@ -29,6 +29,7 @@ function makeAuthorState(overrides = {}) {
   };
 }
 
+// AC-104
 it("renders no social links section when none are set", () => {
   renderProfile(makeAuthorState());
 
@@ -37,6 +38,7 @@ it("renders no social links section when none are set", () => {
   expect(screen.queryByRole("link", { name: /twitter/i })).not.toBeInTheDocument();
 });
 
+// AC-103
 it("renders only the social links that are set", () => {
   renderProfile(makeAuthorState({ website: "https://jane.dev" }));
 
@@ -48,6 +50,7 @@ it("renders only the social links that are set", () => {
   expect(screen.queryByRole("link", { name: /twitter/i })).not.toBeInTheDocument();
 });
 
+// AC-103
 it("renders all three social links when all are set", () => {
   renderProfile(
     makeAuthorState({

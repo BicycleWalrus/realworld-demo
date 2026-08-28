@@ -77,6 +77,7 @@ describe("updateUser", () => {
   // generic update path, so they inherit REQ-011's rule unchanged: a
   // submitted value (including an empty string) is applied, and a field
   // absent from the submission is left unchanged.
+  // AC-102
   test("social links are set when submitted", async () => {
     const loggedUser = makeInstance(
       { username: "jane", website: null, github: null, twitter: null },
@@ -100,6 +101,7 @@ describe("updateUser", () => {
     expect(loggedUser.twitter).toBe("https://twitter.com/jane");
   });
 
+  // AC-106
   test("a blank submitted social link clears the previously stored value", async () => {
     const loggedUser = makeInstance(
       { username: "jane", website: "https://old.dev" },
@@ -112,6 +114,7 @@ describe("updateUser", () => {
     expect(loggedUser.website).toBe("");
   });
 
+  // AC-106
   test("a social link omitted from the submission is left unchanged", async () => {
     const loggedUser = makeInstance(
       { username: "jane", website: "https://jane.dev" },
@@ -124,6 +127,7 @@ describe("updateUser", () => {
     expect(loggedUser.website).toBe("https://jane.dev");
   });
 
+  // AC-105
   test("a social link with a non-http(s) scheme is rejected and nothing is saved", async () => {
     const save = vi.fn().mockResolvedValue();
     const loggedUser = makeInstance({ username: "jane", website: null }, { save });

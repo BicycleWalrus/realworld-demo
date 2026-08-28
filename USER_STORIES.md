@@ -167,3 +167,10 @@ take to read, so that I can decide whether to read it now.
 **US-032** — As a reader, I want to download an article as a Markdown
 file, so that I can save or read it offline in my own editor/notes app.
 *Related requirements: REQ-052*
+
+---
+
+**US-035** — As a user, I want to list links to my other online
+presences on my profile, so that readers who like my writing can find me
+elsewhere.
+*Related requirements: REQ-055*

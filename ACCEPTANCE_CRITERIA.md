@@ -461,6 +461,25 @@ changed.
   the article's title as a Markdown heading followed by its body, and its
   filename is the article's slug with a `.md` extension.
 
+### US-035 — Profile social links
+*(REQ-055)*
+
+- **AC-102** — Given the account settings page, when a user submits
+  `website`/`github`/`twitter` values, then each is saved to their
+  profile.
+- **AC-103** — Given a profile with one or more social links set, when
+  the public profile page is rendered, then each set link is displayed
+  pointing to its stored URL.
+- **AC-104** — Given a profile with no social links set, when the public
+  profile page is rendered, then no social-links section is displayed.
+- **AC-105** — Given a submitted social-link value with a scheme other
+  than `http`/`https` (e.g. `javascript:`), when the update is
+  submitted, then it is rejected and no part of the update is applied.
+- **AC-106** — Given a profile with a social link already set, when an
+  update submits that field as an empty string, then the link is
+  cleared; given the field is instead omitted from the submission, then
+  the previously stored value is left unchanged.
+
 ---
 
 ## Traceability Matrix
@@ -519,3 +538,4 @@ changed.
 | REQ-050 | US-030 | AC-084–AC-087 |
 | REQ-051 | US-031 | AC-088–AC-090 |
 | REQ-052 | US-032 | AC-091, AC-092 |
+| REQ-055 | US-035 | AC-102–AC-106 |
