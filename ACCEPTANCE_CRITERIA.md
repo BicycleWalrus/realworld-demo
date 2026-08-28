@@ -622,6 +622,24 @@ changed.
 - **AC-134** — Given an article the viewer has already saved, when its
   detail page is loaded (not just after clicking save in the current
   session), then the save control reflects its actual saved state.
+- **AC-135** — Given the home page, when a keyword is entered into the
+  search input and submitted, then the article listing shows only
+  articles matching that keyword, newest first.
+- **AC-136** — Given articles whose title, description, or body contains
+  a keyword in any letter case, when that keyword is searched in any
+  letter case, then all such articles are returned (case-insensitive
+  substring match across those three fields).
+- **AC-137** — Given an empty or whitespace-only keyword, when the
+  search is submitted, then no filter is applied and the unfiltered
+  listing for the active view is returned without error.
+- **AC-138** — Given more keyword matches than the page size, when the
+  search results are viewed, then they are paginated at the standard
+  page size (3 per page, REQ-031) with a total count reflecting every
+  match.
+- **AC-139** — Given a keyword together with any of the author, tag, or
+  favorited filters, when the listing is requested, then only articles
+  satisfying both the keyword and those filters are returned, and each
+  filter continues to work unchanged when no keyword is present.
 
 ---
 
@@ -690,3 +708,4 @@ changed.
 | REQ-059 | US-039 | AC-120–AC-124 |
 | REQ-060 | US-040 | AC-125–AC-129 |
 | REQ-061 | US-041 | AC-130–AC-134 |
+| REQ-062 | US-042 | AC-135–AC-139 |

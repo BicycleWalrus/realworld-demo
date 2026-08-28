@@ -5,6 +5,7 @@ const {
   NotFoundError,
   UnauthorizedError,
 } = require("../helper/customErrors");
+const { Op } = require("sequelize");
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
 const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), create: vi.fn() };
@@ -93,6 +94,22 @@ function fakeArticleList(seedRows) {
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+
+    // Keyword-search clause (REQ-062): where[Op.or] holds one
+    // { field: { [Op.iLike]: "%term%" } } per searched column; a row
+    // matches when any searched column contains the term, ignoring case.
+    const searchClauses = where?.[Op.or];
+    if (searchClauses) {
+      rows = rows.filter((r) =>
+        searchClauses.some((clause) => {
+          const [field] = Object.keys(clause);
+          const term = clause[field][Op.iLike].slice(1, -1).toLowerCase();
+          return String(r.dataValues[field] ?? "")
+            .toLowerCase()
+            .includes(term);
+        }),
+      );
+    }
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -705,6 +722,155 @@ describe("allArticles", () => {
 
     const { articles } = res.json.mock.calls[0][0];
     expect(articles.map((a) => a.slug)).toEqual(["article-4", "article-5"]);
+  });
+
+  // Keyword search (REQ-062). One article per match location: "dragon"
+  // appears in id 1's title, id 3's body; "rice" in id 2's description.
+  function makeSearchSeed() {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    return [
+      makeArticle({
+        id: 1,
+        slug: "training-dragons",
+        title: "Training Dragons",
+        description: "a guide",
+        body: "scales and fire",
+        author: jane,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "cooking-rice",
+        title: "Cooking Rice",
+        description: "RICE recipes",
+        body: "plain food",
+        author: jane,
+        tags: [],
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "old-tales",
+        title: "Old Tales",
+        description: "misc",
+        body: "dragon lore",
+        author: jane,
+        tags: [{ name: "lore" }],
+        createdAt: new Date("2020-01-03"),
+      }),
+    ];
+  }
+
+  // AC-135/AC-136: search matches title, description, and body
+  // case-insensitively, newest first.
+  test("search -> case-insensitive matches across title, description, and body", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeSearchSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "DRAGON" } },
+      res,
+      vi.fn(),
+    );
+    const dragonByTitleOrBody = res.json.mock.calls[0][0];
+    expect(dragonByTitleOrBody.articles.map((a) => a.slug)).toEqual([
+      "old-tales",
+      "training-dragons",
+    ]);
+
+    const res2 = makeRes();
+    await allArticles(
+      { loggedUser: undefined, query: { search: "rice" } },
+      res2,
+      vi.fn(),
+    );
+    expect(res2.json.mock.calls[0][0].articles.map((a) => a.slug)).toEqual([
+      "cooking-rice",
+    ]);
+  });
+
+  // AC-137: an empty or whitespace-only keyword applies no filter and
+  // returns the full listing rather than erroring.
+  test("whitespace-only search -> no filter, full listing", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeSearchSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "   " } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(3);
+    expect(articles.map((a) => a.slug)).toEqual([
+      "old-tales",
+      "cooking-rice",
+      "training-dragons",
+    ]);
+  });
+
+  // AC-138: search keeps the standard 3-per-page page size and reports
+  // the true total count across all matches.
+  test("search -> paginates at the standard page size with a true total count", async () => {
+    const seed = [
+      ...makeSearchSeed(),
+      makeArticle({
+        id: 4,
+        slug: "dragon-again",
+        title: "Dragon Again",
+        description: "d",
+        body: "b",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        tags: [],
+        createdAt: new Date("2020-01-04"),
+      }),
+      makeArticle({
+        id: 5,
+        slug: "dragonmore",
+        title: "Dragonmore",
+        description: "d",
+        body: "b",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        tags: [],
+        createdAt: new Date("2020-01-05"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "dragon" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(4);
+    expect(articles).toHaveLength(3);
+    expect(articles.map((a) => a.slug)).toEqual([
+      "dragonmore",
+      "dragon-again",
+      "old-tales",
+    ]);
+  });
+
+  // AC-139: search ANDs into the existing tag filter rather than
+  // replacing it (same composition rule REQ-013 gives author/tag/favorited).
+  test("search combines with the tag filter", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeSearchSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "dragon", tag: "lore" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles.map((a) => a.slug)).toEqual(["old-tales"]);
   });
 });
 

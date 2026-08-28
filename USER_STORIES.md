@@ -229,3 +229,9 @@ content on the platform.
 **US-041** — As a user, I want to save an article to a personal reading
 list, so that I can find it again later without publicly favoriting it.
 *Related requirements: REQ-061*
+
+---
+
+**US-042** — As a user, I want to search for articles by keyword, so
+that I can find content on a topic without knowing the exact author or
+tag. *Related requirements: REQ-062*

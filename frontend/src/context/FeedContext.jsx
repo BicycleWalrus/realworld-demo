@@ -9,9 +9,10 @@ export function useFeedContext() {
 
 function FeedProvider({ children }) {
   const { isAuth } = useAuth();
-  const [{ tabName, tagName }, setTab] = useState({
+  const [{ tabName, tagName, searchTerm }, setTab] = useState({
     tabName: isAuth ? "feed" : "global",
     tagName: "",
+    searchTerm: "",
   });
 
   useEffect(() => {
@@ -21,11 +22,17 @@ function FeedProvider({ children }) {
   const changeTab = async (e, tabName) => {
     const tagName = e.target.innerText.trim();
 
-    setTab({ tabName, tagName });
+    // Keeps the search keyword applied across tab switches — it composes
+    // with the active view (REQ-062) rather than being tied to one view.
+    setTab((tab) => ({ ...tab, tabName, tagName }));
   };
 
+  const setSearchTerm = (searchTerm) => setTab((tab) => ({ ...tab, searchTerm }));
+
   return (
-    <FeedContext.Provider value={{ changeTab, tabName, tagName }}>
+    <FeedContext.Provider
+      value={{ changeTab, setSearchTerm, tabName, tagName, searchTerm }}
+    >
       {children}
     </FeedContext.Provider>
   );
