@@ -39,4 +39,15 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+const appendReadLater = async (loggedUser, article) => {
+  const readLater = loggedUser ? await article.hasReadLaterUser(loggedUser) : false;
+  article.dataValues.readLater = readLater;
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendReadLater,
+};

@@ -18,13 +18,17 @@ function ArticlesButtons({ article, setArticle }) {
     setArticle((prev) => ({ ...prev, favorited, favoritesCount }));
   };
 
+  const handleReadLater = ({ readLater }) => {
+    setArticle((prev) => ({ ...prev, readLater }));
+  };
+
   return loggedUser.username === username ? (
     <ArticleAuthorButtons {...article} slug={slug} />
   ) : (
     <>
       <FollowButton {...author} handler={followHandler} />
       <FavButton {...article} handler={handleFav} text />
-      <ReadLaterButton slug={slug} />
+      <ReadLaterButton readLater={article.readLater} slug={slug} handler={handleReadLater} />
     </>
   );
 }

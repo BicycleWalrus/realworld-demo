@@ -28,7 +28,14 @@ function makeFollowableUser(overrides = {}) {
   );
 }
 
-function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, ...data }) {
+function makeArticle({
+  author,
+  tags = [],
+  hasUser = false,
+  favoritesCount = 0,
+  hasReadLaterUser = false,
+  ...data
+}) {
   return makeInstance(
     {
       id: 1,
@@ -48,6 +55,7 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
       setAuthor: vi.fn(),
       hasUser: vi.fn().mockResolvedValue(hasUser),
       countUsers: vi.fn().mockResolvedValue(favoritesCount),
+      hasReadLaterUser: vi.fn().mockResolvedValue(hasReadLaterUser),
       save: vi.fn().mockResolvedValue(),
       destroy: vi.fn().mockResolvedValue(),
     },
@@ -307,6 +315,31 @@ describe("singleArticle", () => {
     });
     expect(plain.author.username).toBe("jane");
     expect(plain.createdAt).toBeInstanceOf(Date);
+  });
+
+  // A logged-in viewer's read-later status is surfaced on the article so
+  // the frontend can render the correct initial button state, instead of
+  // always assuming "not saved" on load.
+  test("includes the viewer's read-later status", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, hasReadLaterUser: true });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: author, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.readLater).toBe(true);
+  });
+
+  test("anonymous viewer's read-later status is forced false", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, hasReadLaterUser: true });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.readLater).toBe(false);
   });
 
   // AC-050 / AC-054 (article half) and AC-006 (author half): an anonymous

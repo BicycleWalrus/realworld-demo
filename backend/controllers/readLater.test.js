@@ -13,7 +13,7 @@ function makeFollowableAuthor(overrides = {}) {
   );
 }
 
-function makeArticle({ author, hasUser = false, favoritesCount = 0 }) {
+function makeArticle({ author, hasUser = false, favoritesCount = 0, hasReadLaterUser = false }) {
   return makeInstance(
     { id: 1, slug: "a-slug", tagList: [] },
     {
@@ -24,6 +24,7 @@ function makeArticle({ author, hasUser = false, favoritesCount = 0 }) {
       countUsers: vi.fn().mockResolvedValue(favoritesCount),
       addReadLaterUser: vi.fn().mockResolvedValue(),
       removeReadLaterUser: vi.fn().mockResolvedValue(),
+      hasReadLaterUser: vi.fn().mockResolvedValue(hasReadLaterUser),
     },
   );
 }
@@ -78,6 +79,18 @@ describe("readLaterToggler", () => {
     await readLaterToggler({ loggedUser, params: { slug: "a-slug" }, method: "DELETE" }, res, vi.fn());
 
     expect(article.removeReadLaterUser).toHaveBeenCalledWith(loggedUser);
+  });
+
+  // The response reflects the resulting saved state so the caller doesn't
+  // need to re-derive it from the HTTP method it just sent.
+  test("POST response reflects the new saved state", async () => {
+    const article = makeArticle({ author: makeFollowableAuthor(), hasReadLaterUser: true });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await readLaterToggler({ loggedUser, params: { slug: "a-slug" }, method: "POST" }, res, vi.fn());
+
+    expect(article.dataValues.readLater).toBe(true);
   });
 
   // AC-117: toggling read-later never touches the Favorites-related mocks.

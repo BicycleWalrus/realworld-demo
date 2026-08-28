@@ -2,6 +2,7 @@ const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
 const {
   appendFollowers,
   appendFavorites,
+  appendReadLater,
   appendTagList,
 } = require("../helper/helpers");
 const { Article, Tag, User } = require("../models");
@@ -31,6 +32,7 @@ const readLaterToggler = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+    await appendReadLater(loggedUser, article);
 
     res.json({ article });
   } catch (error) {

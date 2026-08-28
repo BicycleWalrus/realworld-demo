@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
+import { useNavigate } from "react-router-dom";
 import ArticlesPreview from "../../components/ArticlesPreview";
 import { useAuth } from "../../context/AuthContext";
 import getReadingList from "../../services/getReadingList";
@@ -10,7 +11,12 @@ function ReadingList() {
     articlesCount: 0,
   });
   const [loading, setLoading] = useState(true);
-  const { headers } = useAuth();
+  const { headers, isAuth } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuth) navigate("/");
+  }, [isAuth, navigate]);
 
   useEffect(() => {
     setLoading(true);
