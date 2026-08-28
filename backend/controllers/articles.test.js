@@ -8,9 +8,10 @@ const {
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
 const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
+const ReadLater = { findOne: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Tag, User });
+mockRequire(require.resolve("../models"), { Article, ReadLater, Tag, User });
 
 const {
   allArticles,
@@ -78,6 +79,7 @@ beforeEach(() => {
   Article.findOne.mockReset();
   Article.findAndCountAll.mockReset();
   Article.create.mockReset();
+  ReadLater.findOne.mockReset();
   Tag.findByPk.mockReset();
   Tag.create.mockReset();
   User.findOne.mockReset();
@@ -307,6 +309,35 @@ describe("singleArticle", () => {
     });
     expect(plain.author.username).toBe("jane");
     expect(plain.createdAt).toBeInstanceOf(Date);
+  });
+
+  // AC-083: an authenticated visitor sees their own read-later status on
+  // the article, both when saved and when not.
+  test.each([
+    [true, true],
+    [null, false],
+  ])("ReadLater.findOne %p -> article.readLater %p", async (found, expected) => {
+    const article = makeArticle({ author: makeFollowableUser() });
+    Article.findOne.mockResolvedValue(article);
+    ReadLater.findOne.mockResolvedValue(found);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: makeFollowableUser({ id: 9 }), params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.readLater).toBe(expected);
+  });
+
+  // AC-082: an anonymous visitor always sees readLater forced to false,
+  // without even querying the ReadLater table.
+  test("no loggedUser -> readLater forced false, ReadLater not queried", async () => {
+    const article = makeArticle({ author: makeFollowableUser() });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.readLater).toBe(false);
+    expect(ReadLater.findOne).not.toHaveBeenCalled();
   });
 
   // AC-050 / AC-054 (article half) and AC-006 (author half): an anonymous

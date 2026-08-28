@@ -8,10 +8,11 @@ const {
 const {
   appendFollowers,
   appendFavorites,
+  appendReadLater,
   appendTagList,
   slugify,
 } = require("../helper/helpers");
-const { Article, Tag, User } = require("../models");
+const { Article, ReadLater, Tag, User } = require("../models");
 
 const includeOptions = [
   { model: Tag, as: "tagList", attributes: ["name"] },
@@ -164,6 +165,15 @@ const singleArticle = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+
+    const isReadLater = loggedUser
+      ? Boolean(
+          await ReadLater.findOne({
+            where: { userId: loggedUser.id, articleId: article.id },
+          }),
+        )
+      : false;
+    appendReadLater(article, isReadLater);
 
     res.json({ article });
   } catch (error) {
