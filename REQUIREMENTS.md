@@ -440,3 +440,13 @@ displays a value below one minute, and never displays `NaN` or throws
 regardless of body length. The existing date's own display and format
 (REQ-040) are unaffected; the reading-time estimate is a separate element
 shown alongside it, not a replacement.
+
+### REQ-052 — Client-side Markdown download of an article
+The article detail page provides a control that downloads the currently
+displayed article's content as a standalone `.md` file, generated
+entirely client-side from data already loaded on the page — no
+additional server request is made. The file's content is the article's
+title rendered as a level-1 Markdown heading, followed by its body; its
+filename is derived from the article's slug (`<slug>.md`). The control is
+available to any viewer who can already view the article, independent of
+authentication state or authorship.

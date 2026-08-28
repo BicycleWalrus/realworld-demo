@@ -451,6 +451,16 @@ changed.
 - **AC-090** — Given an article's body changes length, when the badge is
   rendered again, then the displayed estimate reflects the updated body.
 
+### US-032 — Download article as Markdown
+*(REQ-052)*
+
+- **AC-091** — Given the article detail page, when any viewer (regardless
+  of authentication or authorship) clicks the download control, then a
+  `.md` file is downloaded without any additional server request.
+- **AC-092** — Given the downloaded file, when opened, then its content is
+  the article's title as a Markdown heading followed by its body, and its
+  filename is the article's slug with a `.md` extension.
+
 ---
 
 ## Traceability Matrix
@@ -508,3 +518,4 @@ changed.
 | REQ-049 | US-029 | AC-080–AC-083 |
 | REQ-050 | US-030 | AC-084–AC-087 |
 | REQ-051 | US-031 | AC-088–AC-090 |
+| REQ-052 | US-032 | AC-091, AC-092 |

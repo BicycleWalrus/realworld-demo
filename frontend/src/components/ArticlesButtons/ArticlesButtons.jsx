@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import ArticleAuthorButtons from "../ArticleAuthorButtons";
+import DownloadArticleButton from "../DownloadArticleButton";
 import FavButton from "../FavButton";
 import FollowButton from "../FollowButton";
 
@@ -17,12 +18,17 @@ function ArticlesButtons({ article, setArticle }) {
     setArticle((prev) => ({ ...prev, favorited, favoritesCount }));
   };
 
-  return loggedUser.username === username ? (
-    <ArticleAuthorButtons {...article} slug={slug} />
-  ) : (
+  return (
     <>
-      <FollowButton {...author} handler={followHandler} />
-      <FavButton {...article} handler={handleFav} text />
+      {loggedUser.username === username ? (
+        <ArticleAuthorButtons {...article} slug={slug} />
+      ) : (
+        <>
+          <FollowButton {...author} handler={followHandler} />
+          <FavButton {...article} handler={handleFav} text />{" "}
+        </>
+      )}
+      <DownloadArticleButton {...article} slug={slug} />
     </>
   );
 }

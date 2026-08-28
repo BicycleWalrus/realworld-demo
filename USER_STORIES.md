@@ -161,3 +161,9 @@ that it's more visually distinctive in listings and on its own page.
 **US-031** — As a reader, I want to see roughly how long an article will
 take to read, so that I can decide whether to read it now.
 *Related requirements: REQ-051*
+
+---
+
+**US-032** — As a reader, I want to download an article as a Markdown
+file, so that I can save or read it offline in my own editor/notes app.
+*Related requirements: REQ-052*
