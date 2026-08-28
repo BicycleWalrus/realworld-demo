@@ -45,3 +45,25 @@ describe("getArticles existing locations", () => {
     expect(axios).toHaveBeenCalledWith({ url: expectedUrl, headers: undefined });
   });
 });
+
+// REQ-061: the "top" feed tab is selected via `sort=top` on the existing
+// GET /api/articles listing (no new route), using the same 3/page paging.
+describe("getArticles top location", () => {
+  test("builds a sort=top query string with default paging", async () => {
+    await getArticles({ location: "top" });
+
+    expect(axios).toHaveBeenCalledWith({
+      url: "api/articles?sort=top&&limit=3&&offset=0",
+      headers: undefined,
+    });
+  });
+
+  test("carries a custom page/limit through, same as other locations", async () => {
+    await getArticles({ location: "top", limit: 3, page: 2 });
+
+    expect(axios).toHaveBeenCalledWith({
+      url: "api/articles?sort=top&&limit=3&&offset=2",
+      headers: undefined,
+    });
+  });
+});

@@ -23,6 +23,10 @@ function FeedToggler() {
 
         <FeedNavLink name="global" text="Global Feed" />
 
+        {/* REQ-061: selectable by any visitor, logged in or not - not
+            gated behind `isAuth` like the "Your Feed" pill above. */}
+        <FeedNavLink name="top" text="Top Articles" />
+
         {tabName === "tag" && <FeedNavLink icon name="tag" text={tagName} />}
 
         {tabName === "search" && (

@@ -161,3 +161,9 @@ before reading.
 **US-031** — As a user, I want to search articles by keyword, so that I
 can find content without already knowing the author or tag.
 *Related requirements: REQ-057, REQ-058, REQ-059, REQ-060*
+
+---
+
+**US-032** — As a user, I want articles sorted by favorites so I can
+discover the most well-received content.
+*Related requirements: REQ-061, REQ-062, REQ-063, REQ-064*

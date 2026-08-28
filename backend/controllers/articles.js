@@ -24,8 +24,13 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, search, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, search, sort, limit = 3, offset = 0 } = req.query;
     const term = typeof search === "string" ? search.trim() : "";
+    // REQ-061/REQ-062: the "top" sort ranks by favorite count, which is only
+    // known once each article is enriched below (DB-agnostic - no raw-SQL
+    // ORDER BY on a derived count). So for this branch every matching row is
+    // fetched (limit/offset omitted here) and paged after sorting instead.
+    const isTop = sort === "top";
     const searchOptions = {
       include: [
         {
@@ -41,8 +46,7 @@ const allArticles = async (req, res, next) => {
           ...(author && { where: { username: author } }),
         },
       ],
-      limit: parseInt(limit),
-      offset: offset * limit,
+      ...(!isTop && { limit: parseInt(limit), offset: offset * limit }),
       order: [["createdAt", "DESC"]],
       // AC-088: keyword search matches title, description, or body,
       // case-insensitively (Postgres Op.iLike); additive to the existing
@@ -77,6 +81,20 @@ const allArticles = async (req, res, next) => {
       await appendFavorites(loggedUser, article);
 
       delete article.dataValues.Favorites;
+    }
+
+    // REQ-062/REQ-063: rank the fully-enriched rows by favoritesCount desc,
+    // tie-broken by createdAt desc, then slice to the requested page.
+    // articlesCount stays the full match total already set above.
+    if (isTop) {
+      articles.rows = [...articles.rows].sort((a, b) => {
+        const favoritesDelta = b.dataValues.favoritesCount - a.dataValues.favoritesCount;
+        if (favoritesDelta !== 0) return favoritesDelta;
+        return new Date(b.dataValues.createdAt) - new Date(a.dataValues.createdAt);
+      });
+
+      const start = offset * limit;
+      articles.rows = articles.rows.slice(start, start + parseInt(limit));
     }
 
     res.json({ articles: articles.rows, articlesCount: articles.count });

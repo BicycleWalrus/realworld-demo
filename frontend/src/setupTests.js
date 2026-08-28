@@ -49,3 +49,22 @@ if (
     writable: true,
   });
 }
+
+// Test-environment-only workaround: jsdom does not implement `innerText`
+// (it only implements `textContent`), so a click handler that reads
+// `event.target.innerText` (e.g. the feed-tab pills' click handler) sees
+// `undefined` under tests even though real browsers populate it
+// (approximating rendered/visible text). Falling back to `textContent`
+// has no effect where a real `innerText` implementation already exists,
+// and does not change any application code.
+if (
+  typeof HTMLElement !== "undefined" &&
+  !("innerText" in HTMLElement.prototype)
+) {
+  Object.defineProperty(HTMLElement.prototype, "innerText", {
+    get() {
+      return this.textContent;
+    },
+    configurable: true,
+  });
+}
