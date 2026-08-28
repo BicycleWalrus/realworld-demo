@@ -181,3 +181,9 @@ deleting it and losing its place in the thread.
 publishing it, so that I can write or revise it without exposing
 unfinished work.
 *Related requirements: REQ-069, REQ-070, REQ-071, REQ-072, REQ-073*
+
+---
+
+**US-035** — As a user, I want to browse a directory of all authors so
+that I can discover people to follow without knowing their username.
+*Related requirements: REQ-074, REQ-075, REQ-076*

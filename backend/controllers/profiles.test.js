@@ -1,10 +1,10 @@
 const { NotFoundError, UnauthorizedError } = require("../helper/customErrors");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn() };
+const User = { findOne: vi.fn(), findAndCountAll: vi.fn() };
 mockRequire(require.resolve("../models"), { User });
 
-const { getProfile, followToggler } = require("./profiles");
+const { getProfile, listProfiles, followToggler } = require("./profiles");
 
 function makeArticle(usersCount) {
   return makeInstance({}, { countUsers: vi.fn().mockResolvedValue(usersCount) });
@@ -35,6 +35,7 @@ const loggedUser = makeInstance({ id: 2, username: "reader" });
 
 beforeEach(() => {
   User.findOne.mockReset();
+  User.findAndCountAll.mockReset();
 });
 
 describe("getProfile", () => {
@@ -98,6 +99,64 @@ describe("getProfile", () => {
     expect(profile.dataValues.articleCount).toBe(2);
     expect(profile.dataValues.favoritesCount).toBe(5); // 4 + 1
     expect(profile.dataValues.memberSince).toBe("2022-11-20T00:00:00.000Z");
+  });
+});
+
+describe("listProfiles", () => {
+  // AC-105: returns the paginated rows and total count from
+  // User.findAndCountAll as { profiles, profilesCount }.
+  test("returns profiles and profilesCount from User.findAndCountAll", async () => {
+    const fakeProfiles = [makeInstance({ id: 1, username: "author" })];
+    User.findAndCountAll.mockResolvedValue({ rows: fakeProfiles, count: 1 });
+    const res = makeRes();
+
+    await listProfiles({ query: {}, loggedUser: undefined }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ profiles: fakeProfiles, profilesCount: 1 });
+  });
+
+  // AC-105: default limit/offset (limit=10, offset=0) and email exclusion
+  // when no pagination query params are supplied.
+  test("defaults to limit=10, offset=0, and excludes email", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await listProfiles({ query: {}, loggedUser: undefined }, res, vi.fn());
+
+    expect(User.findAndCountAll).toHaveBeenCalledWith({
+      attributes: { exclude: ["email"] },
+      limit: 10,
+      offset: 0,
+      order: [["username", "ASC"]],
+    });
+  });
+
+  // AC-105: explicit limit/offset query params are parsed and passed through
+  // (offset multiplied by limit, i.e. offset is a page number).
+  test("passes explicit limit/offset through as parsed pagination", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await listProfiles({ query: { limit: "5", offset: "2" }, loggedUser: undefined }, res, vi.fn());
+
+    expect(User.findAndCountAll).toHaveBeenCalledWith({
+      attributes: { exclude: ["email"] },
+      limit: 5,
+      offset: 10,
+      order: [["username", "ASC"]],
+    });
+  });
+
+  // AC-106: works for an anonymous request (no loggedUser) — the directory
+  // is readable without authentication.
+  test("works with no loggedUser (anonymous)", async () => {
+    const fakeProfiles = [makeInstance({ id: 1, username: "author" })];
+    User.findAndCountAll.mockResolvedValue({ rows: fakeProfiles, count: 1 });
+    const res = makeRes();
+
+    await listProfiles({ query: {}, loggedUser: undefined }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ profiles: fakeProfiles, profilesCount: 1 });
   });
 });
 

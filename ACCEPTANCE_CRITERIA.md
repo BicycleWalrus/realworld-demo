@@ -541,6 +541,22 @@ changed.
 
 ---
 
+### US-035 — Browse a user directory
+*(REQ-074, REQ-075, REQ-076)*
+
+- **AC-105** — Given the user directory endpoint, when it is requested,
+  then it returns a bounded page of user profiles (username, avatar,
+  bio) via `limit`/`offset` query parameters (defaulting to a page size
+  of 10), ordered by username, rather than every profile in one
+  unbounded response.
+- **AC-106** — Given the user directory endpoint, when it is requested by
+  an anonymous visitor (no `Authorization` header), then the same
+  paginated listing is returned as for an authenticated request.
+- **AC-107** — Given a rendered directory entry, when it is viewed, then
+  it links to that user's full profile page at `/profile/:username`.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -618,3 +634,6 @@ changed.
 | REQ-071 | US-034 | AC-102 |
 | REQ-072 | US-034 | AC-103 |
 | REQ-073 | US-034 | AC-104 |
+| REQ-074 | US-035 | AC-105 |
+| REQ-075 | US-035 | AC-106 |
+| REQ-076 | US-035 | AC-107 |

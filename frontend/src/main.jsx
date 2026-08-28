@@ -10,6 +10,7 @@ import reportWebVitals from "./reportWebVitals";
 import Article from "./routes/Article/Article";
 import CommentsSection from "./routes/Article/CommentsSection";
 import ArticleEditor from "./routes/ArticleEditor";
+import Directory from "./routes/Directory";
 import Home from "./routes/Home";
 import HomeArticles from "./routes/HomeArticles";
 import Login from "./routes/Login";
@@ -33,6 +34,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 
               <Route path="login" element={<Login />} />
               <Route path="register" element={<SignUp />} />
+
+              <Route path="directory" element={<Directory />} />
 
               <Route path="settings" element={<Settings />} />
 

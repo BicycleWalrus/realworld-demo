@@ -576,3 +576,20 @@ published article.
 not-found error for anyone who is not its author, including an anonymous
 visitor. Only the article's author can retrieve their own unpublished
 draft by slug.
+
+---
+
+### REQ-074 — Paginated user directory
+A user directory lists user profiles (username, avatar, bio) via `GET
+/api/profiles`, using a bounded page size rather than one unbounded query
+or render: results are limited and offset via `limit`/`offset` query
+parameters (defaulting to a page size of 10), ordered by username.
+
+### REQ-075 — User directory readable without authentication
+The user directory endpoint is readable without authentication,
+consistent with REQ-001's pattern for read endpoints: an anonymous
+request receives the same paginated listing as an authenticated one.
+
+### REQ-076 — Directory entries link to full profiles
+Each entry in the user directory links to that user's full profile page
+at `/profile/:username`.
