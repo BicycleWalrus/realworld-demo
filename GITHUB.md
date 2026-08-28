@@ -215,13 +215,14 @@ gh issue view 12               # read one issue's full body
 gh issue view 12 --web         # open it in the browser instead
 ```
 
-Then include a closing keyword referencing that number in your PR's
-**body** (not the title) — GitHub will automatically close the issue when
-the PR merges into `main`:
+Prefix the PR **title** with `Issue-<number>: ` so it's identifiable at a
+glance in the PR list, and include a closing keyword referencing that
+number in the PR's **body** — GitHub will automatically close the issue
+when the PR merges into `main`:
 
 ```bash
 gh pr create --base main \
-  --title "Add dark mode toggle" \
+  --title "Issue-1: Add dark mode toggle" \
   --body "Implements #1.
 
 - Adds a light/dark theme toggle in the navbar
@@ -232,7 +233,7 @@ Closes #1"
 ```
 
 Any of `close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`,
-`resolves`, `resolved` followed by `#<number>` works.
+`resolves`, `resolved` followed by `#<number>` works in the body.
 
 ### Before opening the PR
 
@@ -314,10 +315,11 @@ the user has explicitly asked for it — do not do so proactively.
 
    The `--body` should summarize the change as bullet points and include a
    test plan, per section 5. If the work closes one of the tracked backlog
-   issues (`ISSUES.md`), include `Closes #<number>` in the body per the
-   "If your PR closes one of the backlog issues" guidance above — check
-   with the user for the issue number if it isn't already clear from the
-   task. Do not use `--draft` unless asked.
+   issues (`ISSUES.md`), prefix the `--title` with `Issue-<number>: ` and
+   include `Closes #<number>` in the body, per the "If your PR closes one
+   of the backlog issues" guidance above — check with the user for the
+   issue number if it isn't already clear from the task. Do not use
+   `--draft` unless asked.
 
 6. **Report the PR URL back to the user.** Do not merge the PR, delete
    branches, or force-push unless the user explicitly asks — those are
