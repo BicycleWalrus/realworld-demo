@@ -2,8 +2,12 @@
 
 The "add a new feature" backlog for this assignment. These 21 tickets are
 also filed as [GitHub Issues](https://github.com/BicycleWalrus/realworld-demo/issues)
-on this repo (same numbering, `#1`–`#21`) — this file is the retained,
-readable copy of the same content, grouped with the shared context above.
+on this repo — this file is the retained, readable copy of the same
+content, grouped with the shared context above. Numbering below (`Issue
+1`–`Issue 21`) matches GitHub issue number for `#1`–`#20`; Issue 21 is
+filed as [GitHub issue #25](https://github.com/BicycleWalrus/realworld-demo/issues/25)
+because merged PRs `#21`–`#24` had already consumed those numbers (issues
+and PRs share one number sequence on GitHub) by the time it was filed.
 
 ## How to work a ticket
 
@@ -948,7 +952,7 @@ can narrow results to content matching several topics simultaneously.
 
 ---
 
-## Issue 21 — External link previews in articles
+## Issue 21 — External link previews in articles (GitHub issue #25)
 
 **Size:** M · **Area:** Full-stack
 

@@ -35,3 +35,22 @@ agent-specific checklist for doing so — see [GITHUB.md](./GITHUB.md).
 
 Read it before creating a branch, committing, pushing, or opening a PR in
 this repo.
+
+## Handling an existing open Pull Request
+
+This repo's open-PR backlog has real overlap — duplicate PRs implementing
+the same `ISSUES.md` ticket, PRs that bundle many tickets together, and
+PRs that share unrelated files because they branched from a common
+not-yet-merged state — so an existing PR is never just "merge it."
+
+When asked to review, test, triage, close, or merge a specific open PR —
+phrasing like "handle PR #N", "pull down #N and test it", "can we merge
+#N", "close #N", or "look at #N" — use the `handle-pr` skill rather than
+improvising the `gh`/`git` steps by hand. It checks out the PR, runs the
+automated tests and a focused code review, launches the app for manual
+testing against the PR's acceptance criteria, checks for overlap with
+other open PRs, and only then proposes closing or merging — with explicit
+confirmation required for every close/merge/approve/force-push.
+
+This is distinct from `GITHUB.md`, which covers *opening* a new PR from
+your own branch, not handling one that already exists.
