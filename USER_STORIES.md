@@ -239,3 +239,9 @@ comments on my article, or favorites my article, so that I know when
 someone has engaged with me or my content without having to check
 manually.
 *Related requirements: REQ-097, REQ-098, REQ-099, REQ-100*
+
+---
+
+**US-044** — As a reader, I want a table of contents for an article so
+that I can jump straight to a section I care about.
+*Related requirements: REQ-101, REQ-102*

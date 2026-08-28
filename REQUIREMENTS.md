@@ -794,3 +794,23 @@ notifications is available so a client can render an at-a-glance badge.
 Retrieving notifications and marking them read are both scoped to the
 requesting user: a user can only ever see or mark read their own
 notifications, never another user's.
+
+---
+
+## Article Table of Contents
+
+### REQ-101 — The article detail page renders a table of contents derived from the body's headings, and activating an entry scrolls to it
+On the article detail page, each ATX-style Markdown heading (`#` through
+`######`) in the article body produces a corresponding entry in a
+rendered table of contents, in document order. Each rendered heading also
+carries an id derived (slugified) from its own text, and activating a
+table-of-contents entry scrolls the article to the heading with the
+matching id. The table of contents is derived from the current body on
+each render, so it reflects the body as currently loaded.
+
+### REQ-102 — No headings means no table of contents, and non-heading content rendering is unaffected
+An article body containing no headings renders with no table-of-contents
+element at all — not an empty container and not an error. Tagging
+rendered headings with an id does not change how any non-heading
+Markdown content (paragraphs, lists, links, images, code, etc.) is
+rendered.

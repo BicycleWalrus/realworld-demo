@@ -735,6 +735,25 @@ changed.
 
 ---
 
+### US-044 — Table of contents for an article
+*(REQ-101, REQ-102)*
+
+- **AC-132** — Given an article body containing one or more ATX-style
+  Markdown headings, when the article detail page renders, then a
+  table-of-contents entry appears for each heading in document order;
+  given the article's rendered headings each carry an id derived from
+  their own text, when a table-of-contents entry is activated, then the
+  article scrolls to the heading whose id matches that entry's heading
+  text; given the body changes and the page re-renders, then the table of
+  contents reflects the new body's headings.
+- **AC-133** — Given an article body containing no headings, when the
+  article detail page renders, then no table-of-contents element is
+  present - not an empty container and not an error; given the same
+  article body, then every non-heading Markdown element renders exactly
+  as it did before headings gained ids.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -839,3 +858,5 @@ changed.
 | REQ-098 | US-043 | AC-129 |
 | REQ-099 | US-043 | AC-130 |
 | REQ-100 | US-043 | AC-131 |
+| REQ-101 | US-044 | AC-132 |
+| REQ-102 | US-044 | AC-133 |
