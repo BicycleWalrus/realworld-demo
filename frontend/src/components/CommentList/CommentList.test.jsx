@@ -12,6 +12,9 @@ import getComments from "../../services/getComments";
 vi.mock("../../services/updateComment");
 import updateComment from "../../services/updateComment";
 
+vi.mock("../../services/postComment");
+import postComment from "../../services/postComment";
+
 // useAuth is mocked (same pattern as AuthorInfo.test.jsx) so tests can
 // force the author, non-author, and anonymous cases without a real login
 // flow.
@@ -57,6 +60,7 @@ function renderCommentList() {
 beforeEach(() => {
   getComments.mockReset();
   updateComment.mockReset();
+  postComment.mockReset();
 });
 
 // AC-099: the edit control is shown only to the comment's author.
@@ -219,5 +223,149 @@ describe("CommentList editing flow (author)", () => {
 
     expect(updateComment).not.toHaveBeenCalled();
     expect(await screen.findByText("original text")).toBeInTheDocument();
+  });
+});
+
+// AC-114: a top-level comment's replies are rendered nested underneath it.
+describe("CommentList — nested replies", () => {
+  test("a top-level comment's replies render nested under it", async () => {
+    const replyAuthor = { ...author, username: "bob" };
+    const reply = {
+      id: 2,
+      body: "a reply",
+      createdAt: "2020-01-02T00:00:00.000Z",
+      author: replyAuthor,
+    };
+    getComments.mockResolvedValue([{ ...comment, replies: [reply] }]);
+    useAuth.mockReturnValue({
+      headers: null,
+      isAuth: false,
+      loggedUser: { username: "" },
+    });
+
+    renderCommentList();
+
+    await screen.findByText("original text");
+
+    expect(await screen.findByText("a reply")).toBeInTheDocument();
+  });
+});
+
+// AC-113: the Reply control is offered only on top-level comments (auth
+// rule mirrors posting a top-level comment), never on a reply, and
+// submitting it posts the reply with the parent's id.
+describe("CommentList — replying to a top-level comment", () => {
+  beforeEach(() => {
+    useAuth.mockReturnValue({
+      headers: { Authorization: "Bearer token" },
+      isAuth: true,
+      loggedUser: { username: "someone-else" },
+    });
+  });
+
+  test("an authenticated user sees Reply on a top-level comment but not on a reply", async () => {
+    const replyAuthor = { ...author, username: "bob" };
+    const reply = {
+      id: 2,
+      body: "a reply",
+      createdAt: "2020-01-02T00:00:00.000Z",
+      author: replyAuthor,
+    };
+    getComments.mockResolvedValue([{ ...comment, replies: [reply] }]);
+
+    renderCommentList();
+
+    await screen.findByText("original text");
+    await screen.findByText("a reply");
+
+    // Only the top-level comment offers a Reply control - one level of
+    // nesting only, so a reply itself is not repliable.
+    expect(screen.getAllByText("Reply")).toHaveLength(1);
+  });
+
+  test("an anonymous visitor does not see the Reply control", async () => {
+    getComments.mockResolvedValue([comment]);
+    useAuth.mockReturnValue({
+      headers: null,
+      isAuth: false,
+      loggedUser: { username: "" },
+    });
+
+    renderCommentList();
+
+    await screen.findByText("original text");
+
+    expect(screen.queryByText("Reply")).not.toBeInTheDocument();
+  });
+
+  test("submitting a reply posts it with the parent's id and re-fetches", async () => {
+    const newReply = {
+      id: 2,
+      body: "my reply",
+      createdAt: "2020-01-02T00:00:00.000Z",
+      author: { ...author, username: "someone-else" },
+    };
+    getComments
+      .mockResolvedValueOnce([comment])
+      .mockResolvedValueOnce([{ ...comment, replies: [newReply] }]);
+    postComment.mockResolvedValue(newReply);
+
+    renderCommentList();
+
+    await screen.findByText("original text");
+
+    fireEvent.click(screen.getByText("Reply"));
+
+    const textarea = screen.getByPlaceholderText("Write a reply...");
+    fireEvent.change(textarea, { target: { value: "my reply" } });
+
+    fireEvent.click(screen.getByText("Post Reply"));
+
+    await waitFor(() =>
+      expect(postComment).toHaveBeenCalledWith({
+        body: "my reply",
+        headers: { Authorization: "Bearer token" },
+        parentId: 1,
+        slug: "dragon-tale",
+      }),
+    );
+
+    expect(await screen.findByText("my reply")).toBeInTheDocument();
+    expect(getComments).toHaveBeenCalledTimes(2);
+  });
+
+  test("submitting an empty reply does not call postComment", async () => {
+    getComments.mockResolvedValue([comment]);
+
+    renderCommentList();
+
+    await screen.findByText("original text");
+
+    fireEvent.click(screen.getByText("Reply"));
+
+    const textarea = screen.getByPlaceholderText("Write a reply...");
+    fireEvent.change(textarea, { target: { value: "   " } });
+
+    fireEvent.click(screen.getByText("Post Reply"));
+
+    expect(postComment).not.toHaveBeenCalled();
+  });
+
+  test("cancel closes the reply form without posting", async () => {
+    getComments.mockResolvedValue([comment]);
+
+    renderCommentList();
+
+    await screen.findByText("original text");
+
+    fireEvent.click(screen.getByText("Reply"));
+    fireEvent.change(screen.getByPlaceholderText("Write a reply..."), {
+      target: { value: "unsent draft" },
+    });
+
+    fireEvent.click(screen.getByText("Cancel"));
+
+    expect(postComment).not.toHaveBeenCalled();
+    expect(screen.queryByPlaceholderText("Write a reply...")).not.toBeInTheDocument();
   });
 });

@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import dateFormatter from "../../helpers/dateFormatter";
 import deleteComment from "../../services/deleteComment";
 import getComments from "../../services/getComments";
+import postComment from "../../services/postComment";
 import updateComment from "../../services/updateComment";
 import CommentAuthor from "./CommentAuthor";
 
@@ -32,6 +33,12 @@ function CommentList({ triggerUpdate, updateComments }) {
   // edit view, and the draft body being edited.
   const [editingId, setEditingId] = useState(null);
   const [editBody, setEditBody] = useState("");
+  // REQ-082: which top-level comment (if any) has its inline reply form
+  // open, and the draft body being typed into it. Only top-level comments
+  // can have an open reply form - replies themselves are not repliable
+  // (one level of nesting only).
+  const [replyingId, setReplyingId] = useState(null);
+  const [replyBody, setReplyBody] = useState("");
   const { headers, isAuth, loggedUser } = useAuth();
   const { slug } = useParams();
 
@@ -78,45 +85,89 @@ function CommentList({ triggerUpdate, updateComments }) {
       .catch(console.error);
   };
 
-  return comments?.length > 0 ? (
-    comments.map(({ author, author: { username }, body, createdAt, id, mentions = [] }) => {
-      const isAuthor = isAuth && loggedUser.username === username;
-      const isEditing = editingId === id;
+  // REQ-082: toggles the inline reply form for a top-level comment.
+  const handleReplyClick = (commentId) => {
+    setReplyingId((current) => (current === commentId ? null : commentId));
+    setReplyBody("");
+  };
 
-      return (
-        <div className="card" key={id}>
-          <div className="card-block">
-            {isEditing ? (
-              <textarea
-                className="form-control"
-                onChange={handleEditChange}
-                rows="3"
-                value={editBody}
-              ></textarea>
-            ) : (
-              <p className="card-text">{renderBody(body, mentions)}</p>
-            )}
-          </div>
-          <div className="card-footer">
-            <CommentAuthor {...author} />
-            <span className="date-posted">{dateFormatter(createdAt)}</span>
-            {isEditing ? (
-              <>
-                <button
-                  className="btn btn-sm btn-primary pull-xs-right"
-                  onClick={() => handleSaveEdit(id)}
-                >
-                  Save
-                </button>
-                <button
-                  className="btn btn-sm btn-outline-secondary pull-xs-right"
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </button>
-              </>
-            ) : (
-              isAuthor && (
+  const handleReplyChange = (e) => {
+    setReplyBody(e.target.value);
+  };
+
+  const handleCancelReply = () => {
+    setReplyingId(null);
+  };
+
+  // REQ-082: a non-empty body is required to post a reply, mirroring
+  // CommentEditor's own client-side block on whitespace-only bodies
+  // (REQ-020-style) and CommentList's own edit-save guard above.
+  const handleSubmitReply = (parentId) => {
+    if (replyBody.trim() === "") return;
+
+    postComment({ body: replyBody, headers, parentId, slug })
+      .then((result) => {
+        setReplyingId(null);
+        setReplyBody("");
+        // REQ-083: refresh via updateComments -> triggerUpdate so the new
+        // reply shows up nested under its parent from the server.
+        updateComments(result);
+      })
+      .catch(console.error);
+  };
+
+  // Renders a single comment card. Used for both top-level comments and
+  // their nested replies (REQ-083); `isReply` suppresses the Reply control
+  // and the nested replies block, since only one level of nesting is
+  // supported (REQ-082) - a reply cannot itself be replied to.
+  const renderCard = (comment, { isReply = false } = {}) => {
+    const {
+      author,
+      author: { username },
+      body,
+      createdAt,
+      id,
+      mentions = [],
+      replies = [],
+    } = comment;
+    const isAuthor = isAuth && loggedUser.username === username;
+    const isEditing = editingId === id;
+
+    return (
+      <div className="card" key={id}>
+        <div className="card-block">
+          {isEditing ? (
+            <textarea
+              className="form-control"
+              onChange={handleEditChange}
+              rows="3"
+              value={editBody}
+            ></textarea>
+          ) : (
+            <p className="card-text">{renderBody(body, mentions)}</p>
+          )}
+        </div>
+        <div className="card-footer">
+          <CommentAuthor {...author} />
+          <span className="date-posted">{dateFormatter(createdAt)}</span>
+          {isEditing ? (
+            <>
+              <button
+                className="btn btn-sm btn-primary pull-xs-right"
+                onClick={() => handleSaveEdit(id)}
+              >
+                Save
+              </button>
+              <button
+                className="btn btn-sm btn-outline-secondary pull-xs-right"
+                onClick={handleCancelEdit}
+              >
+                Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              {isAuthor && (
                 <>
                   <button
                     className="btn btn-sm btn-outline-secondary pull-xs-right"
@@ -131,12 +182,52 @@ function CommentList({ triggerUpdate, updateComments }) {
                     <i className="ion-trash-a"></i>
                   </button>
                 </>
-              )
-            )}
-          </div>
+              )}
+              {!isReply && isAuth && (
+                <button
+                  className="btn btn-sm btn-outline-secondary pull-xs-right"
+                  onClick={() => handleReplyClick(id)}
+                >
+                  Reply
+                </button>
+              )}
+            </>
+          )}
         </div>
-      );
-    })
+        {!isReply && replyingId === id && (
+          <div className="card-block reply-form">
+            <textarea
+              className="form-control"
+              onChange={handleReplyChange}
+              placeholder="Write a reply..."
+              rows="2"
+              value={replyBody}
+            ></textarea>
+            <button
+              className="btn btn-sm btn-primary pull-xs-right"
+              onClick={() => handleSubmitReply(id)}
+            >
+              Post Reply
+            </button>
+            <button
+              className="btn btn-sm btn-outline-secondary pull-xs-right"
+              onClick={handleCancelReply}
+            >
+              Cancel
+            </button>
+          </div>
+        )}
+        {!isReply && replies.length > 0 && (
+          <div className="comment-replies">
+            {replies.map((reply) => renderCard(reply, { isReply: true }))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return comments?.length > 0 ? (
+    comments.map((comment) => renderCard(comment))
   ) : (
     <div>There are no comments yet...</div>
   );

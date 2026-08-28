@@ -200,3 +200,9 @@ that it's more visually distinctive in listings and on its page.
 by username, so that the comment references them and readers can jump to
 their profile.
 *Related requirements: REQ-079, REQ-080, REQ-081*
+
+---
+
+**US-038** — As a user, I want to reply to a specific comment, so that
+multi-person discussion is easy to follow.
+*Related requirements: REQ-082, REQ-083, REQ-084, REQ-085*

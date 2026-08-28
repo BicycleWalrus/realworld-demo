@@ -633,3 +633,29 @@ comments that already existed before this requirement.
 An `@something` token in a rendered comment body that matches no existing
 username is displayed as plain text, not a link. Mention resolution does
 not alter the stored comment body or its REQ-022 validation.
+
+### REQ-082 — Reply to a top-level comment
+A top-level comment offers a Reply control under the same authentication
+rule as posting a top-level comment (REQ-003). Submitting a reply creates
+a new comment with a `parentId` referencing that top-level comment. Only
+one level of nesting is supported: a comment that already has a
+`parentId` (i.e. is itself a reply) cannot be targeted as the parent of
+another reply, and such a request is rejected.
+
+### REQ-083 — Replies listed nested under their parent
+Retrieving an article's comments (REQ-024) returns top-level comments
+(comments with no `parentId`), each carrying a nested `replies` list of
+the comments created against it. Replies receive the same author-follower
+and @mention (REQ-080/REQ-081) enrichment as top-level comments.
+
+### REQ-084 — Cascade delete of replies
+Deleting a comment (REQ-023) also deletes any replies associated with it,
+via the parent comment's foreign key. Deleting a comment continues to
+require that the requester is that comment's author, per REQ-023 — this
+requirement does not change who may delete a comment, only what else is
+removed as a consequence.
+
+### REQ-085 — Flat top-level comment behavior unchanged
+For a comment with no `parentId`, comment creation, listing, and deletion
+behave exactly as documented before REQ-082–REQ-084: this feature is
+additive and does not alter existing top-level comment behavior.
