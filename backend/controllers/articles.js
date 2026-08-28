@@ -27,6 +27,21 @@ const allArticles = async (req, res, next) => {
 
     const { author, tag, favorited, search, limit = 3, offset = 0, sort } = req.query;
 
+    // Tag filter (REQ-013/REQ-063): accepts one tag or several, as
+    // repeated tag params or one comma-separated value. A single value
+    // keeps REQ-013's exact query shape (a where on the joined tag).
+    // Multiple values require the article to carry ALL of them (AND) —
+    // not expressible as a where on one joined tag — so the article ids
+    // carrying every requested tag are resolved first with one grouped
+    // query over the join table (the composite (articleId, tagName)
+    // primary key means COUNT can't be inflated by duplicate pairs),
+    // then constrained with an IN, composing with the keyword clause.
+    const tags = []
+      .concat(tag ?? [])
+      .flatMap((value) => String(value).split(","))
+      .map((value) => value.trim())
+      .filter(Boolean);
+
     // Keyword search (REQ-062): case-insensitive substring match against
     // title, description, or body. ANDs into the author/tag/favorited
     // filters rather than replacing them (same composition rule REQ-013
@@ -40,14 +55,44 @@ const allArticles = async (req, res, next) => {
       })),
     };
 
+    let requiredArticleIds;
+    if (tags.length > 1) {
+      const matches = await sequelize.models.TagList.findAll({
+        attributes: ["articleId"],
+        where: { tagName: { [Op.in]: tags } },
+        group: ["articleId"],
+        having: sequelize.where(
+          sequelize.fn("COUNT", sequelize.col("tagName")),
+          Op.gte,
+          tags.length,
+        ),
+        raw: true,
+      });
+      requiredArticleIds = matches.map(({ articleId }) => articleId);
+
+      // No article carries every requested tag: the listing is empty
+      // regardless of the other filters, so skip the main query.
+      if (requiredArticleIds.length === 0) {
+        return res.json({ articles: [], articlesCount: 0 });
+      }
+    }
+
+    const whereClauses = [
+      keywordWhere,
+      requiredArticleIds && { id: { [Op.in]: requiredArticleIds } },
+    ].filter(Boolean);
+
     const searchOptions = {
-      ...(keywordWhere && { where: keywordWhere }),
+      ...(whereClauses.length === 1
+        ? { where: whereClauses[0] }
+        : whereClauses.length > 1 && { where: { [Op.and]: whereClauses } }),
       include: [
         {
           model: Tag,
           as: "tagList",
           attributes: ["name"],
-          ...(tag && { where: { name: tag } }),
+          ...(tags.length === 1 && { where: { name: tags[0] } }),
+          ...(tags.length > 1 && { where: { name: { [Op.in]: tags } } }),
         },
         {
           model: User,
