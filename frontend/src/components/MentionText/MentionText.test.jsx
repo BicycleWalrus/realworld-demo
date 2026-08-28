@@ -11,6 +11,7 @@ function renderText(body, knownUsernames) {
 }
 
 describe("MentionText", () => {
+  // AC-112
   it("renders a known mention as a link to the user's profile", () => {
     renderText("hi @jane", ["jane"]);
 
@@ -18,6 +19,7 @@ describe("MentionText", () => {
     expect(link).toHaveAttribute("href", "/profile/jane");
   });
 
+  // AC-113
   it("renders an unknown mention as plain text, not a link", () => {
     renderText("hi @ghost", ["jane"]);
 

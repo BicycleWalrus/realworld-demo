@@ -28,6 +28,7 @@ beforeEach(() => {
 });
 
 describe("CommentEditor mention autocomplete", () => {
+  // AC-111
   it("shows matching username suggestions while typing an @mention", async () => {
     searchUsers.mockResolvedValue(["bob", "bobby"]);
     renderEditor();

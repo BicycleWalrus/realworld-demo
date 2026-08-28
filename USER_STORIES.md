@@ -187,3 +187,10 @@ that I can quickly jump to the section I'm interested in.
 presences on my profile, so that readers who like my writing can find me
 elsewhere.
 *Related requirements: REQ-055*
+
+---
+
+**US-037** — As a user writing a comment, I want to mention another user
+by username, so that the comment clearly references them and readers can
+jump to their profile.
+*Related requirements: REQ-057*

@@ -135,6 +135,7 @@ describe("CommentList", () => {
   // currently loaded, so this applies retroactively to pre-existing
   // comments too - there's no separate "mentions" field stored on a
   // comment from creation time.
+  // AC-112, AC-114
   it("linkifies an @mention that matches a real user, in a pre-existing comment", async () => {
     mockAuth({ isAuth: true, username: "jane" });
     getComments.mockResolvedValue([makeComment({ body: "hi @bob!" })]);

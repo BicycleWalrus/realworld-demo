@@ -30,6 +30,7 @@ describe("linkifyMentions", () => {
     ]);
   });
 
+  // AC-112
   it("turns a known username into a mention part", () => {
     expect(linkifyMentions("hi @jane!", ["jane"])).toEqual([
       { type: "text", value: "hi " },
@@ -38,6 +39,7 @@ describe("linkifyMentions", () => {
     ]);
   });
 
+  // AC-113
   it("leaves an unknown username as plain text", () => {
     // Rendered as adjacent text segments rather than merged into one - the
     // rendered output is identical either way, this just documents the

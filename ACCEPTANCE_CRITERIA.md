@@ -514,6 +514,25 @@ changed.
   cleared; given the field is instead omitted from the submission, then
   the previously stored value is left unchanged.
 
+### US-037 — @mentions in comments
+*(REQ-057)*
+
+- **AC-111** — Given a comment textarea (create or edit), when the user
+  types `@` followed by characters, then matching username suggestions
+  are offered to select from.
+- **AC-112** — Given a posted comment whose body contains `@username`
+  matching an existing user, when rendered, then that mention is
+  displayed as a link to that user's profile.
+- **AC-113** — Given a posted comment whose body contains `@something`
+  matching no existing user, when rendered, then it is displayed as
+  plain text, not a broken link.
+- **AC-114** — Given a comment that existed before this feature, when it
+  is rendered, then any `@username` mentions in its body are linkified
+  the same as a newly-created comment's.
+- **AC-115** — Given comment creation or editing, when a comment is
+  submitted, then its body validation (non-empty body) is unaffected by
+  the presence of any `@mention` pattern.
+
 ---
 
 ## Traceability Matrix
@@ -575,3 +594,4 @@ changed.
 | REQ-053 | US-033 | AC-093–AC-097 |
 | REQ-054 | US-034 | AC-098–AC-101 |
 | REQ-055 | US-035 | AC-102–AC-106 |
+| REQ-057 | US-037 | AC-111–AC-115 |
