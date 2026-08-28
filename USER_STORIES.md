@@ -187,3 +187,9 @@ unfinished work.
 **US-035** — As a user, I want to browse a directory of all authors so
 that I can discover people to follow without knowing their username.
 *Related requirements: REQ-074, REQ-075, REQ-076*
+
+---
+
+**US-036** — As an author, I want to add a cover image to my article so
+that it's more visually distinctive in listings and on its page.
+*Related requirements: REQ-077, REQ-078*

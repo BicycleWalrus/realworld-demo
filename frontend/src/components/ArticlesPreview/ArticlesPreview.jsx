@@ -35,6 +35,13 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
             {article.published === false && (
               <span className="draft-badge">Draft</span>
             )}
+            {article.image && (
+              <img
+                src={article.image}
+                alt=""
+                className="article-cover-preview"
+              />
+            )}
             <h1>{article.title}</h1>
             <p>{article.description}</p>
             <span>Read more...</span>
