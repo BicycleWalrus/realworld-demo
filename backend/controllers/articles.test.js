@@ -540,6 +540,7 @@ describe("allArticles", () => {
   // keep the newest-first order the underlying query already returns them
   // in (a stable sort's tie-break), matching how every other listing
   // orders newest first by default.
+  // AC-126
   test("sort=trending -> ordered by favorite count, highest first, newest-first tie-break", async () => {
     const author = makeFollowableUser();
     const seed = [
@@ -593,6 +594,7 @@ describe("allArticles", () => {
 
   // Trending composes with tag/author filtering rather than only sorting
   // an unfiltered set.
+  // AC-127
   test("sort=trending -> composes with a tag filter instead of sorting the whole table", async () => {
     const author = makeFollowableUser();
     const seed = [makeArticle({ id: 1, slug: "tagged", author, favoritesCount: 1, tags: ["node"] })];
@@ -608,6 +610,7 @@ describe("allArticles", () => {
   // Trending composes with `favorited` (sorts that user's favorited
   // articles by count) rather than silently ignoring `sort` whenever
   // `favorited` is present.
+  // AC-127
   test("sort=trending -> composes with favorited instead of silently ignoring the sort", async () => {
     const author = makeFollowableUser();
     const seed = [
@@ -635,6 +638,7 @@ describe("allArticles", () => {
 
   // Trending sort still uses this app's standard page size and reports the
   // true total count across all matches, same as the default listing.
+  // AC-128
   test("sort=trending -> paginates at the standard page size with a true total count", async () => {
     const author = makeFollowableUser();
     const seed = Array.from({ length: 5 }, (_, i) =>

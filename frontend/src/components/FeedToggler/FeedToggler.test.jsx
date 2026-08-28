@@ -14,6 +14,7 @@ function renderToggler() {
 }
 
 describe("FeedToggler", () => {
+  // AC-125
   it("offers a Top Articles tab to any visitor, logged in or not", () => {
     renderToggler();
 
@@ -22,6 +23,7 @@ describe("FeedToggler", () => {
     ).toBeInTheDocument();
   });
 
+  // AC-129
   it("selecting Top Articles makes it the active tab", () => {
     renderToggler();
 

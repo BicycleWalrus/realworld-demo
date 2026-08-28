@@ -568,6 +568,24 @@ changed.
 - **AC-119** — Given a visitor with no recently-viewed articles, when
   they visit the home page, then no recently-viewed widget is displayed.
 
+### US-040 — Trending / Top Articles feed tab
+*(REQ-060)*
+
+- **AC-125** — Given the feed tabs, when viewed by any visitor
+  (authenticated or not), then a "Top Articles" tab is available
+  alongside the existing tabs.
+- **AC-126** — Given the "Top Articles" tab is selected, when articles
+  are listed, then they are ordered by favorite count, highest first,
+  with equal counts broken by newest first.
+- **AC-127** — Given the "Top Articles" tab combined with a tag, author,
+  or favorited filter, when articles are listed, then the sort applies
+  to that filtered set rather than being silently ignored.
+- **AC-128** — Given the "Top Articles" tab, when articles are listed,
+  then the same pagination page size as other listings is used.
+- **AC-129** — Given a switch to or from the "Top Articles" tab, when
+  the new tab renders, then no stale data from the previous tab is
+  shown.
+
 ---
 
 ## Traceability Matrix
@@ -632,3 +650,4 @@ changed.
 | REQ-056 | US-036 | AC-107–AC-110 |
 | REQ-057 | US-037 | AC-111–AC-115 |
 | REQ-058 | US-038 | AC-116–AC-119 |
+| REQ-060 | US-040 | AC-125–AC-129 |

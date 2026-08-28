@@ -209,3 +209,10 @@ jump to their profile.
 viewed, so that I can easily get back to something I was reading without
 searching for it again.
 *Related requirements: REQ-058*
+
+---
+
+**US-040** — As a user, I want to browse articles sorted by how many
+favorites they've received, so that I can discover the most well-received
+content on the platform.
+*Related requirements: REQ-060*
