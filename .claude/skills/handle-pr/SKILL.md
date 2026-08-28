@@ -124,53 +124,92 @@ two of these." If it lost to a specific other PR/ticket, name it.
 
 ### If merging
 
+We generally don't have push access to another contributor's own branch,
+and even when we do, force-pushing someone else's branch to rebase it is
+the kind of hard-to-reverse, other-people's-shared-state action this repo
+avoids by default. So "merging" a contributor's PR means **reconciling
+its commit onto our own new branch and opening our own PR from it** —
+never rebasing/force-pushing the original branch in place.
+
 1. Check `mergeable`/`mergeStateStatus` fresh (it may have changed since
    Step 1 if anything else merged in the meantime).
-2. If behind `main` or textually conflicting:
-   `git fetch origin main && git rebase origin/main`. Resolve conflicts
-   by hand — for the `REQUIREMENTS.md`/`USER_STORIES.md`/
-   `ACCEPTANCE_CRITERIA.md` tail and Traceability Matrix, the resolution
-   is almost always "keep both sides, renumber this PR's entries to the
-   next unused number after whatever's now on `main`," never drop either
-   side's entries and never renumber something already on `main`. Rerun
-   the `test-runner` agent after rebasing.
-3. Force-pushing the result (`git push --force-with-lease`) rewrites
-   someone else's branch — confirm with the user before doing it, every
-   time, even if they approved a rebase in general terms earlier in this
-   session.
-4. Confirm branch protection is actually satisfiable: a passing
-   `Run Tests` check and at least one approving review
-   (`statusCheckRollup`/`reviews` from Step 1's `gh pr view`, re-checked).
-   If a review is missing, ask the user whether they want to supply one
-   (`gh pr review <N> --approve`) — this is its own visible action on
-   someone else's PR and needs its own confirmation, don't fold it into
-   "yes, merge."
-5. `gh pr merge <N> --squash` (squash keeps `main`'s history one commit
-   per feature, consistent with how this backlog is being integrated).
-   Ask whether to pass `--delete-branch` too, rather than assuming.
+2. `git checkout main && git pull origin main`, then branch off it under
+   your own username (`GITHUB.md` section 4 naming convention), e.g.
+   `git checkout -b <your-username>/feat-<short-description>`.
+3. Bring the PR's commit(s) onto this new branch with
+   `git cherry-pick <sha>` for each commit on the PR branch not already on
+   `main` (`git log main..<pr-branch> --oneline` lists them). Cherry-pick
+   preserves the original author on the commit — do not amend the
+   authorship — so the contributor still gets credit even though the PR
+   itself is opened from our branch.
+4. Resolve any conflicts by hand — for the `REQUIREMENTS.md`/
+   `USER_STORIES.md`/`ACCEPTANCE_CRITERIA.md` tail and Traceability
+   Matrix, the resolution is almost always "keep both sides, renumber
+   this PR's entries to the next unused number after whatever's now on
+   `main`," never drop either side's entries and never renumber something
+   already on `main`. The `req-freeze-guard` hook will block an Edit/Write
+   pass over these files during conflict resolution because it can't tell
+   "resolving a merge conflict" from "editing a frozen entry" — per
+   `CLAUDE.md`, that hook only guards Claude Code's own Edit/Write/
+   MultiEdit tools, not Bash, so do the renumbering via a `python3`/`sed`
+   script through Bash instead of the Edit tool.
+5. Grep the changed non-doc files for the old `REQ-###`/`US-###`/`AC-###`
+   numbers too (e.g. `grep -rn "REQ-0[0-9]*\|AC-0[0-9]*" <changed files>`)
+   — code comments and test-description strings that cite these IDs need
+   the same renumbering, or they'll cite the wrong requirement after the
+   docs move.
+6. Rerun the `test-runner` agent on the new branch — the renumbering
+   shouldn't touch application logic, so a full pass is expected; treat
+   any new failure as a real regression introduced by conflict resolution.
+7. Push the new branch (`git push -u origin <branch>`) and open a PR from
+   it (`gh pr create --base main`, per `GITHUB.md` section 5) — **do not
+   merge the original PR**, it stays open until the new one lands. In the
+   new PR's body, name the original PR/author it reconciles (and, if it
+   won a comparison against sibling duplicate PRs per Step 1, name those
+   and summarize why this one won), and include the same `Closes #<issue>`
+   the original used.
+8. Confirm branch protection is satisfiable on the *new* PR: a passing
+   `Run Tests` check and at least one approving review. If a review is
+   missing, ask the user whether they want to supply one
+   (`gh pr review <new-N> --approve`) — this is its own visible action and
+   needs its own confirmation, don't fold it into "yes, merge."
+9. `gh pr merge <new-N> --squash` (squash keeps `main`'s history one
+   commit per feature). Ask whether to pass `--delete-branch` too, rather
+   than assuming.
+10. Once the new PR merges, close the original PR (and any duplicate-
+    cluster siblings per Step 5) referencing the new PR number, crediting
+    the original author's implementation by name.
 
 ## Step 5 — Aftermath
 
 - Return to the branch recorded in Step 0
   (`git checkout <original-branch>`) and pop the stash if one was made
   (`git stash pop`), so the user's prior work is exactly as they left it.
-- If this PR just merged, `gh pr list --state open` again and check
-  which remaining PRs touch files this merge changed — report that list
-  to the user as "these likely need a rebase now" rather than commenting
-  on all of them automatically.
+- If a (reconciled or direct) merge just happened, `gh pr list --state
+  open` again and check which remaining PRs touch files this merge
+  changed — report that list to the user as "these likely need a rebase
+  now" rather than commenting on all of them automatically.
 - If this PR was part of a duplicate cluster identified in Step 1 and it
-  just merged (or just got closed as a duplicate of one still open),
-  offer to close the others in that cluster the same way — but propose
-  it and wait, don't cascade closes automatically.
+  just merged (via its own reconciled PR, per Step 4) or just got closed
+  as a duplicate of one still open, offer to close the others in that
+  cluster the same way — but propose it and wait, don't cascade closes
+  automatically.
 
 ## Guardrails
 
 - One PR per invocation. Never chain automatically into the next.
 - Never merge, close, approve a review, or force-push without explicit
   confirmation tied to that specific action and that specific PR.
-- Never skip the automated test gate (Step 2) to reach a merge.
+- Never rebase or force-push a contributor's own PR branch in place —
+  reconcile onto our own new branch and open our own PR instead (Step 4).
+- When reconciling onto our own branch, always cherry-pick (never
+  re-author) the original commit(s), so the contributor keeps authorship
+  credit on what merges.
+- Never skip the automated test gate (Step 2, and again after reconciling
+  in Step 4) to reach a merge.
 - Never edit or renumber a `REQ-###`/`US-###`/`AC-###` entry or
   Traceability Matrix row that's already on `main` — only ever append
-  past the current highest number.
+  past the current highest number. This applies to code comments/test
+  descriptions citing those IDs too, not just the doc files.
 - Never leave the workspace on the PR's branch or with a stash unresolved
   when you're done — always execute Step 5.
