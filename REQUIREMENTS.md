@@ -405,3 +405,16 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — Article cover image is optional
+Creating or updating an article accepts an optional `image` field (a URL
+string). When set, it is included in the article's representation in
+every API response (listing, feed, single article, create, update). This
+does not change REQ-015's required-field check, which still covers only
+title, description, and body.
+
+**Boundary:** on update, `image` is only applied when truthy, mirroring
+REQ-017's treatment of `description`/`body` — a falsy value (e.g., an
+empty string) submitted for `image` leaves the existing stored image
+unchanged rather than clearing it. No validation is performed on the URL
+itself; an invalid or unreachable value is stored and returned as-is.
