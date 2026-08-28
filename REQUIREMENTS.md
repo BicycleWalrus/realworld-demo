@@ -405,3 +405,15 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — Dark theme toggle with persisted, OS-aware default
+A control in the navbar, visible on every page regardless of
+authentication state, switches the application's color theme between
+light and dark without a page reload. The chosen theme is persisted (via
+`localStorage`) and re-applied on subsequent page loads and new visits in
+the same browser. When no theme has previously been chosen in that
+browser, the application defaults to dark if the browser reports a
+`prefers-color-scheme: dark` preference, and to light otherwise (including
+when the preference cannot be determined). The light theme's appearance is
+unchanged from before this control existed; dark-theme styling is applied
+only when the dark theme is active.
