@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import NavItem from "../NavItem";
 import SourceCodeLink from "../SourceCodeLink";
+import ThemeToggle from "../ThemeToggle";
 import DropdownMenu from "./DropdownMenu";
 
 function Navbar() {
@@ -32,6 +33,10 @@ function Navbar() {
               <NavItem text="Sign up" url="/register" />
             </>
           )}
+
+          <li className="nav-item">
+            <ThemeToggle />
+          </li>
         </ul>
       </div>
     </nav>
