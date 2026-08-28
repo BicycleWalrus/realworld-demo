@@ -167,3 +167,10 @@ take to read, so that I can decide whether to read it now.
 **US-032** — As a reader, I want to download an article as a Markdown
 file, so that I can save or read it offline in my own editor/notes app.
 *Related requirements: REQ-052*
+
+---
+
+**US-033** — As a comment author, I want to edit my own comment, so that I
+can fix a mistake or clarify what I said without deleting the whole
+comment and losing the thread position/replies context.
+*Related requirements: REQ-053*

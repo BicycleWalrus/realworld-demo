@@ -48,6 +48,7 @@ beforeEach(() => {
   getComments.mockResolvedValue([makeComment()]);
 });
 
+// AC-097
 describe("CommentList", () => {
   it("does not show an edit control to a non-author viewer", async () => {
     mockAuth({ isAuth: true, username: "someone-else" });

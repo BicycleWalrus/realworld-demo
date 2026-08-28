@@ -118,6 +118,7 @@ describe("createComment", () => {
 });
 
 describe("updateComment", () => {
+  // AC-095
   test("no loggedUser -> UnauthorizedError", async () => {
     const next = vi.fn();
 
@@ -147,6 +148,7 @@ describe("updateComment", () => {
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
   });
 
+  // AC-093
   test("comment author edits own comment -> saved and returned", async () => {
     const author = makeFollowableUser({ id: 9 });
     const comment = makeInstance(
@@ -171,6 +173,7 @@ describe("updateComment", () => {
     expect(res.json).toHaveBeenCalledWith({ comment });
   });
 
+  // AC-094
   test("non-author attempts edit -> ForbiddenError, not saved", async () => {
     const author = makeFollowableUser({ id: 9 });
     const comment = makeInstance(
@@ -195,6 +198,7 @@ describe("updateComment", () => {
     expect(comment.body).toBe("original");
   });
 
+  // AC-096
   test("empty body -> FieldRequiredError, not saved", async () => {
     const author = makeFollowableUser({ id: 9 });
     const comment = makeInstance(
