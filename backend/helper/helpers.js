@@ -39,4 +39,17 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+// Assigns an already-determined read-later status onto the article,
+// mirroring appendTagList's style: the caller resolves the value (via
+// the ReadLater model directly), this just attaches it.
+const appendReadLater = (article, isReadLater) => {
+  article.dataValues.readLater = isReadLater;
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendReadLater,
+};

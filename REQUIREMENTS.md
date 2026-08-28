@@ -405,3 +405,39 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Read-later / bookmark list
+An authenticated user can save an article to a private "read later" list
+and remove it again, via `POST`/`DELETE /api/articles/:slug/read-later`.
+This is backed by its own `ReadLater` table (one row per user/article
+pair), entirely separate from `Favorites` (REQ-025/REQ-026) — saving or
+removing an article for later does not create, alter, or read any
+`Favorites` row, and vice versa. Both actions require an authenticated
+session; an unauthenticated request is rejected (401), the same as
+favoriting (REQ-025).
+
+A dedicated endpoint, `GET /api/user/read-later`, returns only the
+requesting user's own saved articles, most-recently-saved first, using
+the same pagination page size as other article listings (REQ-031). No
+endpoint exposes another user's read-later list, or any aggregate
+"how many people saved this" count — the list, and even its existence
+for a given article, is private to the saving user. The single-article
+endpoint (`GET /api/articles/:slug`) additionally reports the
+requesting user's own read-later status for that article as a
+`readLater` boolean (`false` for an anonymous request), the same way it
+already reports `favorited`.
+
+On the client, a "Read Later" toggle button appears on the article
+detail page (not on article preview cards in listings). Clicking it
+without an active session alerts the visitor to log in first, rather
+than sending a request — the same pattern `FavButton` already uses.
+`readLater` status is fetched independently of the article detail
+page's existing nav-state-based skip-fetch (REQ-043), since that
+navigation state never carries it (no article-listing response
+includes it) — this doesn't change REQ-043's own behavior for the
+fields it already covers. A dedicated `/read-later` page lists the
+current user's saved articles; a visitor without an active session is
+redirected away from it, consistent with the account settings page
+(REQ-036).

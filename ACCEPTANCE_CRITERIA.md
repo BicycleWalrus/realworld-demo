@@ -406,6 +406,39 @@ changed.
 
 ---
 
+### US-029 — Personal read-later list
+*(REQ-049)*
+
+- **AC-080** — Given an authenticated user, when they save an article for
+  later, then it appears in their `GET /api/user/read-later` list; when
+  they remove it, then it no longer does — independently of that
+  article's `Favorites` state either way.
+- **AC-081** — Given a user with several saved articles, when their list
+  is requested, then it's ordered most-recently-saved first, respecting
+  the existing pagination page size (REQ-031).
+- **AC-082** — Given an anonymous request, when saving/unsaving is
+  attempted, then it's rejected (401); when any other user's read-later
+  list or an article's read-later status is inspected, then no
+  information about who has saved it is ever exposed — status is only
+  ever reported for the requesting user's own view of their own list.
+- **AC-083** — Given an article an authenticated user has saved, when
+  they view its detail page, then a "Saved for Later" control is shown
+  (vs. "Read Later" when not saved), and this stays consistent across
+  every place the control is rendered on that page.
+- **AC-084** — Given the read-later status is not part of the article
+  detail page's navigation-state skip-fetch (REQ-043), when the page is
+  reached via an in-app link, then the status is still fetched and
+  displayed correctly, without changing REQ-043's existing behavior for
+  the fields it already covers.
+- **AC-085** — Given a visitor without an active session, when they
+  navigate to `/read-later`, then they are redirected away, consistent
+  with the account settings page (REQ-036).
+- **AC-086** — Given a visitor without an active session, when they
+  attempt to click the read-later control, then they are alerted to log
+  in rather than a request being sent — the same pattern as favoriting.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +491,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-086 |

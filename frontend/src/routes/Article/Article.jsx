@@ -27,6 +27,18 @@ function Article() {
       });
   }, [isAuth, slug, headers, state, navigate]);
 
+  // Read-later status is never part of the navigation state above (it
+  // isn't part of any article-listing response), so it's fetched
+  // independently, regardless of whether the effect above skipped its
+  // own fetch (REQ-043).
+  useEffect(() => {
+    if (!isAuth) return;
+
+    getArticle({ slug, headers })
+      .then((fetched) => setArticle((prev) => ({ ...prev, readLater: fetched?.readLater })))
+      .catch(console.error);
+  }, [isAuth, slug, headers]);
+
   return (
     <div className="article-page">
       <BannerContainer>
