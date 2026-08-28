@@ -31,6 +31,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "articleId",
         timestamps: false,
       });
+
+      // Read-later
+      this.belongsToMany(User, {
+        through: "ReadLaters",
+        as: "readLaterUsers",
+        foreignKey: "articleId",
+        timestamps: false,
+      });
     }
 
     toJSON() {

@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import ArticleAuthorButtons from "../ArticleAuthorButtons";
 import FavButton from "../FavButton";
 import FollowButton from "../FollowButton";
+import ReadLaterButton from "../ReadLaterButton";
 
 function ArticlesButtons({ article, setArticle }) {
   const { author: { username } = {}, author } = article || {};
@@ -23,6 +24,7 @@ function ArticlesButtons({ article, setArticle }) {
     <>
       <FollowButton {...author} handler={followHandler} />
       <FavButton {...article} handler={handleFav} text />
+      <ReadLaterButton slug={slug} />
     </>
   );
 }

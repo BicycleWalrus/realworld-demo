@@ -404,6 +404,32 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-035 — Personal read-later list
+*(REQ-056, REQ-057)*
+
+- **AC-111** — Given an unauthenticated request, when it attempts to add
+  or remove an article from a read-later list, then it is rejected with
+  an authorization error.
+- **AC-112** — Given a slug that doesn't correspond to any article, when
+  an authenticated user attempts to add or remove it from their
+  read-later list, then the request fails with a not-found error.
+- **AC-113** — Given an article not yet on a user's read-later list, when
+  that user adds it, then it appears in that user's read-later list on a
+  subsequent listing request.
+- **AC-114** — Given an article on a user's read-later list, when that
+  user removes it, then it no longer appears in that user's read-later
+  list on a subsequent listing request.
+- **AC-115** — Given a user's read-later list containing articles with
+  different `createdAt` values, when the list is retrieved, then
+  articles are ordered newest-article-first.
+- **AC-116** — Given a user has saved an article to their read-later
+  list, when a different user (or an anonymous request) attempts to
+  retrieve that list, then no endpoint returns it.
+- **AC-117** — Given a user adds or removes an article from their
+  read-later list, when that article's favorite count and any other
+  user's favorited state are subsequently checked, then neither has
+  changed as a result.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +484,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-056 | US-035 | AC-111–AC-114, AC-117 |
+| REQ-057 | US-035 | AC-115–AC-116 |
