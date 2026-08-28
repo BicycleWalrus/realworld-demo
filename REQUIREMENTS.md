@@ -421,3 +421,14 @@ rendered as a top-level Markdown heading, followed by the article's body
 text. The downloaded file's name is derived from the article's slug —
 e.g., an article with slug `how-to-train-your-dragon` downloads as
 `how-to-train-your-dragon.md`.
+
+### REQ-051 — Estimated reading time on article previews and detail view
+Every article preview card and the article detail page display an
+estimated reading time (e.g., "4 min read"), computed from the word count
+of the article's `body` at 200 words per minute and rounded up, with a
+floor of one minute so an empty or very short body never displays "0 min
+read" or a non-numeric value. The reading time is shown alongside the
+existing article/comment date display (REQ-040) without altering that
+date's format.
+
+*(Directly verified by `frontend/src/helpers/readingTime.test.js`.)*

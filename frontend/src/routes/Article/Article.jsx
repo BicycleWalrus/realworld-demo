@@ -32,7 +32,7 @@ function Article() {
     <div className="article-page">
       <BannerContainer>
         <h1>{title}</h1>
-        <ArticleMeta author={author} createdAt={createdAt}>
+        <ArticleMeta author={author} body={body} createdAt={createdAt}>
           <ArticlesButtons article={article} setArticle={setArticle} />
           <DownloadArticleButton title={title} body={body} slug={slug} />
         </ArticleMeta>
@@ -49,7 +49,7 @@ function Article() {
         <hr />
 
         <div className="article-actions">
-          <ArticleMeta author={author} createdAt={createdAt}>
+          <ArticleMeta author={author} body={body} createdAt={createdAt}>
             <ArticlesButtons article={article} setArticle={setArticle} />
             <DownloadArticleButton title={title} body={body} slug={slug} />
           </ArticleMeta>
