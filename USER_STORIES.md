@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-035** — As a user, I want to save articles to a personal read-later
+list and view that list later, so that I can keep track of articles I
+want to come back to without publicly favoriting them.
+*Related requirements: REQ-056, REQ-057*

@@ -405,3 +405,21 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-056 — Saving/removing an article from a user's read-later list requires authentication and an existing article
+Adding or removing an article from a user's personal read-later list
+requires a resolved, authenticated user and requires the target article
+to exist (identified by slug); otherwise the request is rejected. This
+is a distinct feature from favoriting (REQ-025): it uses its own join
+table and does not read, write, or otherwise alter the `Favorites`
+table, the favorite count, or the favorited flag on any article.
+
+### REQ-057 — A user's read-later list is private and lists saved articles newest-article-first
+A user's read-later list contains only articles that user has
+explicitly saved, and is retrievable only by that same authenticated
+user via a self-scoped endpoint — no endpoint accepts another user's
+identifier to retrieve their list, and it is not represented on that
+user's public profile. Listed articles are ordered by the underlying
+article's own `createdAt` (newest first) — the same ordering already
+used elsewhere in article listings — rather than by the time each
+article was added to the list.
