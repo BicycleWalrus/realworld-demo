@@ -18,7 +18,11 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
     articles.map((article) => {
       return (
         <div className="article-preview" key={article.slug}>
-          <ArticleMeta author={article.author} createdAt={article.createdAt}>
+          <ArticleMeta
+            author={article.author}
+            body={article.body}
+            createdAt={article.createdAt}
+          >
             <FavButton
               favorited={article.favorited}
               favoritesCount={article.favoritesCount}
