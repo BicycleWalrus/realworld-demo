@@ -42,7 +42,9 @@ const readLaterList = async (req, res, next) => {
     const articleIds = savedRows.map((row) => row.articleId);
 
     const articles = await Article.findAll({
-      where: { id: articleIds },
+      // Draft visibility (REQ-067): a saved article that later became
+      // a draft disappears from the list for everyone but its author.
+      where: { id: articleIds, draft: false },
       include: [
         { model: Tag, as: "tagList", attributes: ["name"] },
         { model: User, as: "author", attributes: ["username", "bio", "image"] },

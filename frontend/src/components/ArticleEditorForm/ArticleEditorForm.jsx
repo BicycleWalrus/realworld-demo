@@ -5,11 +5,11 @@ import getArticle from "../../services/getArticle";
 import setArticle from "../../services/setArticle";
 import FormFieldset from "../FormFieldset";
 
-const emptyForm = { title: "", description: "", body: "", image: "", tagList: "" };
+const emptyForm = { title: "", description: "", body: "", image: "", tagList: "", draft: false };
 
 function ArticleEditorForm() {
   const { state } = useLocation();
-  const [{ title, description, body, image, tagList }, setForm] = useState(
+  const [{ title, description, body, image, tagList, draft }, setForm] = useState(
     state || emptyForm,
   );
   const [errorMessage, setErrorMessage] = useState("");
@@ -25,10 +25,10 @@ function ArticleEditorForm() {
     if (state || !slug) return;
 
     getArticle({ headers, slug })
-      .then(({ author: { username }, body, description, image, tagList, title }) => {
+      .then(({ author: { username }, body, description, image, tagList, title, draft }) => {
         if (username !== loggedUser.username) redirect();
 
-        setForm({ body, description, image: image || "", tagList, title });
+        setForm({ body, description, image: image || "", tagList, title, draft: !!draft });
       })
       .catch(console.error);
 
@@ -48,16 +48,19 @@ function ArticleEditorForm() {
     setForm((form) => ({ ...form, tagList: value.split(/,| /) }));
   };
 
-  const formSubmit = (e) => {
+  // Draft/publish workflow (REQ-067): saving always submits an explicit
+  // draft flag — false publishes (create or draft publish), true keeps
+  // or makes the article a draft.
+  const save = (submitAsDraft) => (e) => {
     e.preventDefault();
 
-    setArticle({ headers, slug, body, description, image, tagList, title })
+    setArticle({ headers, slug, body, description, image, tagList, title, draft: submitAsDraft })
       .then((slug) => navigate(`/article/${slug}`))
       .catch(setErrorMessage);
   };
 
   return (
-    <form onSubmit={formSubmit}>
+    <form onSubmit={save(false)}>
       <fieldset>
         {errorMessage && <span className="error-messages">{errorMessage}</span>}
         <FormFieldset
@@ -109,7 +112,14 @@ function ArticleEditorForm() {
         </FormFieldset>
 
         <button className="btn btn-lg pull-xs-right btn-primary" type="submit">
-          {slug ? "Update Article" : "Publish Article"}
+          {slug && !draft ? "Update Article" : "Publish Article"}
+        </button>
+        <button
+          className="btn btn-lg pull-xs-right btn-outline-primary"
+          onClick={save(true)}
+          type="button"
+        >
+          Save Draft
         </button>
       </fieldset>
     </form>

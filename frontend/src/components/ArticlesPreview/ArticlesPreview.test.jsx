@@ -41,3 +41,17 @@ it("renders no image on a preview card when the article has none", () => {
 
   expect(screen.queryByRole("img", { name: "A title" })).not.toBeInTheDocument();
 });
+
+// AC-161 (REQ-067): the author's own profile listing shows drafts,
+// each visibly marked as a draft.
+it("marks a draft article with a Draft badge on its preview card", () => {
+  renderPreview([makeArticle({ draft: true })]);
+
+  expect(screen.getByText("Draft")).toBeInTheDocument();
+});
+
+it("adds no draft badge to published articles", () => {
+  renderPreview([makeArticle()]);
+
+  expect(screen.queryByText("Draft")).not.toBeInTheDocument();
+});
