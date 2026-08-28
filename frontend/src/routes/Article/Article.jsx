@@ -5,6 +5,7 @@ import ArticleMeta from "../../components/ArticleMeta";
 import ArticlesButtons from "../../components/ArticlesButtons";
 import ArticleTags from "../../components/ArticleTags";
 import BannerContainer from "../../components/BannerContainer";
+import DownloadArticleButton from "../../components/DownloadArticleButton";
 import { useAuth } from "../../context/AuthContext";
 import getArticle from "../../services/getArticle";
 
@@ -33,6 +34,7 @@ function Article() {
         <h1>{title}</h1>
         <ArticleMeta author={author} createdAt={createdAt}>
           <ArticlesButtons article={article} setArticle={setArticle} />
+          <DownloadArticleButton title={title} body={body} slug={slug} />
         </ArticleMeta>
       </BannerContainer>
 
@@ -49,6 +51,7 @@ function Article() {
         <div className="article-actions">
           <ArticleMeta author={author} createdAt={createdAt}>
             <ArticlesButtons article={article} setArticle={setArticle} />
+            <DownloadArticleButton title={title} body={body} slug={slug} />
           </ArticleMeta>
         </div>
 
