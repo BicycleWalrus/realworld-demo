@@ -404,6 +404,31 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-029 — @mentions in comments
+*(REQ-049)*
+
+- **AC-080** — Given a comment being typed, when the user enters `@` followed
+  by one or more characters, then matching username suggestions are offered
+  for selection via autocomplete.
+- **AC-081** — Given a posted comment containing an `@username` pattern that
+  matches an existing user, when the comment is displayed, then the
+  `@username` is rendered as a clickable link to that user's profile page.
+- **AC-082** — Given a posted comment containing an `@something` pattern that
+  does not match any existing username, when the comment is displayed, then
+  the `@something` is displayed as plain text, not as a broken or invalid link.
+- **AC-083** — Given a newly created comment with `@username` mentions, when
+  the comment is posted and subsequently displayed, then mentions are
+  rendered as links per AC-081.
+- **AC-084** — Given an existing comment (created before this feature was
+  implemented) containing text matching the `@username` pattern, when the
+  comment is displayed in the UI, then the `@username` is rendered as a link
+  if a matching user exists, or as plain text otherwise (retroactive mention
+  rendering).
+- **AC-085** — Given the autocomplete UI while typing a mention, when the user
+  has typed `@ALI`, then matching suggestions include users with usernames
+  like `alice`, `alison`, and `ali` (case-insensitive, partial-username
+  matching).
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +483,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-085 |

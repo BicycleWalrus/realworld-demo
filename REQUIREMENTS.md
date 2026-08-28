@@ -405,3 +405,24 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — @mentions in comments
+When a user writes a comment, typing `@` followed by characters triggers
+autocomplete suggestions matching existing usernames. When the comment is
+posted, any `@username` pattern in the comment body that corresponds to an
+existing user is rendered as a clickable link to that user's profile page
+(`/profile/:username`). An `@something` pattern that does not match any
+existing username is displayed as plain text.
+
+**Special case:** Autocomplete matching is case-insensitive and matches
+partial usernames — e.g., typing `@ali` offers suggestions for `alice`,
+`alison`, etc.
+
+**Boundary:** Mention rendering applies to all comments, both newly
+created and existing comments displayed in the UI (retroactive rendering
+at display time). The comment's stored body text remains unchanged; mention
+parsing and link generation occur only during rendering.
+
+**Constraint:** Comment body validation (REQ-022) and deletion rules
+(REQ-023) are unchanged — mentions are a rendering/UX layer on top of
+the existing free-text body.
