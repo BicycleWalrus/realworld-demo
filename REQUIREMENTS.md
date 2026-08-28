@@ -851,3 +851,23 @@ The downloaded file's name is derived from the article's slug as
 the article - authenticated or anonymous, author or not - and neither
 grants nor requires any access beyond what viewing the article already
 allows.
+
+---
+
+## Recently Viewed Articles
+
+### REQ-107 — Opening an article's detail page records it in a per-browser recently-viewed history
+Opening an article's detail page records that article (its slug and
+title) in a "recently viewed" history stored in the browser's
+localStorage. This history is per-browser, not tied to an account, and is
+available to all visitors including anonymous ones. Recording a view is
+independent of the article detail page's existing fetch/navigation-state
+behavior (REQ-043) - it does not change what data that page displays or
+how it decides whether to refetch from the server.
+
+### REQ-108 — A Recently Viewed widget shows the visitor's history, most-recent first, deduplicated and capped
+A widget displays the visitor's recently-viewed history, most-recent
+first, capped at 10 entries. Re-viewing an article already present in the
+history moves it to the top rather than adding a second entry, so the
+history never contains duplicate entries for the same article. When the
+history is empty, the widget renders nothing.
