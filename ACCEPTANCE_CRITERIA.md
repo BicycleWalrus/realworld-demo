@@ -406,6 +406,24 @@ changed.
 
 ---
 
+### US-029 — Browse articles sorted by popularity
+*(REQ-049)*
+
+- **AC-080** — Given articles with different favorite counts, when listed
+  with `sort=top`, then they're ordered by favorite count, highest first,
+  with equal counts tie-broken by newest first.
+- **AC-081** — Given a `sort=top` request, when results are returned,
+  then they respect the existing page size (REQ-031).
+- **AC-082** — Given no `sort` parameter (or one other than `top`), when
+  articles are listed, then ordering is unchanged from today — newest
+  first (REQ-013).
+- **AC-083** — Given the Home page, when any visitor (authenticated or
+  not) selects the "Top Articles" tab, then it lists articles by
+  popularity; switching to and from it behaves like any other tab switch,
+  with no stale data shown, and it is never the default tab (REQ-030).
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +476,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-083 |

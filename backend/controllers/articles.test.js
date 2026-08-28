@@ -10,7 +10,12 @@ const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-uti
 const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Tag, User });
+// Real Sequelize.literal(...) returns an opaque Literal instance; the fake
+// only needs a marker distinguishable from a plain column-name string (see
+// fakeArticleList's `order` handling below) — not to model Sequelize's
+// actual internal shape.
+const sequelize = { literal: (sql) => ({ __literal: true, sql }) };
+mockRequire(require.resolve("../models"), { Article, Tag, User, sequelize });
 
 const {
   allArticles,
@@ -39,6 +44,7 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
       tagList: tags,
       createdAt: new Date("2020-01-01"),
       author,
+      favoritesCount,
       ...data,
     },
     {
@@ -59,8 +65,18 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
 // behavior can be asserted on the returned response body rather than on
 // what arguments were passed to a mock.
 function fakeArticleList(seedRows) {
-  return ({ include = [], limit, offset, where } = {}) => {
-    let rows = [...seedRows].sort((a, b) => b.dataValues.createdAt - a.dataValues.createdAt);
+  return ({ include = [], limit, offset, order, where } = {}) => {
+    // A plain `["createdAt", "DESC"]` order entry sorts newest-first (the
+    // default); anything else (a Literal marker, for `sort=top`) sorts by
+    // favoritesCount instead, tie-broken newest-first.
+    const sortByFavorites = order?.[0]?.[0]?.__literal;
+    let rows = sortByFavorites
+      ? [...seedRows].sort(
+          (a, b) =>
+            b.dataValues.favoritesCount - a.dataValues.favoritesCount ||
+            b.dataValues.createdAt - a.dataValues.createdAt,
+        )
+      : [...seedRows].sort((a, b) => b.dataValues.createdAt - a.dataValues.createdAt);
 
     const tagFilter = include.find((i) => i.as === "tagList")?.where?.name;
     const authorFilter = include.find((i) => i.as === "author")?.where?.username;
@@ -398,6 +414,102 @@ describe("allArticles", () => {
     const res = makeRes();
 
     await allArticles({ loggedUser: undefined, query: {} }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(4);
+    expect(articles).toHaveLength(3);
+    expect(articles[0].slug).toBe("jane-3");
+  });
+
+  // AC-080: sort=top orders by favorite count, highest first.
+  test("sort=top -> ordered by favorite count, highest first", async () => {
+    const seed = [
+      makeArticle({
+        author: makeFollowableUser(),
+        slug: "least-favorited",
+        favoritesCount: 1,
+        createdAt: new Date("2020-01-03"),
+      }),
+      makeArticle({
+        author: makeFollowableUser(),
+        slug: "most-favorited",
+        favoritesCount: 5,
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        author: makeFollowableUser(),
+        slug: "mid-favorited",
+        favoritesCount: 3,
+        createdAt: new Date("2020-01-02"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "top" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual([
+      "most-favorited",
+      "mid-favorited",
+      "least-favorited",
+    ]);
+  });
+
+  // AC-080: equal favorite counts tie-break newest first.
+  test("sort=top -> ties broken by newest first", async () => {
+    const seed = [
+      makeArticle({
+        author: makeFollowableUser(),
+        slug: "older",
+        favoritesCount: 2,
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        author: makeFollowableUser(),
+        slug: "newer",
+        favoritesCount: 2,
+        createdAt: new Date("2020-01-05"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "top" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["newer", "older"]);
+  });
+
+  // AC-082: no `sort` param -> unchanged, newest-first default (REQ-013).
+  test("no sort param -> default newest-first order is unaffected", async () => {
+    const seed = makeSeedArticles();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: {} }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["jane-2", "bob-1", "jane-1"]);
+  });
+
+  // AC-081: sort=top respects the existing page size.
+  test("sort=top respects pagination", async () => {
+    const seed = [
+      ...makeSeedArticles(),
+      makeArticle({
+        id: 4,
+        slug: "jane-3",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        tags: [],
+        favoritesCount: 10,
+        createdAt: new Date("2020-01-04"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "top" } }, res, vi.fn());
 
     const { articles, articlesCount } = res.json.mock.calls[0][0];
     expect(articlesCount).toBe(4);

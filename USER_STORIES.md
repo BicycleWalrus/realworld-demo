@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-029** — As a user, I want to browse articles sorted by how many
+favorites they've received, so that I can discover the most well-received
+content on the platform.
+*Related requirements: REQ-049*
