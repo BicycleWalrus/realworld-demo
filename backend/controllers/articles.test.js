@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const {
   AlreadyTakenError,
   ForbiddenError,
@@ -67,6 +68,16 @@ function fakeArticleList(seedRows) {
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+
+    const searchPattern = where?.[Op.or]?.[0]?.title?.[Op.iLike];
+    if (searchPattern) {
+      const keyword = searchPattern.replace(/^%|%$/g, "").toLowerCase();
+      rows = rows.filter((r) =>
+        [r.title, r.description, r.body].some((field) =>
+          field?.toLowerCase().includes(keyword),
+        ),
+      );
+    }
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -403,6 +414,109 @@ describe("allArticles", () => {
     expect(articlesCount).toBe(4);
     expect(articles).toHaveLength(3);
     expect(articles[0].slug).toBe("jane-3");
+  });
+
+  // AC-080: a keyword matching only the title is found.
+  test("search matches title (case-insensitive)", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({ author, slug: "dragons", title: "All About Dragons", description: "d", body: "b" }),
+      makeArticle({ author, slug: "other", title: "Something Else", description: "d", body: "b" }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { search: "DRAGONS" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["dragons"]);
+  });
+
+  // AC-080: a keyword matching only the description is found.
+  test("search matches description", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({ author, slug: "match", title: "T", description: "about dragons", body: "b" }),
+      makeArticle({ author, slug: "no-match", title: "T", description: "d", body: "b" }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { search: "dragons" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["match"]);
+  });
+
+  // AC-080: a keyword matching only the body is found.
+  test("search matches body", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({ author, slug: "match", title: "T", description: "d", body: "a body about dragons" }),
+      makeArticle({ author, slug: "no-match", title: "T", description: "d", body: "b" }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { search: "dragons" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["match"]);
+  });
+
+  // AC-081: an empty or whitespace-only search is treated the same as no
+  // search filter at all — the full listing is returned.
+  test.each(["", "   "])("whitespace-only search (%p) -> full listing, no filter applied", async (search) => {
+    const seed = makeSeedArticles();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { search } }, res, vi.fn());
+
+    const { articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(seed.length);
+  });
+
+  // AC-082: search combines (AND) with an existing filter, here tag.
+  test("search combines with an existing tag filter", async () => {
+    const author = makeFollowableUser();
+    const seed = [
+      makeArticle({
+        author,
+        slug: "match",
+        title: "dragons",
+        description: "d",
+        body: "b",
+        tags: [{ name: "fantasy" }],
+      }),
+      makeArticle({
+        author,
+        slug: "wrong-tag",
+        title: "dragons",
+        description: "d",
+        body: "b",
+        tags: [{ name: "other" }],
+      }),
+      makeArticle({
+        author,
+        slug: "wrong-keyword",
+        title: "T",
+        description: "d",
+        body: "b",
+        tags: [{ name: "fantasy" }],
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "dragons", tag: "fantasy" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["match"]);
   });
 
   // AC-031: filtering by which user favorited the article.

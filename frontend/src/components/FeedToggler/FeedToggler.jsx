@@ -4,7 +4,7 @@ import FeedNavLink from "./FeedNavLink";
 
 function FeedToggler() {
   const { isAuth } = useAuth();
-  const { tabName, tagName } = useFeedContext();
+  const { searchTerm, tabName, tagName } = useFeedContext();
 
   return (
     <div className="feed-toggle">
@@ -14,6 +14,10 @@ function FeedToggler() {
         <FeedNavLink name="global" text="Global Feed" />
 
         {tabName === "tag" && <FeedNavLink icon name="tag" text={tagName} />}
+
+        {tabName === "search" && (
+          <FeedNavLink name="search" text={`Search results for "${searchTerm}"`} />
+        )}
       </ul>
     </div>
   );

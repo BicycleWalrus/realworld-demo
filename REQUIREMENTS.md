@@ -405,3 +405,26 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Article keyword search
+The article listing endpoint (`GET /api/articles`, REQ-013) accepts an
+additional `search` query parameter. When `search`, trimmed, is non-empty,
+only articles whose `title`, `description`, or `body` contain that
+keyword (case-insensitive) are returned; matching is independent per
+field (a match in any one of the three is sufficient). An empty or
+whitespace-only `search` value is treated identically to omitting it —
+the full, unfiltered listing is returned. `search` combines with the
+existing `author`/`tag`/`favorited` filters (REQ-013) using AND
+semantics, the same way those filters already combine with each other,
+and respects the existing pagination page size (REQ-031).
+
+On the client, the Home page's article listing gains a search input,
+submitting which switches the feed into a "search" mode analogous to the
+existing tag-filtered mode: a dedicated pseudo-tab is shown, and paging
+through results preserves the active search term. Search is a distinct,
+mutually-exclusive mode from the existing "Your Feed"/"Global Feed"/tag
+tabs at the UI level — the same way tag-filtering already behaves —
+even though the underlying endpoint would allow combining `search` with
+`tag`/`author` in a single request.
