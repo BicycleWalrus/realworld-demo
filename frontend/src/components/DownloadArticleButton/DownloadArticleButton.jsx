@@ -7,11 +7,17 @@ function DownloadArticleButton({ body, slug, title }) {
     const link = document.createElement("a");
     link.href = url;
     link.download = `${slug}.md`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
 
-    URL.revokeObjectURL(url);
+    try {
+      document.body.appendChild(link);
+      link.click();
+    } finally {
+      document.body.removeChild(link);
+      // Revoked on a delay, not synchronously after click(): some browsers
+      // (e.g. Safari) read the blob: URL asynchronously to save the file,
+      // so revoking it immediately can produce an empty/failed download.
+      setTimeout(() => URL.revokeObjectURL(url), 0);
+    }
   };
 
   return (

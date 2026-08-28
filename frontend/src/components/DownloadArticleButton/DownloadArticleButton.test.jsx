@@ -29,6 +29,7 @@ describe("DownloadArticleButton", () => {
       },
     );
 
+    vi.useFakeTimers();
     render(<DownloadArticleButton {...article} />);
     fireEvent.click(screen.getByRole("button", { name: /download/i }));
 
@@ -40,6 +41,13 @@ describe("DownloadArticleButton", () => {
     );
 
     expect(downloadedFilename).toBe(`${article.slug}.md`);
+
+    // revokeObjectURL is deferred (not called synchronously after click())
+    // so browsers that read the blob: URL asynchronously can still save it.
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+    vi.runAllTimers();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith("blob:mock-url");
+
+    vi.useRealTimers();
   });
 });
