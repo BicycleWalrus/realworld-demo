@@ -24,13 +24,33 @@ const allArticles = async (req, res, next) => {
     const { loggedUser } = req;
 
     const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const tags = Array.isArray(tag) ? tag : [];
+
+    // Multiple `tag` values (repeated query param) require ANDing across
+    // tags — an article must carry all of them. A single tag's where-clause
+    // below (only reachable when `tag` is a plain string) is unchanged, so
+    // that path stays byte-for-byte identical to today (REQ-013).
+    let multiTagArticleIds;
+    if (tags.length > 1) {
+      const tagRecords = await Tag.findAll({ where: { name: tags } });
+      const articleIdSets = await Promise.all(
+        tagRecords.map(async (t) => (await t.getArticles({ attributes: ["id"] })).map((a) => a.id)),
+      );
+      // Fewer matching Tag rows than requested names means at least one
+      // requested tag doesn't exist, so no article can carry all of them.
+      multiTagArticleIds =
+        articleIdSets.length === tags.length
+          ? articleIdSets.reduce((acc, ids) => acc.filter((id) => ids.includes(id)))
+          : [];
+    }
+
     const searchOptions = {
       include: [
         {
           model: Tag,
           as: "tagList",
           attributes: ["name"],
-          ...(tag && { where: { name: tag } }),
+          ...(typeof tag === "string" && { where: { name: tag } }),
         },
         {
           model: User,
@@ -42,6 +62,7 @@ const allArticles = async (req, res, next) => {
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
+      ...(multiTagArticleIds && { where: { id: multiTagArticleIds } }),
     };
 
     let articles = { rows: [], count: 0 };

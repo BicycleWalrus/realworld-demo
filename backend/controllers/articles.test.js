@@ -8,7 +8,7 @@ const {
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
 const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
-const Tag = { findByPk: vi.fn(), create: vi.fn() };
+const Tag = { findAll: vi.fn(), findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
 mockRequire(require.resolve("../models"), { Article, Tag, User });
 
@@ -54,6 +54,16 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
   );
 }
 
+// A Tag record whose `getArticles()` resolves to the given article ids —
+// mirrors how allArticles resolves each requested tag name to the set of
+// article ids carrying it, for the multi-tag AND filter.
+function makeTag(name, articleIds) {
+  return makeInstance(
+    { name },
+    { getArticles: vi.fn().mockResolvedValue(articleIds.map((id) => ({ id }))) },
+  );
+}
+
 // Minimal stand-in for Sequelize's real filtering/pagination, scoped to just
 // the query shapes allArticles/articlesFeed actually construct, so list
 // behavior can be asserted on the returned response body rather than on
@@ -67,6 +77,7 @@ function fakeArticleList(seedRows) {
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+    if (where?.id) rows = rows.filter((r) => where.id.includes(r.id));
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -78,6 +89,7 @@ beforeEach(() => {
   Article.findOne.mockReset();
   Article.findAndCountAll.mockReset();
   Article.create.mockReset();
+  Tag.findAll.mockReset();
   Tag.findByPk.mockReset();
   Tag.create.mockReset();
   User.findOne.mockReset();
@@ -379,6 +391,89 @@ describe("allArticles", () => {
 
     const { articles } = res.json.mock.calls[0][0];
     expect(articles.map((a) => a.slug)).toEqual(["bob-1"]);
+  });
+
+  // AC-080: a single tag (even as a one-element array, as some HTTP
+  // clients would send it) behaves exactly like the existing single-tag
+  // path (REQ-013) — the include's where-clause, not the id-list filter.
+  test("a single tag value behaves exactly as today, regardless of filter mechanism", async () => {
+    const seed = makeSeedArticles();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { tag: "training" } }, res, vi.fn());
+
+    expect(Tag.findAll).not.toHaveBeenCalled();
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["bob-1"]);
+  });
+
+  // AC-081: multiple tags require ALL of them (AND), not any of them (OR).
+  test("multi-tag filter -> only articles carrying every requested tag", async () => {
+    const seed = [
+      makeArticle({ id: 1, slug: "both", author: makeFollowableUser() }),
+      makeArticle({ id: 2, slug: "only-dragons", author: makeFollowableUser() }),
+      makeArticle({ id: 3, slug: "only-training", author: makeFollowableUser() }),
+      makeArticle({ id: 4, slug: "neither", author: makeFollowableUser() }),
+    ];
+    Tag.findAll.mockResolvedValue([makeTag("dragons", [1, 2]), makeTag("training", [1, 3])]);
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { tag: ["dragons", "training"] } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["both"]);
+  });
+
+  // AC-081: a requested tag that doesn't exist means no article can carry
+  // all of them, regardless of how the ones that do exist match.
+  test("multi-tag filter with a nonexistent tag -> no results, not an error", async () => {
+    const seed = [makeArticle({ id: 1, slug: "has-dragons", author: makeFollowableUser() })];
+    Tag.findAll.mockResolvedValue([makeTag("dragons", [1])]); // "ghost" doesn't exist
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { tag: ["dragons", "ghost"] } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articles).toEqual([]);
+    expect(articlesCount).toBe(0);
+  });
+
+  // AC-082: multi-tag filtering combines with the existing author filter.
+  test("multi-tag filter combines with the author filter", async () => {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const bob = makeFollowableUser({ id: 2, username: "bob" });
+    const seed = [
+      makeArticle({ id: 1, slug: "jane-both-tags", author: jane }),
+      makeArticle({ id: 2, slug: "bob-both-tags", author: bob }),
+    ];
+    Tag.findAll.mockResolvedValue([makeTag("dragons", [1, 2]), makeTag("training", [1, 2])]);
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: ["dragons", "training"], author: "jane" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["jane-both-tags"]);
+  });
+
+  // AC-083: no tag filter at all continues to behave exactly as today.
+  test("no tag filter -> unaffected, full listing", async () => {
+    const seed = makeSeedArticles();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: {} }, res, vi.fn());
+
+    expect(Tag.findAll).not.toHaveBeenCalled();
+    const { articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(seed.length);
   });
 
   // AC-033: with no explicit limit/offset, results are capped at 3 per

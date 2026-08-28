@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import getArticles from "../services/getArticles";
 
-function useArticles({ location, tabName, tagName, username }) {
+function useArticles({ location, tabName, tagName, tagNames, username }) {
   const [{ articles, articlesCount }, setArticlesData] = useState({
     articles: [],
     articlesCount: 0,
@@ -15,11 +15,11 @@ function useArticles({ location, tabName, tagName, username }) {
 
     setLoading(true);
 
-    getArticles({ headers, location, tabName, tagName, username })
+    getArticles({ headers, location, tabName, tagName, tagNames, username })
       .then(setArticlesData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [headers, location, tabName, tagName, username]);
+  }, [headers, location, tabName, tagName, tagNames, username]);
 
   return { articles, articlesCount, loading, setArticlesData };
 }
