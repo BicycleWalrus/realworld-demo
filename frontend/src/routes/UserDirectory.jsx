@@ -9,8 +9,14 @@ const BIO_SNIPPET_LENGTH = 100;
 
 function bioSnippet(bio) {
   if (!bio) return "";
-  return bio.length > BIO_SNIPPET_LENGTH
-    ? `${bio.slice(0, BIO_SNIPPET_LENGTH)}...`
+
+  // Array.from splits on Unicode code points, not UTF-16 code units like
+  // String.slice does - avoids cutting a multi-byte character (e.g. an
+  // emoji) in half into an unpaired surrogate that renders as a broken
+  // glyph.
+  const codePoints = Array.from(bio);
+  return codePoints.length > BIO_SNIPPET_LENGTH
+    ? `${codePoints.slice(0, BIO_SNIPPET_LENGTH).join("")}...`
     : bio;
 }
 

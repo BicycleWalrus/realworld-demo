@@ -236,4 +236,36 @@ describe("directory", () => {
     const [{ limit }] = User.findAndCountAll.mock.calls[0];
     expect(limit).toBe(20);
   });
+
+  // No-auth, full-table-enumeration endpoint - a huge, negative, or
+  // non-numeric limit/offset must not reach the database unclamped.
+  test("clamps an oversized limit instead of dumping the whole table in one request", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: { limit: "999999" } }, res, vi.fn());
+
+    const [{ limit }] = User.findAndCountAll.mock.calls[0];
+    expect(limit).toBe(100);
+  });
+
+  test("falls back to the default for a non-numeric or negative limit", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+
+    await directory({ query: { limit: "abc" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[0][0].limit).toBe(20);
+
+    await directory({ query: { limit: "-5" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[1][0].limit).toBe(20);
+  });
+
+  test("falls back to offset 0 for a non-numeric or negative offset", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+
+    await directory({ query: { offset: "abc" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[0][0].offset).toBe(0);
+
+    await directory({ query: { offset: "-1" } }, makeRes(), vi.fn());
+    expect(User.findAndCountAll.mock.calls[1][0].offset).toBe(0);
+  });
 });

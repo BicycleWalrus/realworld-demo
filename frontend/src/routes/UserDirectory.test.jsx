@@ -57,6 +57,21 @@ describe("UserDirectory", () => {
     expect(await screen.findByText(`${"a".repeat(100)}...`)).toBeInTheDocument();
   });
 
+  // The truncation cutoff can land exactly on a multi-byte character (e.g.
+  // an emoji, which is a UTF-16 surrogate pair) - it must not be split in
+  // half into a broken/unpaired-surrogate glyph.
+  it("truncates without splitting a multi-byte character at the cutoff", async () => {
+    const bioWithEmoji = `${"a".repeat(99)}😀 more text past the cutoff`;
+    getUserDirectory.mockResolvedValue({
+      users: [{ username: "jane", image: null, bio: bioWithEmoji }],
+      usersCount: 1,
+    });
+
+    renderDirectory();
+
+    expect(await screen.findByText(`${"a".repeat(99)}😀...`)).toBeInTheDocument();
+  });
+
   it("requests the next page of authors on page change", async () => {
     getUserDirectory.mockResolvedValue({
       users: Array.from({ length: 20 }, (_, i) => ({
