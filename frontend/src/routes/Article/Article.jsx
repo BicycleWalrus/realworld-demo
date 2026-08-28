@@ -1,11 +1,15 @@
 import Markdown from "markdown-to-jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Outlet, useLocation, useNavigate, useParams } from "react-router-dom";
 import ArticleMeta from "../../components/ArticleMeta";
 import ArticlesButtons from "../../components/ArticlesButtons";
 import ArticleTags from "../../components/ArticleTags";
 import BannerContainer from "../../components/BannerContainer";
+import TableOfContents from "../../components/TableOfContents";
 import { useAuth } from "../../context/AuthContext";
+import extractHeadings, {
+  createHeadingSlugger,
+} from "../../helpers/extractHeadings";
 import getArticle from "../../services/getArticle";
 
 function Article() {
@@ -15,6 +19,11 @@ function Article() {
   const { headers, isAuth } = useAuth();
   const navigate = useNavigate();
   const { slug } = useParams();
+
+  const headings = useMemo(() => extractHeadings(body), [body]);
+  // A fresh slugger per body so the ids assigned here match extractHeadings'
+  // ids above (both start their duplicate-heading counters from zero).
+  const headingSlugify = useMemo(() => createHeadingSlugger(), [body]);
 
   useEffect(() => {
     if (state) return;
@@ -42,7 +51,14 @@ function Article() {
             {image && (
               <img alt={title} className="article-cover-image" src={image} />
             )}
-            {body && <Markdown options={{ forceBlock: true }}>{body}</Markdown>}
+            <TableOfContents headings={headings} />
+            {body && (
+              <Markdown
+                options={{ forceBlock: true, slugify: headingSlugify }}
+              >
+                {body}
+              </Markdown>
+            )}
             <ArticleTags tagList={tagList} />
           </div>
         </div>
