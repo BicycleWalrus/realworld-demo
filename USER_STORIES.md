@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-029** — As a user writing a comment, I want to mention another user by
+username, so that the comment clearly references them and readers can
+jump to their profile.
+*Related requirements: REQ-049*
