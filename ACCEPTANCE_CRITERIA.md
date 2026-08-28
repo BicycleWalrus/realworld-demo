@@ -514,6 +514,33 @@ changed.
 
 ---
 
+### US-034 — Save an article as a draft
+*(REQ-069, REQ-070, REQ-071, REQ-072, REQ-073)*
+
+- **AC-100** — Given an author creating an article with `published: false`
+  in the request, when the article is created, then it is saved as a
+  draft; given an author creating an article that omits the `published`
+  flag, when the article is created, then it is saved as published (the
+  pre-existing default).
+- **AC-101** — Given a draft article, when the global feed, the
+  personalized feed, a tag filter, a keyword search, the Top Articles
+  listing, or another user's profile listing is requested, then the draft
+  is excluded from the results.
+- **AC-102** — Given an author viewing their own profile's article
+  listing, when the listing is requested, then their own draft articles
+  are included, and the client marks each of them with a visible "Draft"
+  indicator.
+- **AC-103** — Given an author's draft article, when the author submits an
+  update with `published: true`, then the article is saved as published
+  and subsequently appears in listings like any other published article.
+- **AC-104** — Given a draft article retrieved by slug, when the request
+  is made by anyone other than its author (including an anonymous
+  visitor), then the request fails with a not-found error; when the
+  request is made by the article's author, then the draft is returned
+  normally.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -586,3 +613,8 @@ changed.
 | REQ-066 | US-033 | AC-097 |
 | REQ-067 | US-033 | AC-098 |
 | REQ-068 | US-033 | AC-099 |
+| REQ-069 | US-034 | AC-100 |
+| REQ-070 | US-034 | AC-101 |
+| REQ-071 | US-034 | AC-102 |
+| REQ-072 | US-034 | AC-103 |
+| REQ-073 | US-034 | AC-104 |

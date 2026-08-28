@@ -544,3 +544,35 @@ The client only renders a control for editing a comment's body to the
 account that authored that comment. Any other authenticated visitor, or
 an anonymous visitor, does not see the control (mirroring the existing
 comment-delete control's ownership check).
+
+---
+
+### REQ-069 — Article draft state / draft save
+*(Amends REQ-015.)* An article carries a `published` flag. An author may
+save a new or edited article as an unpublished draft (`published: false`)
+instead of publishing it, rather than every created article being
+immediately public. For backward compatibility, when the flag is omitted
+on creation the article is published (`published: true`), so REQ-015's
+creation behavior is otherwise unchanged.
+
+### REQ-070 — Draft visibility exclusion
+*(Amends REQ-013 and REQ-018.)* An unpublished draft article is excluded
+from the global feed, the personalized feed (REQ-018), tag filtering,
+keyword search (REQ-057), the Top Articles listing (REQ-061), and other
+users' profile listings (REQ-013) — for everyone except the article's
+author.
+
+### REQ-071 — Author draft access
+An author sees their own draft articles in their own profile's "My
+Articles" listing and can continue editing them.
+
+### REQ-072 — Publishing a draft
+An author can publish a draft by setting `published: true` on an article
+update, after which it appears in listings the same as any other
+published article.
+
+### REQ-073 — Draft direct-access protection
+*(Amends REQ-019.)* Retrieving a draft article by slug fails with a
+not-found error for anyone who is not its author, including an anonymous
+visitor. Only the article's author can retrieve their own unpublished
+draft by slug.
