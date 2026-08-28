@@ -338,7 +338,14 @@ but don't, in this sandboxed shell:
   in commit messages and PR bodies ("the ticket's" → "the ticket",
   "doesn't" → "does not"), or write the message to a file with `Write`
   first and pass it via `-F`/`--body-file`/`git commit -F <file>` instead
-  of an inline heredoc.
+  of an inline heredoc. This failure doesn't always surface immediately as
+  a syntax error — an apostrophe-containing heredoc passed to `gh pr
+  create --body "$(cat <<'EOF' ... EOF)"` has instead been observed to
+  just hang with no output until it's killed, rather than erroring. Don't
+  wait it out: for any commit message or PR body longer than a short
+  one-liner, write it with `Write` and pass `-F`/`--body-file` up front,
+  rather than reaching for an inline heredoc and only switching after
+  hitting a failure.
 - **`gh pr edit` intermittently fails** with `GraphQL: Projects (classic)
   is being deprecated ... (repository.pullRequest.projectCards)`, even for
   an edit that has nothing to do with project boards, and even though the
