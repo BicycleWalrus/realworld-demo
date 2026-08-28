@@ -12,10 +12,12 @@ const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), findAll: vi.fn(), 
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
 const Favorites = { findAll: vi.fn() };
+const TagList = { findAll: vi.fn() };
 const sequelize = {
-  models: { Favorites },
+  models: { Favorites, TagList },
   fn: (fnName, col) => ({ fnName, col }),
   col: (name) => ({ col: name }),
+  where: (left, op, value) => ({ left, op, value }),
 };
 mockRequire(require.resolve("../models"), { Article, Tag, User, sequelize });
 
@@ -45,6 +47,26 @@ function mockFavoriteCounts(countsByArticleId) {
       favoritesCount: String(favoritesCount),
     })),
   );
+}
+
+// Mocks the grouped join-table query multi-tag filtering issues, from
+// [articleId, tagName] pairs: an article id is returned when it carries
+// at least `having.value` of the wanted tags (the composite join-table
+// primary key means one pair max per article/tag).
+function mockTagIntersection(pairs) {
+  TagList.findAll.mockImplementation(({ where, having }) => {
+    const wanted = new Set(where.tagName[Op.in]);
+    const needed = having.value;
+    const countByArticleId = new Map();
+    for (const [articleId, tagName] of pairs) {
+      if (!wanted.has(tagName)) continue;
+      countByArticleId.set(articleId, (countByArticleId.get(articleId) ?? 0) + 1);
+    }
+    const ids = [...countByArticleId]
+      .filter(([, count]) => count >= needed)
+      .map(([id]) => id);
+    return Promise.resolve(ids.map((articleId) => ({ articleId })));
+  });
 }
 
 function makeArticle({
@@ -91,24 +113,41 @@ function fakeArticleList(seedRows) {
 
     const tagFilter = include.find((i) => i.as === "tagList")?.where?.name;
     const authorFilter = include.find((i) => i.as === "author")?.where?.username;
-    if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
+    if (tagFilter) {
+      // tagFilter is either a single tag name or an IN-list of them
+      // (multi-tag filtering, REQ-063) — either way the row must carry
+      // at least one of the named tags for the include to have kept it.
+      const wanted = Array.isArray(tagFilter[Op.in]) ? tagFilter[Op.in] : [tagFilter];
+      rows = rows.filter((r) => r.tagList.some((t) => wanted.includes(t.name)));
+    }
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
-    if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
 
-    // Keyword-search clause (REQ-062): where[Op.or] holds one
-    // { field: { [Op.iLike]: "%term%" } } per searched column; a row
-    // matches when any searched column contains the term, ignoring case.
-    const searchClauses = where?.[Op.or];
-    if (searchClauses) {
-      rows = rows.filter((r) =>
-        searchClauses.some((clause) => {
-          const [field] = Object.keys(clause);
-          const term = clause[field][Op.iLike].slice(1, -1).toLowerCase();
-          return String(r.dataValues[field] ?? "")
-            .toLowerCase()
-            .includes(term);
-        }),
-      );
+    // Top-level where arrives either as a single clause or as an Op.and
+    // list (REQ-062/REQ-063 compose there); interpret each uniformly.
+    const whereClauses = where ? (where[Op.and] ?? [where]) : [];
+    for (const clause of whereClauses) {
+      if (clause?.userId) rows = rows.filter((r) => clause.userId.includes(r.author.id));
+
+      // Keyword-search clause (REQ-062): where[Op.or] holds one
+      // { field: { [Op.iLike]: "%term%" } } per searched column; a row
+      // matches when any searched column contains the term, ignoring case.
+      const searchClauses = clause?.[Op.or];
+      if (searchClauses) {
+        rows = rows.filter((r) =>
+          searchClauses.some((c) => {
+            const [field] = Object.keys(c);
+            const term = c[field][Op.iLike].slice(1, -1).toLowerCase();
+            return String(r.dataValues[field] ?? "")
+              .toLowerCase()
+              .includes(term);
+          }),
+        );
+      }
+
+      // Multi-tag id constraint (REQ-063): only rows whose id is in the
+      // resolved carry-all-tags id list survive.
+      const idIn = clause?.id?.[Op.in];
+      if (idIn) rows = rows.filter((r) => idIn.includes(r.id));
     }
 
     const count = rows.length;
@@ -126,6 +165,7 @@ beforeEach(() => {
   Tag.create.mockReset();
   User.findOne.mockReset();
   Favorites.findAll.mockReset();
+  TagList.findAll.mockReset();
 });
 
 describe("createArticle", () => {
@@ -871,6 +911,167 @@ describe("allArticles", () => {
     const { articles, articlesCount } = res.json.mock.calls[0][0];
     expect(articlesCount).toBe(1);
     expect(articles.map((a) => a.slug)).toEqual(["old-tales"]);
+  });
+
+  // Multi-tag (AND) filtering (REQ-063). Seed pairs for the join-table
+  // mock mirror each article's tags.
+  function makeMultiTagSeed() {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const bob = makeFollowableUser({ id: 2, username: "bob" });
+    const articles = [
+      makeArticle({
+        id: 1,
+        slug: "both-jane",
+        title: "Both Tags",
+        author: jane,
+        tags: [{ name: "dragons" }, { name: "training" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "dragons-only",
+        title: "Dragons Only",
+        author: jane,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "both-bob",
+        title: "Both Tags Bob",
+        author: bob,
+        tags: [{ name: "dragons" }, { name: "training" }],
+        createdAt: new Date("2020-01-03"),
+      }),
+    ];
+    const pairs = [
+      [1, "dragons"], [1, "training"],
+      [2, "dragons"],
+      [3, "dragons"], [3, "training"],
+    ];
+    return { articles, pairs, jane };
+  }
+
+  // AC-140: several tag values return only articles carrying ALL of
+  // them, newest first — whether sent as repeated params or one
+  // comma-separated value.
+  test("multiple tags -> only articles carrying every tag (repeated params)", async () => {
+    const { articles, pairs } = makeMultiTagSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(articles));
+    mockTagIntersection(pairs);
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: ["dragons", "training"] } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles: returned, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(2);
+    expect(returned.map((a) => a.slug)).toEqual(["both-bob", "both-jane"]);
+  });
+
+  test("multiple tags -> comma-separated form behaves the same", async () => {
+    const { articles, pairs } = makeMultiTagSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(articles));
+    mockTagIntersection(pairs);
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: " training , dragons " } },
+      res,
+      vi.fn(),
+    );
+
+    expect(res.json.mock.calls[0][0].articles.map((a) => a.slug)).toEqual([
+      "both-bob",
+      "both-jane",
+    ]);
+  });
+
+  // AC-141: a single tag keeps REQ-013's exact behavior —
+  // no join-table intersection query is issued.
+  test("single tag -> REQ-013 behavior, no intersection query", async () => {
+    const { articles, pairs } = makeMultiTagSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(articles));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: "dragons" } },
+      res,
+      vi.fn(),
+    );
+
+    expect(TagList.findAll).not.toHaveBeenCalled();
+    expect(res.json.mock.calls[0][0].articles.map((a) => a.slug)).toEqual([
+      "both-bob",
+      "dragons-only",
+      "both-jane",
+    ]);
+  });
+
+  // AC-140: when no article carries every requested tag, the listing
+  // is empty without running the main query.
+  test("multiple tags with no common article -> empty listing", async () => {
+    const { articles } = makeMultiTagSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(articles));
+    mockTagIntersection([[2, "dragons"]]);
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: ["dragons", "nonexistent"] } },
+      res,
+      vi.fn(),
+    );
+
+    expect(res.json.mock.calls[0][0]).toEqual({ articles: [], articlesCount: 0 });
+    expect(Article.findAndCountAll).not.toHaveBeenCalled();
+  });
+
+  // AC-144: multi-tag composes with the author filter.
+  test("multiple tags combine with the author filter", async () => {
+    const { articles, pairs } = makeMultiTagSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(articles));
+    mockTagIntersection(pairs);
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: ["dragons", "training"], author: "bob" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles: returned, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(returned.map((a) => a.slug)).toEqual(["both-bob"]);
+  });
+
+  // AC-143: multi-tag keeps the standard page size and true count.
+  test("multiple tags -> standard page size with true total count", async () => {
+    const { articles, pairs, jane } = makeMultiTagSeed();
+    const fourth = makeArticle({
+      id: 4,
+      slug: "both-again",
+      title: "Both Again",
+      author: jane,
+      tags: [{ name: "dragons" }, { name: "training" }],
+      createdAt: new Date("2020-01-04"),
+    });
+    Article.findAndCountAll.mockImplementation(fakeArticleList([...articles, fourth]));
+    mockTagIntersection([...pairs, [4, "dragons"], [4, "training"]]);
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { tag: ["dragons", "training"] } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles: returned, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(3);
+    expect(returned).toHaveLength(3);
+    expect(returned.map((a) => a.slug)).toEqual(["both-again", "both-bob", "both-jane"]);
   });
 });
 

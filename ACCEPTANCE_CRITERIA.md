@@ -640,6 +640,24 @@ changed.
   favorited filters, when the listing is requested, then only articles
   satisfying both the keyword and those filters are returned, and each
   filter continues to work unchanged when no keyword is present.
+- **AC-140** — Given more than one tag filter value (repeated `tag`
+  parameters or one comma-separated value), when the listing is
+  requested, then only articles carrying every specified tag are
+  returned, newest first; when no article carries all of them, the
+  listing is empty with a count of zero.
+- **AC-141** — Given exactly one tag filter value, when the listing is
+  requested, then it is filtered exactly as a single-tag filter works
+  today (REQ-013), with no multi-tag query path taken.
+- **AC-142** — Given no tag filter value, when the listing is
+  requested, then it behaves exactly as it does today with no tag
+  filter.
+- **AC-143** — Given more multi-tag matches than the page size, when
+  the filtered listing is viewed, then it is paginated at the standard
+  page size (REQ-031) with a total count reflecting every match.
+- **AC-144** — Given a multi-tag filter together with any of the
+  author, favorited, or keyword-search filters, when the listing is
+  requested, then only articles satisfying both the tag set and those
+  filters are returned.
 
 ---
 
@@ -709,3 +727,4 @@ changed.
 | REQ-060 | US-040 | AC-125–AC-129 |
 | REQ-061 | US-041 | AC-130–AC-134 |
 | REQ-062 | US-042 | AC-135–AC-139 |
+| REQ-063 | US-043 | AC-140–AC-144 |

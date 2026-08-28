@@ -4,6 +4,7 @@ import BannerContainer from "../components/BannerContainer";
 import ContainerRow from "../components/ContainerRow";
 import FeedToggler from "../components/FeedToggler";
 import RecentlyViewed from "../components/RecentlyViewed";
+import TagFilterInput from "../components/TagFilterInput/TagFilterInput";
 import { useAuth } from "../context/AuthContext";
 import FeedProvider from "../context/FeedContext";
 import PopularTags from "./../components/PopularTags";
@@ -23,6 +24,7 @@ function Home() {
         <FeedProvider>
           <div className="col-md-9">
             <ArticleSearch />
+            <TagFilterInput />
             <FeedToggler />
             <Outlet />
           </div>

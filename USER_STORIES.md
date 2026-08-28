@@ -235,3 +235,9 @@ list, so that I can find it again later without publicly favoriting it.
 **US-042** — As a user, I want to search for articles by keyword, so
 that I can find content on a topic without knowing the exact author or
 tag. *Related requirements: REQ-062*
+
+---
+
+**US-043** — As a user, I want to filter articles by multiple tags at
+once, so that I can narrow results to content matching several topics
+simultaneously. *Related requirements: REQ-063*

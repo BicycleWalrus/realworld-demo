@@ -4,13 +4,14 @@ import { useFeedContext } from "../context/FeedContext";
 import useArticleList from "../hooks/useArticles";
 
 function HomeArticles() {
-  const { tabName, tagName, searchTerm } = useFeedContext();
+  const { tabName, tagName, searchTerm, filterTags } = useFeedContext();
 
   const { articles, articlesCount, loading, setArticlesData } = useArticleList({
     location: tabName,
     tabName,
     tagName,
     searchTerm,
+    filterTags,
   });
 
   return loading ? (
@@ -30,6 +31,7 @@ function HomeArticles() {
         location={tabName}
         tagName={tagName}
         searchTerm={searchTerm}
+        filterTags={filterTags}
         updateArticles={setArticlesData}
       />
     </>

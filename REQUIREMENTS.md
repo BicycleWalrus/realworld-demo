@@ -596,3 +596,19 @@ match. An empty or whitespace-only keyword applies no filter and returns
 the unfiltered listing for the active view. In the web client a search
 input sits above the feed on the home page; the keyword stays applied
 while switching feed views and persists across pagination.
+
+### REQ-063 — Multi-tag (AND) article filtering
+The article listing's tag filter accepts more than one tag value —
+delivered as repeated `tag` query parameters or one comma-separated
+value — and returns only articles carrying all of the specified tags
+(AND), not just any of them. A single tag value continues to filter
+exactly as before (REQ-013), including its query shape, and an absent
+tag filter changes nothing. Multi-tag filtering keeps the standard
+listing behavior (newest-first order, default page size per REQ-031,
+true total count) and composes with the author, favorited, and keyword
+search (REQ-062) filters as well as the trending sort. When no article
+carries every requested tag, the listing is empty with a count of zero.
+In the web client a comma-separated tags input sits beside the keyword
+search above the feed; while it is set it supplies the tag parameters
+(taking the place of a sidebar single-tag tab), and it persists across
+feed views and pagination.
