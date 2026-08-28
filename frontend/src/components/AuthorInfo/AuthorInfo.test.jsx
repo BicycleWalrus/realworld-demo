@@ -30,6 +30,18 @@ const profile = {
   memberSince: "2022-03-14T00:00:00.000Z",
 };
 
+// AC-135: a profile with no social links set (matches the base fixture
+// above - website/github/twitter absent).
+const profileWithoutLinks = profile;
+
+// AC-135: a profile with all three social links set.
+const profileWithLinks = {
+  ...profile,
+  website: "https://jane.dev",
+  github: "https://github.com/jane",
+  twitter: "https://twitter.com/jane",
+};
+
 function renderAuthorInfo(username = "jane") {
   return render(
     <MemoryRouter initialEntries={[`/profile/${username}`]}>
@@ -148,5 +160,47 @@ describe("AuthorInfo author stats — before load", () => {
     // doesn't leak an unresolved promise/state update into other tests
     resolveProfile(profile);
     await screen.findByText("4 articles");
+  });
+});
+
+// AC-135: whichever of website/github/twitter are set on the profile
+// render as links; none set renders no links section at all.
+describe("AuthorInfo social links", () => {
+  beforeEach(() => {
+    useAuth.mockReturnValue({
+      headers: null,
+      loggedUser: { username: "" },
+    });
+  });
+
+  test("renders a link for each set social link, pointing to its URL", async () => {
+    getProfile.mockReset().mockResolvedValue(profileWithLinks);
+
+    renderAuthorInfo("jane");
+
+    expect(await screen.findByRole("link", { name: "Website" })).toHaveAttribute(
+      "href",
+      profileWithLinks.website,
+    );
+    expect(screen.getByRole("link", { name: "GitHub" })).toHaveAttribute(
+      "href",
+      profileWithLinks.github,
+    );
+    expect(screen.getByRole("link", { name: "Twitter" })).toHaveAttribute(
+      "href",
+      profileWithLinks.twitter,
+    );
+  });
+
+  test("renders no social links when none are set", async () => {
+    getProfile.mockReset().mockResolvedValue(profileWithoutLinks);
+
+    renderAuthorInfo("jane");
+
+    await waitFor(() => expect(getProfile).toHaveBeenCalled());
+
+    expect(screen.queryByRole("link", { name: "Website" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "GitHub" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Twitter" })).not.toBeInTheDocument();
   });
 });
