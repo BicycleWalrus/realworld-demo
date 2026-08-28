@@ -405,3 +405,32 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Navbar theme toggle available on every page, for all auth states
+A control in the navbar lets a visitor switch between a light and a dark
+theme. The control is rendered for every page reachable through the
+navbar, regardless of whether the visitor is authenticated — it is not
+conditioned on the same authentication check that shows or hides the
+"New Article"/account controls versus the "Login"/"Sign up" controls.
+
+### REQ-050 — Chosen theme persists across reloads and visits
+Once a visitor selects a theme via the navbar toggle, that choice is saved
+in the browser (`localStorage`) and is reapplied on subsequent page loads
+and visits, without requiring the visitor to reselect it.
+
+### REQ-051 — First-visit theme defaults to OS preference, else light
+On a first visit with no previously saved theme choice, the application
+selects the dark theme if the browser reports an operating-system
+preference for dark color schemes (`prefers-color-scheme: dark`);
+otherwise it selects the light theme. This OS-preference check is only
+consulted when no theme choice has been saved yet — once a choice exists
+(REQ-050), it takes precedence over the OS preference on later visits.
+
+### REQ-052 — Theme switch applies instantly with unchanged light rendering
+Selecting a theme via the navbar toggle takes effect immediately, without
+a page reload. When the dark theme is not selected (the OS-preference
+default resolves to light, or the visitor has explicitly chosen light),
+the rendered appearance is unchanged from the application's existing
+(pre-dark-theme) light appearance.
