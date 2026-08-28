@@ -195,3 +195,10 @@ total favorites received, and member-since date on their profile, so
 that I can gauge who they are and how established they are on the
 platform before reading their work.
 *Related requirements: REQ-056*
+
+---
+
+**US-037** — As a user writing a comment, I want to mention another user
+by username, so that the comment clearly references them and readers can
+jump to their profile.
+*Related requirements: REQ-057*

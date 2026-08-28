@@ -70,6 +70,28 @@ button:focus {
   padding: 0;
 }
 
+.mention-suggestions {
+  border: 1px solid #ddd;
+  border-top: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mention-suggestions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: block;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  width: 100%;
+}
+
+.mention-suggestions button:hover {
+  background-color: #f3f3f3;
+}
+
 .author-stats {
   color: #aaa;
   font-size: 0.9rem;

@@ -1,5 +1,6 @@
 process.env.JWT_KEY = process.env.JWT_KEY || "test-jwt-key";
 
+const { Op } = require("sequelize");
 const {
   AlreadyTakenError,
   FieldRequiredError,
@@ -9,14 +10,15 @@ const {
 const { bcryptHash } = require("../helper/bcrypt");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn(), create: vi.fn() };
+const User = { findOne: vi.fn(), create: vi.fn(), findAll: vi.fn() };
 mockRequire(require.resolve("../models"), { User });
 
-const { signUp, signIn } = require("./users");
+const { signUp, signIn, searchUsers, verifyUsernames } = require("./users");
 
 beforeEach(() => {
   User.findOne.mockReset();
   User.create.mockReset();
+  User.findAll.mockReset();
 });
 
 describe("signUp", () => {
@@ -107,5 +109,76 @@ describe("signIn", () => {
 
     expect(res.json).toHaveBeenCalledWith({ user: existentUser });
     expect(existentUser.dataValues.token).toEqual(expect.any(String));
+  });
+});
+
+describe("searchUsers", () => {
+  // AC: a search term returns matching usernames.
+  test("search term -> matching usernames returned", async () => {
+    User.findAll.mockResolvedValue([
+      makeInstance({ username: "jane" }),
+      makeInstance({ username: "janet" }),
+    ]);
+    const res = makeRes();
+
+    await searchUsers({ query: { search: "jan" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: ["jane", "janet"] });
+  });
+
+  // AC: no matching usernames -> empty list, not an error.
+  test("no matches -> empty list", async () => {
+    User.findAll.mockResolvedValue([]);
+    const res = makeRes();
+
+    await searchUsers({ query: { search: "zzz" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: [] });
+  });
+
+  // AC: an empty/missing search term short-circuits to an empty list
+  // without ever querying the database - this endpoint never returns the
+  // full user directory.
+  test("missing search term -> empty list, no query made", async () => {
+    const res = makeRes();
+
+    await searchUsers({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: [] });
+    expect(User.findAll).not.toHaveBeenCalled();
+  });
+});
+
+describe("verifyUsernames", () => {
+  // Exact-match batch lookup, distinct from searchUsers' prefix match -
+  // used to confirm real @mention candidates without an unordered,
+  // capped prefix result starving out the exact username being checked.
+  test("returns only the usernames that actually exist", async () => {
+    User.findAll.mockResolvedValue([makeInstance({ username: "bob" })]);
+    const res = makeRes();
+
+    await verifyUsernames({ query: { usernames: "bob,ghost" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: ["bob"] });
+  });
+
+  test("missing usernames param -> empty list, no query made", async () => {
+    const res = makeRes();
+
+    await verifyUsernames({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: [] });
+    expect(User.findAll).not.toHaveBeenCalled();
+  });
+
+  test("caps the batch at 20 usernames", async () => {
+    User.findAll.mockResolvedValue([]);
+    const res = makeRes();
+    const usernames = Array.from({ length: 30 }, (_, i) => `user${i}`).join(",");
+
+    await verifyUsernames({ query: { usernames } }, res, vi.fn());
+
+    const [{ where }] = User.findAll.mock.calls[0];
+    expect(where[Op.or]).toHaveLength(20);
   });
 });

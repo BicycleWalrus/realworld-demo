@@ -517,3 +517,17 @@ condition is met; because navigation state never carries these new stats
 fields, a profile reached via that shortcut performs one additional,
 independent fetch to populate them, without altering the shortcut's own
 bio-based condition.
+
+### REQ-057 — @mentions in comments
+Typing `@username` in a comment (on creation or edit) offers
+matching-username suggestions as the user types, sourced from a
+case-insensitive username prefix search capped at 5 results. Once posted
+(or edited), any `@word` in a comment's body that exactly matches an
+existing username (case-insensitive) is rendered as a link to that
+user's profile, using the username's canonically stored casing; a
+`@word` that matches no existing user is rendered as plain text. This
+resolution happens at render time against whichever comments are
+currently loaded, not stored at comment-creation time, so it applies
+retroactively to comments that existed before this feature. Comment body
+validation (REQ-022) is unaffected — mentions are a display/UX layer
+over the existing free-text body.
