@@ -754,6 +754,25 @@ changed.
 
 ---
 
+### US-045 — Social links on a profile
+*(REQ-103, REQ-104)*
+
+- **AC-134** — Given an authenticated user submitting an account update,
+  when a website, github, or twitter field is submitted with a
+  non-blank value, then that link is set on the account; when one of
+  those fields is submitted blank, then that link is cleared; when one
+  of those fields is not submitted at all, then its previously stored
+  value is left unchanged - matching the partial-update semantics of
+  AC-017, and without changing how username, email, bio, image, or
+  password fields are applied.
+- **AC-135** — Given a user profile with one or more of website, github,
+  or twitter set, when that profile is viewed, then a link appears for
+  each set field, pointing to its stored URL; given a user profile with
+  none of these fields set, when that profile is viewed, then no links
+  section is rendered.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -860,3 +879,5 @@ changed.
 | REQ-100 | US-043 | AC-131 |
 | REQ-101 | US-044 | AC-132 |
 | REQ-102 | US-044 | AC-133 |
+| REQ-103 | US-045 | AC-134 |
+| REQ-104 | US-045 | AC-135 |

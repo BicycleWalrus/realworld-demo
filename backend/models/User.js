@@ -89,6 +89,12 @@ module.exports = (sequelize, DataTypes) => {
       bio: DataTypes.TEXT,
       image: DataTypes.TEXT,
       password: DataTypes.STRING,
+      // REQ-103/REQ-104: optional social/external links, set via the
+      // existing generic partial-update loop in updateUser (REQ-011) -
+      // no controller change needed for these to flow through.
+      website: DataTypes.TEXT,
+      github: DataTypes.TEXT,
+      twitter: DataTypes.TEXT,
     },
     {
       sequelize,

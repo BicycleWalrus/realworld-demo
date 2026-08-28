@@ -72,4 +72,79 @@ describe("updateUser", () => {
     expect(loggedUser.password).not.toBe("original-hash");
     await expect(bcryptCompare("", loggedUser.password)).resolves.toBe(true);
   });
+
+  // AC-134: social link fields (REQ-103) flow through the same generic
+  // partial-update loop as username/email/bio/image - submitting a
+  // non-blank value sets the link.
+  test("submitted social link fields are applied", async () => {
+    const loggedUser = makeInstance(
+      { username: "jane", website: "", github: "", twitter: "", password: "hash" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = {
+      loggedUser,
+      body: {
+        user: {
+          website: "https://jane.dev",
+          github: "https://github.com/jane",
+          twitter: "https://twitter.com/jane",
+          password: "",
+        },
+      },
+    };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.website).toBe("https://jane.dev");
+    expect(loggedUser.github).toBe("https://github.com/jane");
+    expect(loggedUser.twitter).toBe("https://twitter.com/jane");
+    expect(loggedUser.save).toHaveBeenCalled();
+  });
+
+  // AC-134: submitting a social link field as a blank string clears it
+  // (same "value !== undefined" rule REQ-011 already applies to bio/image).
+  test("a social link field submitted blank clears it", async () => {
+    const loggedUser = makeInstance(
+      {
+        username: "jane",
+        website: "https://old.dev",
+        github: "https://github.com/old",
+        twitter: "https://twitter.com/old",
+        password: "hash",
+      },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = {
+      loggedUser,
+      body: { user: { website: "", github: "", twitter: "", password: "" } },
+    };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.website).toBe("");
+    expect(loggedUser.github).toBe("");
+    expect(loggedUser.twitter).toBe("");
+  });
+
+  // AC-134: a social link field omitted from the submission entirely is
+  // left unchanged, same as an omitted bio/image field.
+  test("a social link field not submitted is left unchanged", async () => {
+    const loggedUser = makeInstance(
+      {
+        username: "jane",
+        website: "https://jane.dev",
+        github: "https://github.com/jane",
+        twitter: "https://twitter.com/jane",
+        password: "hash",
+      },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = { loggedUser, body: { user: { username: "jane", password: "" } } };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.website).toBe("https://jane.dev");
+    expect(loggedUser.github).toBe("https://github.com/jane");
+    expect(loggedUser.twitter).toBe("https://twitter.com/jane");
+  });
 });

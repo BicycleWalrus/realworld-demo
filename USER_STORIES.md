@@ -245,3 +245,9 @@ manually.
 **US-044** — As a reader, I want a table of contents for an article so
 that I can jump straight to a section I care about.
 *Related requirements: REQ-101, REQ-102*
+
+---
+
+**US-045** — As a user, I want to list links to my other online
+presences on my profile so that readers can find me elsewhere.
+*Related requirements: REQ-103, REQ-104*

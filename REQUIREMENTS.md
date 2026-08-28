@@ -814,3 +814,22 @@ element at all — not an empty container and not an error. Tagging
 rendered headings with an id does not change how any non-heading
 Markdown content (paragraphs, lists, links, images, code, etc.) is
 rendered.
+
+---
+
+## Profile Social Links
+
+### REQ-103 — A user account may carry optional external/social links
+A user account may carry three optional external/social links: website,
+github, and twitter. These are set through the same account-update
+mechanism as username, email, bio, and image, and are therefore governed
+by the same partial-update semantics as REQ-011: a link field submitted
+with a blank value clears that link, and a link field not submitted is
+left unchanged. This does not change the update behavior of username,
+email, bio, image, or password described in REQ-011 or REQ-012.
+
+### REQ-104 — A user's public profile displays whichever social links are set
+A user's public profile displays a link for each of website, github, and
+twitter that is currently set on that account, each pointing to the
+provided URL. A profile with none of these links set renders with no
+links section and no placeholder in its place.
