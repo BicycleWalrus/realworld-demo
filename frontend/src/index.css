@@ -26,3 +26,109 @@ button:focus {
   justify-content: center;
   flex-direction: column;
 }
+
+.theme-toggle {
+  background: none;
+  border: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: inherit;
+}
+
+/*
+ * Dark theme overrides. Purely additive: every rule here is scoped under
+ * [data-theme="dark"], so the vendored Bootstrap theme in public/main.css
+ * is untouched and the light appearance is unaffected when this attribute
+ * is absent or set to "light" (REQ-049).
+ */
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] body,
+html[data-theme="dark"] .banner,
+html[data-theme="dark"] header,
+html[data-theme="dark"] .navbar-light,
+html[data-theme="dark"] footer {
+  background-color: #121212;
+  color: #e4e4e4;
+}
+
+html[data-theme="dark"] a {
+  color: #6fcf97;
+}
+
+html[data-theme="dark"] a:hover {
+  color: #8fdcae;
+}
+
+html[data-theme="dark"] .navbar-brand,
+html[data-theme="dark"] .nav-link,
+html[data-theme="dark"] .navbar-light .nav-link {
+  color: #e4e4e4 !important;
+}
+
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .sidebar,
+html[data-theme="dark"] .article-preview {
+  background-color: #1e1e1e;
+  color: #e4e4e4;
+  border-color: #3a3a3a;
+}
+
+html[data-theme="dark"] .card-footer,
+html[data-theme="dark"] .article-meta {
+  background-color: #1a1a1a;
+  border-color: #3a3a3a;
+}
+
+html[data-theme="dark"] hr,
+html[data-theme="dark"] .card,
+html[data-theme="dark"] .dropdown-menu,
+html[data-theme="dark"] .article-preview,
+html[data-theme="dark"] .navbar-light,
+html[data-theme="dark"] .divider,
+html[data-theme="dark"] [class*="border"] {
+  border-color: #3a3a3a;
+}
+
+html[data-theme="dark"] .form-control {
+  background-color: #1e1e1e;
+  border-color: #3a3a3a;
+  color: #e4e4e4;
+}
+
+html[data-theme="dark"] .form-control::placeholder {
+  color: #9a9a9a;
+}
+
+html[data-theme="dark"] .tag-pill,
+html[data-theme="dark"] .tag-default {
+  background-color: #2a2a2a;
+  border-color: #3a3a3a;
+  color: #e4e4e4;
+}
+
+html[data-theme="dark"] .btn-outline-secondary {
+  color: #e4e4e4;
+  border-color: #5a5a5a;
+}
+
+html[data-theme="dark"] .btn-outline-secondary:hover {
+  background-color: #3a3a3a;
+  color: #fff;
+}
+
+html[data-theme="dark"] blockquote,
+html[data-theme="dark"] pre,
+html[data-theme="dark"] code {
+  background-color: #1e1e1e;
+  color: #e4e4e4;
+  border-color: #3a3a3a;
+}
+
+html[data-theme="dark"] .text-muted,
+html[data-theme="dark"] .attribution {
+  color: #9a9a9a !important;
+}

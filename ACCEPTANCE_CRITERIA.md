@@ -406,6 +406,31 @@ changed.
 
 ---
 
+- **AC-080** — Given a visitor with no previously stored theme choice,
+  when their browser reports a dark `prefers-color-scheme`, then the site
+  renders in the dark theme by default.
+- **AC-081** — Given a visitor with no previously stored theme choice and
+  no dark `prefers-color-scheme` reported (or the browser doesn't expose
+  one), when the site loads, then it renders in the light theme by
+  default.
+- **AC-082** — Given any page, when a visitor clicks the navbar's theme
+  toggle, then the theme switches immediately, with no page reload.
+- **AC-083** — Given a visitor has switched themes, when they reload the
+  page or return in a new visit from the same browser, then the
+  previously selected theme is restored.
+- **AC-084** — Given the dark theme is not active, when any existing page
+  is rendered, then it matches the pre-existing (light) appearance,
+  because dark-theme rules are scoped under `[data-theme="dark"]` and the
+  vendored `main.css` stylesheet is unchanged.
+- **AC-085** — Given an authenticated visitor, when the navbar renders,
+  then the theme toggle appears to the right of their avatar/username in
+  the account dropdown control.
+- **AC-086** — Given an anonymous visitor, when the navbar renders, then
+  the theme toggle appears to the right of the "Login"/"Sign up" links,
+  as the last item in the same right-hand navbar group.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +483,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-084 |
+| REQ-050 | US-029 | AC-085, AC-086 |

@@ -405,3 +405,27 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Light/dark theme toggle
+A control in the navbar, present on every page, lets any visitor
+(authenticated or not) switch the site's color theme between light and
+dark at any time; the change applies immediately, with no page reload.
+The chosen theme is persisted in the browser's `localStorage` and is
+restored on subsequent page loads and future visits from that browser.
+When no theme has been explicitly chosen yet, the site defaults to the
+visitor's OS/browser `prefers-color-scheme` setting where the browser
+exposes one, and otherwise defaults to light. The dark theme is applied
+via a `data-theme="dark"` attribute on the document root plus additive
+CSS rules scoped to that attribute; the existing light appearance (the
+vendored Bootstrap theme in `frontend/public/main.css`) is unmodified, so
+every page renders exactly as it did before this requirement when the
+dark theme is not active.
+
+### REQ-050 — Theme toggle placement in the navbar
+The theme toggle (REQ-049) is rendered as the last item in the navbar's
+right-hand item group — to the right of the account/profile area where a
+logged-in visitor's avatar and username are shown, or, for an anonymous
+visitor, to the right of the "Login"/"Sign up" links. It is not part of
+the left-hand (brand/source-code) portion of the navbar.
