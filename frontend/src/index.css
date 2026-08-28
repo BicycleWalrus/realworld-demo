@@ -26,3 +26,8 @@ button:focus {
   justify-content: center;
   flex-direction: column;
 }
+
+.article-cover-image {
+  max-width: 100%;
+  margin-bottom: 1rem;
+}
