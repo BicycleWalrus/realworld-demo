@@ -88,15 +88,26 @@ describe("markRead", () => {
     expect(notification.save).toHaveBeenCalled();
   });
 
-  // Omitting an id marks all of the caller's unread notifications as read.
-  test("omitting id -> marks all of the caller's unread notifications read", async () => {
+  // An explicit `all: true` marks every unread notification of the
+  // caller's as read.
+  test("all: true -> marks all of the caller's unread notifications read", async () => {
     const res = makeRes();
 
-    await markRead({ loggedUser, body: {} }, res, vi.fn());
+    await markRead({ loggedUser, body: { all: true } }, res, vi.fn());
 
     expect(Notification.update).toHaveBeenCalledWith(
       { read: true },
       { where: { recipientId: 1, read: false } },
     );
+  });
+
+  // A bare/empty body must not implicitly mark everything as read - that
+  // would be a surprising, hard-to-undo side effect of a malformed request.
+  test("omitting both id and all -> no-op, nothing marked", async () => {
+    const res = makeRes();
+
+    await markRead({ loggedUser, body: {} }, res, vi.fn());
+
+    expect(Notification.update).not.toHaveBeenCalled();
   });
 });

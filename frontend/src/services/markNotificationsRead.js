@@ -1,10 +1,10 @@
 import axios from "axios";
 import errorHandler from "../helpers/errorHandler";
 
-async function markNotificationsRead({ headers, id }) {
+async function markNotificationsRead({ all, headers, id }) {
   try {
     const { data } = await axios({
-      data: { id },
+      data: { all, id },
       headers,
       method: "PATCH",
       url: "api/user/notifications/read",

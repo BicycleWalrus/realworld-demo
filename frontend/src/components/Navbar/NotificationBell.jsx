@@ -50,7 +50,7 @@ function NotificationBell() {
   };
 
   const markAllRead = () => {
-    markNotificationsRead({ headers })
+    markNotificationsRead({ all: true, headers })
       .then(fetchNotifications)
       .catch(console.error);
   };

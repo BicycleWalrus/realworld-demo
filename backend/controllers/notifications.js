@@ -31,7 +31,7 @@ const markRead = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { id } = req.body;
+    const { all, id } = req.body;
 
     if (id) {
       const notification = await Notification.findByPk(id);
@@ -45,6 +45,10 @@ const markRead = async (req, res, next) => {
       await notification.save();
 
       return res.json({ notification });
+    }
+
+    if (!all) {
+      return res.json({ message: { body: ["No notification specified"] } });
     }
 
     await Notification.update(
