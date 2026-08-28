@@ -404,6 +404,16 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-032 — Download article as Markdown
+*(REQ-052)*
+
+- **AC-091** — Given the article detail page, when any viewer (regardless
+  of authentication or authorship) clicks the download control, then a
+  `.md` file is downloaded without any additional server request.
+- **AC-092** — Given the downloaded file, when opened, then its content is
+  the article's title as a Markdown heading followed by its body, and its
+  filename is the article's slug with a `.md` extension.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +468,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-052 | US-032 | AC-091, AC-092 |

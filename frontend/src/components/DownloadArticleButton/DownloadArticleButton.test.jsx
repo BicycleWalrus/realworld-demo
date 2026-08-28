@@ -13,6 +13,7 @@ beforeEach(() => {
 });
 
 describe("DownloadArticleButton", () => {
+  // AC-091
   it("renders a download control", () => {
     render(<DownloadArticleButton {...article} />);
 
@@ -21,6 +22,7 @@ describe("DownloadArticleButton", () => {
     ).toBeInTheDocument();
   });
 
+  // AC-091, AC-092
   it("downloads a .md file named after the slug, containing the title and body", async () => {
     let downloadedFilename;
     vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
