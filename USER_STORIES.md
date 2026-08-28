@@ -206,3 +206,9 @@ their profile.
 **US-038** — As a user, I want to reply to a specific comment, so that
 multi-person discussion is easy to follow.
 *Related requirements: REQ-082, REQ-083, REQ-084, REQ-085*
+
+---
+
+**US-039** — As a user, I want to save an article to a personal reading
+list, so that I can find it again later without publicly favoriting it.
+*Related requirements: REQ-086, REQ-087, REQ-088*

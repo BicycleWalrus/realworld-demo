@@ -221,6 +221,10 @@ const singleArticle = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+    // REQ-086/REQ-088: additive per-viewer flag for the detail page's
+    // read-later button; unset (false) for anonymous visitors, since the
+    // read-later list is private to the logged-in user.
+    article.dataValues.readLater = loggedUser ? await loggedUser.hasReadLater(article) : false;
 
     res.json({ article });
   } catch (error) {

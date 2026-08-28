@@ -12,6 +12,7 @@ const userRoutes = require("./routes/user");
 const articlesRoutes = require("./routes/articles");
 const profilesRoutes = require("./routes/profiles");
 const tagsRoutes = require("./routes/tags");
+const readLaterRoutes = require("./routes/readLater");
 
 const app = express();
 app.use(cors());
@@ -32,6 +33,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/articles", articlesRoutes);
 app.use("/api/profiles", profilesRoutes);
 app.use("/api/tags", tagsRoutes);
+app.use("/api/read-later", readLaterRoutes);
 
 if (process.env.NODE_ENV === "production") {
   // Serve static files from the React app build directory

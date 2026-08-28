@@ -37,6 +37,16 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "followerId",
         timestamps: false,
       });
+
+      // Read Later (REQ-086/REQ-087/REQ-088): a private, per-user saved-
+      // articles list, distinct from Favorites. Timestamps are left on
+      // (default) so the join table's createdAt can order the list
+      // most-recently-added first.
+      this.belongsToMany(Article, {
+        through: "ReadLater",
+        as: "readLater",
+        foreignKey: "userId",
+      });
     }
 
     toJSON() {
