@@ -30,13 +30,7 @@ function AuthorInfo() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Nav-state never carries the author-stats fields (only bio/image/
-    // followers/social links do), so the existing bio-freshness shortcut
-    // alone would leave stats permanently unset when a profile is reached
-    // via an in-app link. Requiring articleCount to already be present
-    // forces exactly one fetch in that case without altering the
-    // shortcut's own bio-based freshness rule otherwise.
-    if (state && state.bio === bio && articleCount !== undefined) return;
+    if (state && state.bio === bio) return;
 
     getProfile({ headers, username })
       .then(setAuthor)
@@ -45,6 +39,25 @@ function AuthorInfo() {
         navigate("/not-found", { replace: true });
       });
   }, [username, headers, state, navigate]);
+
+  // Independent of the fetch-or-skip decision above (which stays exactly
+  // as REQ-043 documents it): nav-state never carries the author-stats
+  // fields, so when that shortcut is taken, backfill just the stats with
+  // one additional fetch rather than changing the shortcut's own condition.
+  useEffect(() => {
+    if (!state || state.bio !== bio || articleCount !== undefined) return;
+
+    getProfile({ headers, username })
+      .then(({ articleCount, memberSince, totalFavoritesCount }) =>
+        setAuthor((prev) => ({
+          ...prev,
+          articleCount,
+          memberSince,
+          totalFavoritesCount,
+        })),
+      )
+      .catch(console.error);
+  }, [username, headers, state, bio, articleCount]);
 
   const followHandler = ({ followersCount, following }) => {
     setAuthor((prev) => ({ ...prev, followersCount, following }));
