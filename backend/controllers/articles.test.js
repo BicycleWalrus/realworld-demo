@@ -11,7 +11,11 @@ const { Op } = require("sequelize");
 const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Tag, User });
+// REQ-095/REQ-096: singleArticle additively calls appendReactions, which
+// requires Reaction from ../models - mocked here so that helper runs
+// unchanged against a controlled reaction list.
+const Reaction = { findAll: vi.fn() };
+mockRequire(require.resolve("../models"), { Article, Tag, User, Reaction });
 
 const {
   allArticles,
@@ -129,6 +133,8 @@ beforeEach(() => {
   Tag.findByPk.mockReset();
   Tag.create.mockReset();
   User.findOne.mockReset();
+  Reaction.findAll.mockReset();
+  Reaction.findAll.mockResolvedValue([]);
 });
 
 describe("createArticle", () => {
@@ -551,6 +557,58 @@ describe("singleArticle", () => {
       await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
 
       expect(article.dataValues.readLater).toBe(false);
+    });
+  });
+
+  // AC-126: singleArticle additively exposes reactionCounts (visible to
+  // anonymous and authenticated viewers alike) and, for an authenticated
+  // viewer, their own current reaction - null when they have none, and
+  // always null for an anonymous viewer since there is no loggedUser to
+  // derive it from. Independent of Favorites (REQ-096) - favoritesCount
+  // assertions live in this same describe block above, untouched.
+  describe("reactionCounts / reaction (REQ-095/REQ-096)", () => {
+    test("no loggedUser -> reaction is null, reactionCounts reflects all reactions", async () => {
+      const author = makeFollowableUser();
+      const article = makeArticle({ author });
+      Article.findOne.mockResolvedValue(article);
+      Reaction.findAll.mockResolvedValue([
+        { type: "like", userId: 1 },
+        { type: "celebrate", userId: 2 },
+      ]);
+      const res = makeRes();
+
+      await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+      expect(article.dataValues.reactionCounts).toEqual({ like: 1, insightful: 0, celebrate: 1 });
+      expect(article.dataValues.reaction).toBeNull();
+    });
+
+    test("loggedUser has reacted -> reaction is that user's own type", async () => {
+      const author = makeFollowableUser();
+      const viewer = makeFollowableUser({ id: 2, username: "reader" });
+      const article = makeArticle({ author });
+      Article.findOne.mockResolvedValue(article);
+      Reaction.findAll.mockResolvedValue([{ type: "insightful", userId: 2 }]);
+      const res = makeRes();
+
+      await singleArticle({ loggedUser: viewer, params: { slug: "a-slug" } }, res, vi.fn());
+
+      expect(article.dataValues.reaction).toBe("insightful");
+      expect(article.dataValues.reactionCounts).toEqual({ like: 0, insightful: 1, celebrate: 0 });
+    });
+
+    test("loggedUser has not reacted -> reaction is null even though other users have", async () => {
+      const author = makeFollowableUser();
+      const viewer = makeFollowableUser({ id: 2, username: "reader" });
+      const article = makeArticle({ author });
+      Article.findOne.mockResolvedValue(article);
+      Reaction.findAll.mockResolvedValue([{ type: "like", userId: 99 }]);
+      const res = makeRes();
+
+      await singleArticle({ loggedUser: viewer, params: { slug: "a-slug" } }, res, vi.fn());
+
+      expect(article.dataValues.reaction).toBeNull();
+      expect(article.dataValues.reactionCounts).toEqual({ like: 1, insightful: 0, celebrate: 0 });
     });
   });
 

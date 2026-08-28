@@ -2,6 +2,11 @@ const slugify = (string) => {
   return string.trim().toLowerCase().replace(/\W|_/g, "-");
 };
 
+// REQ-094/REQ-095/REQ-096: the fixed reaction set. Reactions are a separate,
+// independent concept from Favorites - not folded into it and not affecting
+// the favorite count.
+const REACTION_TYPES = ["like", "insightful", "celebrate"];
+
 const appendTagList = (articleTags, article) => {
   const tagList = articleTags.map((tag) => tag.name);
 
@@ -57,10 +62,36 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
+// REQ-095: attaches a per-reaction-type count (visible to anonymous and
+// authenticated viewers alike) and, for an authenticated viewer, their own
+// current reaction (or null), on `article.dataValues`. Additive, mirroring
+// appendFavorites/appendFollowers - never reads or writes Favorites.
+const appendReactions = async (loggedUser, article) => {
+  // Required lazily (not at module top level) so this file can still be
+  // loaded - e.g. by helpers.test.js's slugify tests - without pulling in a
+  // real Sequelize connection; every caller of appendReactions (articles.js,
+  // reactions.js) already requires "../models" itself, whether real or, in
+  // tests, mocked via mockRequire before this runs.
+  const { Reaction } = require("../models");
+  const reactions = await Reaction.findAll({ where: { articleId: article.id } });
+
+  const reactionCounts = { like: 0, insightful: 0, celebrate: 0 };
+  for (const r of reactions) {
+    if (reactionCounts[r.type] !== undefined) reactionCounts[r.type]++;
+  }
+  article.dataValues.reactionCounts = reactionCounts;
+
+  article.dataValues.reaction = loggedUser
+    ? (reactions.find((r) => r.userId === loggedUser.id)?.type ?? null)
+    : null;
+};
+
 module.exports = {
   slugify,
   appendTagList,
   appendFavorites,
   appendFollowers,
   appendAuthorStats,
+  appendReactions,
+  REACTION_TYPES,
 };

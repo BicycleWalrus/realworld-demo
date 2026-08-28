@@ -224,3 +224,10 @@ includes relevant articles even from authors I don't already follow.
 **US-041** — As a reader, I want to see roughly how long an article will
 take to read so that I can decide whether to read it now.
 *Related requirements: REQ-092, REQ-093*
+
+---
+
+**US-042** — As a reader, I want to react to an article with more than one
+kind of response, not just a generic favorite, so that I can express how
+it landed for me.
+*Related requirements: REQ-094, REQ-095, REQ-096*
