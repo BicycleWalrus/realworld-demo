@@ -721,6 +721,131 @@ describe("allArticles", () => {
     expect(articles.map((a) => a.slug)).toEqual(["bob-1"]);
   });
 
+  // AC-141: a single tag (REQ-013/REQ-110) behaves exactly as before -
+  // explicit companion to the "tag filter" test above, pinned to this exact
+  // seed so a future multi-tag change can't silently alter it.
+  test("single tag -> unchanged single-tag behavior (REQ-110)", async () => {
+    const seed = makeSeedArticles();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { tag: "training" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles.map((a) => a.slug)).toEqual(["bob-1"]);
+  });
+
+  // AC-140: two or more tags in the query (`tag=a&tag=b`, parsed by Express
+  // as an array) return only articles carrying ALL of the specified tags -
+  // logical AND, not OR.
+  describe("multi-tag AND filter (REQ-109)", () => {
+    function makeMultiTagSeed() {
+      const author = makeFollowableUser({ id: 1, username: "jane" });
+      return [
+        makeArticle({
+          id: 1,
+          slug: "both-tags",
+          author,
+          tags: [{ name: "a" }, { name: "b" }],
+          createdAt: new Date("2020-01-01"),
+        }),
+        makeArticle({
+          id: 2,
+          slug: "only-a",
+          author,
+          tags: [{ name: "a" }],
+          createdAt: new Date("2020-01-02"),
+        }),
+        makeArticle({
+          id: 3,
+          slug: "only-b",
+          author,
+          tags: [{ name: "b" }],
+          createdAt: new Date("2020-01-03"),
+        }),
+        makeArticle({
+          id: 4,
+          slug: "neither",
+          author,
+          tags: [{ name: "c" }],
+          createdAt: new Date("2020-01-04"),
+        }),
+      ];
+    }
+
+    test("only articles carrying every specified tag are returned", async () => {
+      const seed = makeMultiTagSeed();
+      Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+      const res = makeRes();
+
+      await allArticles({ loggedUser: undefined, query: { tag: ["a", "b"] } }, res, vi.fn());
+
+      const { articles, articlesCount } = res.json.mock.calls[0][0];
+      expect(articlesCount).toBe(1);
+      expect(articles.map((a) => a.slug)).toEqual(["both-tags"]);
+    });
+
+    // AC-140/REQ-031: multi-tag still respects the default 3-per-page size,
+    // with articlesCount reflecting the full AND-filtered match total.
+    test("paginates at 3 per page with the true AND-filtered total count", async () => {
+      const author = makeFollowableUser({ id: 1, username: "jane" });
+      const seed = [1, 2, 3, 4].map((n) =>
+        makeArticle({
+          id: n,
+          slug: `both-${n}`,
+          author,
+          tags: [{ name: "a" }, { name: "b" }],
+          createdAt: new Date(`2020-01-0${n}`),
+        }),
+      );
+      Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+      const res = makeRes();
+
+      await allArticles({ loggedUser: undefined, query: { tag: ["a", "b"] } }, res, vi.fn());
+
+      const { articles, articlesCount } = res.json.mock.calls[0][0];
+      expect(articlesCount).toBe(4);
+      expect(articles).toHaveLength(3);
+      expect(articles.map((a) => a.slug)).toEqual(["both-4", "both-3", "both-2"]);
+    });
+
+    // REQ-109: multi-tag combines (AND) with the existing author filter,
+    // same additive-composition pattern as search (AC-091 above).
+    test("combines with an author filter", async () => {
+      const jane = makeFollowableUser({ id: 1, username: "jane" });
+      const bob = makeFollowableUser({ id: 2, username: "bob" });
+      const seed = [
+        makeArticle({
+          id: 1,
+          slug: "jane-both",
+          author: jane,
+          tags: [{ name: "a" }, { name: "b" }],
+          createdAt: new Date("2020-01-01"),
+        }),
+        makeArticle({
+          id: 2,
+          slug: "bob-both",
+          author: bob,
+          tags: [{ name: "a" }, { name: "b" }],
+          createdAt: new Date("2020-01-02"),
+        }),
+      ];
+      Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+      const res = makeRes();
+
+      await allArticles(
+        { loggedUser: undefined, query: { tag: ["a", "b"], author: "jane" } },
+        res,
+        vi.fn(),
+      );
+
+      const { articles, articlesCount } = res.json.mock.calls[0][0];
+      expect(articlesCount).toBe(1);
+      expect(articles.map((a) => a.slug)).toEqual(["jane-both"]);
+    });
+  });
+
   // AC-033: with no explicit limit/offset, results are capped at 3 per
   // page, newest first, while the total count still reflects every match.
   test("default pagination -> 3 per page, newest first, true total count", async () => {

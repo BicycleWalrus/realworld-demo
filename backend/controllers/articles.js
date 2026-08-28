@@ -25,13 +25,21 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, search, sort, limit = 3, offset = 0 } = req.query;
+    const { author, tag: tagParam, favorited, search, sort, limit = 3, offset = 0 } = req.query;
     const term = typeof search === "string" ? search.trim() : "";
     // REQ-061/REQ-062: the "top" sort ranks by favorite count, which is only
     // known once each article is enriched below (DB-agnostic - no raw-SQL
     // ORDER BY on a derived count). So for this branch every matching row is
     // fetched (limit/offset omitted here) and paged after sorting instead.
     const isTop = sort === "top";
+    // REQ-109/REQ-110: Express parses a repeated `?tag=a&tag=b` query string
+    // into an array, and a single `?tag=a` into a string. Normalize both
+    // shapes into a `tags` array. Exactly one tag keeps today's DB-level
+    // tagList filter unchanged (REQ-013/REQ-110); two or more tags switch to
+    // an in-memory AND filter below, since a single tagList include can only
+    // match one tag name at a time.
+    const tags = Array.isArray(tagParam) ? tagParam.filter(Boolean) : tagParam ? [tagParam] : [];
+    const isMultiTag = tags.length > 1;
     // REQ-070: draft (unpublished) articles are excluded from every listing
     // path (global/tag/search/favorited/top and other users' profiles)
     // unless the viewer is looking at their own profile (author === the
@@ -45,7 +53,12 @@ const allArticles = async (req, res, next) => {
           model: Tag,
           as: "tagList",
           attributes: ["name"],
-          ...(tag && { where: { name: tag } }),
+          // REQ-013/REQ-110: exactly one tag still filters at the DB level,
+          // identical to today. REQ-109: two or more tags omit this
+          // include-where entirely (a to-one `where` here can only match a
+          // single tag name) and are AND-filtered in JS after enrichment,
+          // below.
+          ...(tags.length === 1 && { where: { name: tags[0] } }),
         },
         {
           model: User,
@@ -54,7 +67,10 @@ const allArticles = async (req, res, next) => {
           ...(author && { where: { username: author } }),
         },
       ],
-      ...(!isTop && { limit: parseInt(limit), offset: offset * limit }),
+      // REQ-109: multi-tag also fetches every matching row (no limit/offset),
+      // mirroring the isTop fetch-all-then-slice approach, so the AND filter
+      // below can run against the full match set before paging.
+      ...(!isTop && !isMultiTag && { limit: parseInt(limit), offset: offset * limit }),
       order: [["createdAt", "DESC"]],
       // AC-088: keyword search matches title, description, or body,
       // case-insensitively (Postgres Op.iLike); additive to the existing
@@ -103,8 +119,34 @@ const allArticles = async (req, res, next) => {
         return new Date(b.dataValues.createdAt) - new Date(a.dataValues.createdAt);
       });
 
+      // REQ-109: a combined sort=top + multi-tag request is not exercised by
+      // any documented requirement (isTop and multi-tag are normally
+      // mutually exclusive), but if both are present, apply the top sort
+      // first and defer slicing to the multi-tag block below so the AND
+      // filter runs against the full sorted set rather than an
+      // already-truncated page.
+      if (!isMultiTag) {
+        const start = offset * limit;
+        articles.rows = articles.rows.slice(start, start + parseInt(limit));
+      }
+    }
+
+    // REQ-109: an article must carry every one of the specified tags
+    // (logical AND). Runs after enrichment above, where appendTagList has
+    // set each article's dataValues.tagList to an array of tag-name
+    // strings, and after the isTop sort (if both were requested). Re-derives
+    // articlesCount from the AND-filtered set and slices the requested page
+    // (REQ-031), since the DB-level limit/offset was skipped for this
+    // branch.
+    if (isMultiTag) {
+      const filtered = articles.rows.filter((article) => {
+        const names = article.dataValues.tagList || [];
+        return tags.every((t) => names.includes(t));
+      });
+
       const start = offset * limit;
-      articles.rows = articles.rows.slice(start, start + parseInt(limit));
+      articles.rows = filtered.slice(start, start + parseInt(limit));
+      articles.count = filtered.length;
     }
 
     res.json({ articles: articles.rows, articlesCount: articles.count });
