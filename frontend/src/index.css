@@ -69,3 +69,13 @@ button:focus {
   list-style: none;
   padding: 0;
 }
+
+.recently-viewed {
+  margin-top: 1rem;
+}
+
+.recently-viewed ul {
+  list-style: none;
+  padding-left: 0;
+  margin-bottom: 0;
+}

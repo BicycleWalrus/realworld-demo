@@ -10,6 +10,10 @@ export function getRecentlyViewed() {
   }
 }
 
+// The title is a snapshot taken at view time - if the article is later
+// renamed, the widget keeps showing the old title until the article is
+// viewed again. The link's slug is always current, so this is a
+// display-only staleness, not a broken link.
 export function recordView({ slug, title }) {
   const withoutExisting = getRecentlyViewed().filter(
     (entry) => entry.slug !== slug,
