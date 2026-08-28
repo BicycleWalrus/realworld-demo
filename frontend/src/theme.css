@@ -1,0 +1,130 @@
+/*
+  Additive dark theme. Nothing here changes the light theme (main.css is
+  untouched); every rule below is scoped under [data-theme="dark"] and
+  only takes effect once that attribute is set on <html>.
+*/
+
+[data-theme="dark"] {
+  --color-bg: #16181d;
+  --color-surface: #22252b;
+  --color-surface-alt: #2a2d34;
+  --color-text: #e4e6eb;
+  --color-text-muted: #a9adb4;
+  --color-border: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] html,
+[data-theme="dark"] body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+[data-theme="dark"] header,
+[data-theme="dark"] footer {
+  background-color: var(--color-surface);
+}
+
+[data-theme="dark"] footer .attribution {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] hr,
+[data-theme="dark"] .article-preview {
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .nav-pills.outline-active .nav-link.active {
+  background-color: var(--color-surface) !important;
+}
+
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link {
+  color: var(--color-text-muted);
+}
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link:focus,
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link:hover,
+[data-theme="dark"] .navbar-light .navbar-nav .active > .nav-link,
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link.active {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .dropdown-menu {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+}
+[data-theme="dark"] .dropdown-item {
+  color: var(--color-text);
+}
+[data-theme="dark"] .dropdown-item:focus,
+[data-theme="dark"] .dropdown-item:hover {
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+}
+[data-theme="dark"] .dropdown-divider {
+  background-color: var(--color-border);
+}
+
+[data-theme="dark"] .form-control {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+[data-theme="dark"] .form-control::placeholder {
+  color: var(--color-text-muted);
+}
+[data-theme="dark"] .form-control:disabled,
+[data-theme="dark"] .form-control[readonly] {
+  background-color: var(--color-surface-alt);
+}
+
+[data-theme="dark"] .card,
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-footer {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+[data-theme="dark"] .article-page .card {
+  border-color: var(--color-border);
+}
+[data-theme="dark"] .article-page .card .card-footer {
+  border-color: var(--color-border);
+}
+[data-theme="dark"] .article-page .card .date-posted {
+  color: var(--color-text-muted);
+}
+[data-theme="dark"] .article-page .card .mod-options {
+  color: var(--color-text);
+}
+
+[data-theme="dark"] .home-page .sidebar,
+[data-theme="dark"] .profile-page .user-info {
+  background-color: var(--color-surface);
+}
+[data-theme="dark"] .profile-page .user-info p {
+  color: var(--color-text-muted);
+}
+[data-theme="dark"] .profile-page .user-info .action-btn {
+  color: var(--color-text-muted);
+  border-color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .article-meta .info .date {
+  color: var(--color-text-muted);
+}
+[data-theme="dark"] .article-preview .preview-link p {
+  color: var(--color-text-muted);
+}
+[data-theme="dark"] .article-preview .preview-link span {
+  color: var(--color-text-muted);
+}
+
+[data-theme="dark"] .tag-default.tag-outline {
+  border-color: var(--color-border);
+  color: var(--color-text-muted) !important;
+}
+
+[data-theme="dark"] code {
+  background-color: var(--color-surface-alt);
+}
+[data-theme="dark"] pre {
+  color: var(--color-text);
+}

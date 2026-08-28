@@ -405,3 +405,37 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Dark/light theme toggle available from any page
+A control in the navbar, present on every page regardless of
+authentication state, lets a visitor switch the site between a light and
+a dark color theme. Selecting a theme takes effect immediately, without a
+page reload, by setting a `data-theme` attribute (`"light"` or `"dark"`)
+on the document root. The chosen theme is written to `localStorage`
+(key `"theme"`) and is restored on subsequent page loads and future
+visits from the same browser.
+
+### REQ-050 — Unset theme preference defaults to OS/browser color-scheme preference
+When no theme has been explicitly chosen in a given browser (no stored
+`localStorage` value), the site's theme is derived from the OS/browser
+`prefers-color-scheme` media query at load time: `dark` if the browser
+reports a dark preference, `light` otherwise. Special case: for as long
+as no explicit choice has been made, a live change in the OS/browser
+preference (e.g. the OS switching color scheme while the site remains
+open) is picked up and reflected immediately. Once a visitor has
+explicitly chosen a theme via REQ-049's toggle, further OS/browser
+preference changes no longer alter the displayed theme.
+
+### REQ-051 — Dark theme is additive; light theme is unmodified
+The dark theme is implemented entirely as a new, additive stylesheet
+whose rules are scoped under a `[data-theme="dark"]` selector; the
+existing light-theme stylesheet is not modified. Consequently, the site's
+appearance when the dark theme is not selected (`data-theme` absent or
+`"light"`) is pixel-equivalent to its appearance before this requirement
+existed. The dark theme's scoped overrides cover every existing page and
+component (navbar and its user dropdown, forms, buttons, cards, the
+article page and its comments, tags, and the profile/settings pages), so
+that no text, border, or icon becomes illegible against the dark
+background.
