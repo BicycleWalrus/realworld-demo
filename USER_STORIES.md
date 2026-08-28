@@ -209,3 +209,9 @@ jump to their profile.
 viewed, so that I can easily get back to something I was reading without
 searching for it again.
 *Related requirements: REQ-058*
+
+---
+
+**US-041** — As a user, I want to save an article to a personal reading
+list, so that I can find it again later without publicly favoriting it.
+*Related requirements: REQ-061*

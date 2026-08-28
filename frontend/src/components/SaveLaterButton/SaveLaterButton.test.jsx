@@ -25,6 +25,7 @@ describe("SaveLaterButton", () => {
   // isSaved is the article's actual saved state (from the parent's own
   // data, appended server-side) - correct from the first render, not
   // just after a click, unlike the button's own local state before.
+  // AC-134
   it("reflects the isSaved prop on first render, before any click", () => {
     useAuth.mockReturnValue({ headers: {}, isAuth: true });
 

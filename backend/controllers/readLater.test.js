@@ -53,6 +53,7 @@ beforeEach(() => {
 });
 
 describe("readLaterToggler", () => {
+  // AC-133
   test("no loggedUser -> UnauthorizedError", async () => {
     const next = vi.fn();
 
@@ -74,6 +75,7 @@ describe("readLaterToggler", () => {
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
   });
 
+  // AC-130
   test("POST on an unsaved article -> addSavedByUser called, isSaved true", async () => {
     const article = makeArticle({ isSaved: true });
     Article.findOne.mockResolvedValue(article);
@@ -85,6 +87,7 @@ describe("readLaterToggler", () => {
     expect(res.json).toHaveBeenCalledWith({ article: { slug: "a-slug", isSaved: true } });
   });
 
+  // AC-130
   test("DELETE on a saved article -> removeSavedByUser called, isSaved false", async () => {
     const article = makeArticle({ isSaved: false });
     Article.findOne.mockResolvedValue(article);
@@ -102,6 +105,7 @@ describe("readLaterToggler", () => {
 
   // This is a distinct concept from favoriting (REQ-025/REQ-026): no
   // Favorites-related method is ever called by this controller.
+  // AC-132
   test("never touches the Favorites association", async () => {
     const article = makeArticle();
     article.addUser = vi.fn();
@@ -116,6 +120,7 @@ describe("readLaterToggler", () => {
 });
 
 describe("readLaterList", () => {
+  // AC-133
   test("no loggedUser -> UnauthorizedError", async () => {
     const next = vi.fn();
 
@@ -124,6 +129,7 @@ describe("readLaterList", () => {
     expect(next.mock.calls[0][0]).toBeInstanceOf(UnauthorizedError);
   });
 
+  // AC-131
   test("returns saved articles, most recently saved first", async () => {
     ReadLater.findAll.mockResolvedValue([{ articleId: 2 }, { articleId: 1 }]);
     const article1 = makeListedArticle({ id: 1, slug: "first-saved" });
