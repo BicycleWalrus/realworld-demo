@@ -11,7 +11,7 @@ import getArticle from "../../services/getArticle";
 function Article() {
   const { state } = useLocation();
   const [article, setArticle] = useState(state || {});
-  const { title, body, tagList, createdAt, author } = article || {};
+  const { title, body, tagList, createdAt, author, image } = article || {};
   const { headers, isAuth } = useAuth();
   const navigate = useNavigate();
   const { slug } = useParams();
@@ -31,6 +31,16 @@ function Article() {
     <div className="article-page">
       <BannerContainer>
         <h1>{title}</h1>
+        {image && (
+          <img
+            alt={title}
+            className="article-cover-image"
+            onError={(e) => {
+              e.target.style.display = "none";
+            }}
+            src={image}
+          />
+        )}
         <ArticleMeta author={author} createdAt={createdAt}>
           <ArticlesButtons article={article} setArticle={setArticle} />
         </ArticleMeta>

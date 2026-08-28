@@ -405,3 +405,17 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-052 — Optional article cover image
+Creating or updating an article accepts an optional `image` field (a URL
+string). If provided, the image is persisted with the article and is
+displayed on the article's preview card and on its detail page. If
+omitted (or falsy on update, per the existing pattern for
+`description`/`body`), the article behaves exactly as it does today — no
+image is rendered, and no layout element is added in its place. This
+field is never required: REQ-015's required-field validation for article
+creation (`title`, `description`, `body`) is unchanged, and omitting
+`image` never blocks creation or update. An invalid or unreachable image
+URL does not prevent article creation, update, or rendering — the image
+element is hidden on load failure rather than left as a broken-image
+placeholder, and the page does not error.

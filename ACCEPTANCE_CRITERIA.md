@@ -404,6 +404,28 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-032 — Article cover image
+*(REQ-052)*
+
+- **AC-092** — Given an article is created with an `image` URL, when the
+  article is fetched afterward, then that URL is present in the returned
+  article data; given an article is created without one, then creation
+  succeeds exactly as before and `image` is absent/null.
+- **AC-093** — Given an existing article without an image, when it is
+  updated with a non-empty `image` value, then the article's image is
+  set; given an update submits a falsy `image`, then the existing value
+  (or absence of one) is left unchanged, consistent with how
+  `description`/`body` are already handled on update.
+- **AC-094** — Given an article has an `image` set, when its preview card
+  or detail page is rendered, then the image is displayed; given an
+  article has no `image`, when rendered, then no image element appears
+  and no layout shift occurs relative to the pre-existing layout.
+- **AC-095** — Given an article's `image` URL is invalid or unreachable,
+  when the article is created or its page is rendered, then creation and
+  rendering both complete without error (the image element is hidden
+  rather than left as a broken-image placeholder, and the application
+  does not crash).
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +480,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-052 | US-032 | AC-092–AC-095 |
