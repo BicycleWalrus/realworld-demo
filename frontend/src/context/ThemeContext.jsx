@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import resolveTheme from "../helpers/resolveTheme";
 
 const ThemeContext = createContext();
 
@@ -6,18 +7,8 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
-function prefersDark() {
-  return (
-    typeof window.matchMedia === "function" &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches
-  );
-}
-
-const storedTheme = localStorage.getItem("theme");
-const initialTheme = storedTheme || (prefersDark() ? "dark" : "light");
-
 function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState(initialTheme);
+  const [theme, setTheme] = useState(resolveTheme);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);

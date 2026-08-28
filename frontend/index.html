@@ -27,6 +27,20 @@
     />
     <!-- Import the custom Bootstrap 4 theme from our local file -->
     <link rel="stylesheet" href="/main.css" />
+    <!-- Sets the theme before first paint to avoid a flash of the wrong
+         theme; mirrors frontend/src/helpers/resolveTheme.js's logic
+         (duplicated here, not imported, since it must run before any
+         module script). -->
+    <script>
+      (function () {
+        var stored = localStorage.getItem("theme");
+        var prefersDark =
+          typeof window.matchMedia === "function" &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches;
+        var theme = stored || (prefersDark ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
