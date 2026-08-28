@@ -19,6 +19,13 @@ button:focus {
   user-select: none;
 }
 
+.theme-toggle {
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .not-found {
   display: flex;
   height: 85vh;
