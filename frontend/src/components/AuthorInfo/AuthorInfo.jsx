@@ -2,6 +2,7 @@ import Markdown from "markdown-to-jsx";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import dateFormatter from "../../helpers/dateFormatter";
 import isSafeUrl from "../../helpers/isSafeUrl";
 import getProfile from "../../services/getProfile";
 import Avatar from "../Avatar";
@@ -10,7 +11,18 @@ import FollowButton from "../FollowButton";
 function AuthorInfo() {
   const { state } = useLocation();
   const [
-    { bio, followersCount, following, github, image, twitter, website },
+    {
+      articleCount,
+      bio,
+      followersCount,
+      following,
+      github,
+      image,
+      memberSince,
+      totalFavoritesCount,
+      twitter,
+      website,
+    },
     setAuthor,
   ] = useState(state || {});
   const { headers, loggedUser } = useAuth();
@@ -18,7 +30,13 @@ function AuthorInfo() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (state && state.bio === bio) return;
+    // Nav-state never carries the author-stats fields (only bio/image/
+    // followers/social links do), so the existing bio-freshness shortcut
+    // alone would leave stats permanently unset when a profile is reached
+    // via an in-app link. Requiring articleCount to already be present
+    // forces exactly one fetch in that case without altering the
+    // shortcut's own bio-based freshness rule otherwise.
+    if (state && state.bio === bio && articleCount !== undefined) return;
 
     getProfile({ headers, username })
       .then(setAuthor)
@@ -36,6 +54,13 @@ function AuthorInfo() {
     <div className="col-xs-12 col-md-10 offset-md-1">
       <Avatar alt={username} className="user-img" src={image} />
       <h4>{username}</h4>
+
+      {memberSince && (
+        <p className="author-stats">
+          {articleCount} Articles · {totalFavoritesCount} Favorites · Member
+          since {dateFormatter(memberSince)}
+        </p>
+      )}
 
       {bio && <Markdown options={{ forceBlock: true }}>{bio}</Markdown>}
 

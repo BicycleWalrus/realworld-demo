@@ -25,6 +25,14 @@ function makeAuthorState(overrides = {}) {
     followersCount: 0,
     following: false,
     image: null,
+    // articleCount must be present for the nav-state freshness shortcut to
+    // skip a refetch (nav-state never carries these stats fields on real
+    // navigations, so their absence always forces one fetch) - included
+    // here so these fixtures don't trigger a real network call in tests
+    // that aren't exercising the stats themselves.
+    articleCount: 0,
+    totalFavoritesCount: 0,
+    memberSince: "2020-01-01T00:00:00.000Z",
     ...overrides,
   };
 }
@@ -72,4 +80,27 @@ it("renders all three social links when all are set", () => {
     "href",
     "https://twitter.com/jane",
   );
+});
+
+it("renders the author's article count, total favorites, and member-since date", () => {
+  renderProfile(
+    makeAuthorState({
+      articleCount: 4,
+      totalFavoritesCount: 9,
+      memberSince: "2019-06-15T12:00:00.000Z",
+    }),
+  );
+
+  expect(screen.getByText(/4 Articles/)).toBeInTheDocument();
+  expect(screen.getByText(/9 Favorites/)).toBeInTheDocument();
+  expect(screen.getByText(/Member since June 15, 2019/)).toBeInTheDocument();
+});
+
+it("renders a zero-state for an author with no articles or favorites yet", () => {
+  renderProfile(
+    makeAuthorState({ articleCount: 0, totalFavoritesCount: 0 }),
+  );
+
+  expect(screen.getByText(/0 Articles/)).toBeInTheDocument();
+  expect(screen.getByText(/0 Favorites/)).toBeInTheDocument();
 });

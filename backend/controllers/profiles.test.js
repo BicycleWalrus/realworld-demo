@@ -6,16 +6,26 @@ mockRequire(require.resolve("../models"), { User });
 
 const { getProfile, followToggler } = require("./profiles");
 
-function makeProfile({ hasFollower = false, followersCount = 0 } = {}) {
+function makeProfile({
+  hasFollower = false,
+  followersCount = 0,
+  articles = [],
+  createdAt = "2020-01-01T00:00:00.000Z",
+} = {}) {
   return makeInstance(
-    { id: 1, username: "author" },
+    { id: 1, username: "author", createdAt },
     {
       hasFollower: vi.fn().mockResolvedValue(hasFollower),
       countFollowers: vi.fn().mockResolvedValue(followersCount),
       addFollower: vi.fn().mockResolvedValue(),
       removeFollower: vi.fn().mockResolvedValue(),
+      getArticles: vi.fn().mockResolvedValue(articles),
     },
   );
+}
+
+function makeArticle(favoritesCount) {
+  return { countUsers: vi.fn().mockResolvedValue(favoritesCount) };
 }
 
 const loggedUser = makeInstance({ id: 2, username: "reader" });
@@ -46,6 +56,47 @@ describe("getProfile", () => {
     expect(res.json).toHaveBeenCalledWith({ profile });
     expect(profile.dataValues.following).toBe(false);
     expect(profile.dataValues.followersCount).toBe(5);
+  });
+
+  // AC: article count, total favorites (summed across articles), and
+  // member-since date are attached to the profile response.
+  test("attaches article count, total favorites across all articles, and member-since date", async () => {
+    const profile = makeProfile({
+      articles: [makeArticle(3), makeArticle(0), makeArticle(2)],
+      createdAt: "2019-06-15T00:00:00.000Z",
+    });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser: undefined, params: { username: "author" } }, res, vi.fn());
+
+    expect(profile.dataValues.articleCount).toBe(3);
+    expect(profile.dataValues.totalFavoritesCount).toBe(5);
+    expect(profile.dataValues.memberSince).toBe("2019-06-15T00:00:00.000Z");
+  });
+
+  // Zero-state: an author with no articles yet.
+  test("author with no articles -> articleCount and totalFavoritesCount are 0", async () => {
+    const profile = makeProfile({ articles: [] });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser: undefined, params: { username: "author" } }, res, vi.fn());
+
+    expect(profile.dataValues.articleCount).toBe(0);
+    expect(profile.dataValues.totalFavoritesCount).toBe(0);
+  });
+
+  // Stats must be visible to anonymous and authenticated visitors alike.
+  test("stats are attached the same way for an authenticated viewer", async () => {
+    const profile = makeProfile({ articles: [makeArticle(1)] });
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser, params: { username: "author" } }, res, vi.fn());
+
+    expect(profile.dataValues.articleCount).toBe(1);
+    expect(profile.dataValues.totalFavoritesCount).toBe(1);
   });
 });
 

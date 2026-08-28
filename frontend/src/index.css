@@ -69,3 +69,8 @@ button:focus {
   list-style: none;
   padding: 0;
 }
+
+.author-stats {
+  color: #aaa;
+  font-size: 0.9rem;
+}
