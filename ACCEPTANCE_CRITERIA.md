@@ -461,6 +461,25 @@ changed.
   the article's title as a Markdown heading followed by its body, and its
   filename is the article's slug with a `.md` extension.
 
+### US-033 — Comment editing
+*(REQ-053)*
+
+- **AC-093** — Given the comment's author submits an edit with a
+  non-empty body, when saved, then the comment's text is updated.
+- **AC-094** — Given an authenticated user who is not the comment's
+  author, when they attempt to edit it, then the request is rejected
+  with an authorization (403) error and the comment is unchanged.
+- **AC-095** — Given no `Authorization` header, when an edit is
+  attempted, then the request is rejected with an
+  authentication-required (401) error.
+- **AC-096** — Given the comment's author submits an empty body, when
+  submitted, then the request is rejected with a field-required error
+  and the comment is unchanged.
+- **AC-097** — Given a comment, when rendered, then the edit control is
+  shown only to that comment's author; given a successful edit, when the
+  comment list is subsequently loaded, then the updated text (not the
+  pre-edit text) is what's displayed.
+
 ### US-034 — Auto-generated table of contents
 *(REQ-054)*
 
@@ -534,4 +553,5 @@ changed.
 | REQ-050 | US-030 | AC-084–AC-087 |
 | REQ-051 | US-031 | AC-088–AC-090 |
 | REQ-052 | US-032 | AC-091, AC-092 |
+| REQ-053 | US-033 | AC-093–AC-097 |
 | REQ-054 | US-034 | AC-098–AC-101 |

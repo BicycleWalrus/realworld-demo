@@ -451,6 +451,18 @@ filename is derived from the article's slug (`<slug>.md`). The control is
 available to any viewer who can already view the article, independent of
 authentication state or authorship.
 
+### REQ-053 — Comment editing
+The author of a comment may edit its text after posting. Only the
+comment's author may edit it — any other authenticated account attempting
+to edit is rejected with an authorization error, mirroring the existing
+deletion ownership rule (REQ-023); an unauthenticated request is rejected
+with an authentication-required error, mirroring REQ-003. Editing
+requires a non-empty body, the same validation applied on comment
+creation (REQ-022). A successful edit is persisted and reflected in
+subsequent requests, not only in the current session's local state.
+Comment creation (REQ-022) and deletion (REQ-023, REQ-042) are
+unaffected.
+
 ### REQ-054 — Auto-generated table of contents for article headings
 The article detail page derives a table of contents from the headings
 present in the article's body, rendering a linked entry for each one in
