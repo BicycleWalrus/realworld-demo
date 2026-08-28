@@ -175,3 +175,7 @@ html[data-theme="dark"] .mention-suggestions {
 html[data-theme="dark"] .mention-suggestions button:hover {
   background-color: #2c343a;
 }
+
+html[data-theme="dark"] .user-directory-list li {
+  border-bottom-color: #2c343a;
+}
