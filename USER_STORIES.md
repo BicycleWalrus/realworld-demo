@@ -167,3 +167,9 @@ take to read, so that I can decide whether to read it now.
 **US-032** — As a reader, I want to download an article as a Markdown
 file, so that I can save or read it offline in my own editor/notes app.
 *Related requirements: REQ-052*
+
+---
+
+**US-034** — As a reader, I want a table of contents for long articles, so
+that I can quickly jump to the section I'm interested in.
+*Related requirements: REQ-054*

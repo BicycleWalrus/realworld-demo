@@ -2,12 +2,14 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import TableOfContents from "./TableOfContents";
 
 describe("TableOfContents", () => {
+  // AC-100
   it("renders nothing when there are no headings", () => {
     const { container } = render(<TableOfContents headings={[]} />);
 
     expect(container).toBeEmptyDOMElement();
   });
 
+  // AC-098
   it("renders a link for each heading", () => {
     const headings = [
       { level: 1, text: "Intro", id: "intro" },
@@ -26,6 +28,7 @@ describe("TableOfContents", () => {
     );
   });
 
+  // AC-099
   it("scrolls to the matching heading and prevents the default hash navigation", () => {
     const target = document.createElement("div");
     target.id = "details";

@@ -461,6 +461,21 @@ changed.
   the article's title as a Markdown heading followed by its body, and its
   filename is the article's slug with a `.md` extension.
 
+### US-034 — Auto-generated table of contents
+*(REQ-054)*
+
+- **AC-098** — Given an article body containing headings, when the
+  article detail page is rendered, then a table of contents with one
+  linked entry per heading, in document order, is displayed.
+- **AC-099** — Given a table of contents entry, when clicked, then the
+  page scrolls to the corresponding heading instead of navigating away.
+- **AC-100** — Given an article body with no headings, when the article
+  detail page is rendered, then no table of contents is displayed (no
+  empty container, no error).
+- **AC-101** — Given an article whose body is edited to add, remove, or
+  change headings, when the article is next viewed, then the table of
+  contents reflects the current set of headings.
+
 ---
 
 ## Traceability Matrix
@@ -519,3 +534,4 @@ changed.
 | REQ-050 | US-030 | AC-084–AC-087 |
 | REQ-051 | US-031 | AC-088–AC-090 |
 | REQ-052 | US-032 | AC-091, AC-092 |
+| REQ-054 | US-034 | AC-098–AC-101 |
