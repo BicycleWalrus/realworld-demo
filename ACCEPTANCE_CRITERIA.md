@@ -404,6 +404,35 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-029 — Optional article cover image
+*(REQ-049)*
+
+- **AC-080** — Given a create-article request that includes a non-empty
+  `image` URL, when submitted, then the created article's representation
+  includes that image value.
+- **AC-081** — Given a create-article request with no `image` field (or an
+  empty string), when submitted, then creation still succeeds using only
+  the existing title/description/body checks (REQ-015 unaffected), and
+  the created article has no image value.
+- **AC-082** — Given an update-article request that includes a new,
+  truthy `image` value, when submitted, then the article's stored image
+  is replaced with that value.
+- **AC-083** — Given an update-article request with a falsy (missing or
+  empty-string) `image` value, when submitted, then the article's
+  existing image value is left unchanged.
+- **AC-084** — Given an article with an `image` value set, when its
+  preview card is rendered, then a cover image element is shown using
+  that value as its source.
+- **AC-085** — Given an article with no `image` value set, when its
+  preview card is rendered, then no cover image element is shown, and no
+  placeholder is rendered in its place.
+- **AC-086** — Given an article with an `image` value set, when its
+  detail page is rendered, then a cover image element is shown using
+  that value as its source.
+- **AC-087** — Given an article with no `image` value set, when its
+  detail page is rendered, then no cover image element is shown, and no
+  placeholder is rendered in its place.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +487,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-087 |
