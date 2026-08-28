@@ -19,10 +19,22 @@ button:focus {
   user-select: none;
 }
 
+.theme-toggle {
+  background: none;
+  border: none;
+  font: inherit;
+  cursor: pointer;
+}
+
 .not-found {
   display: flex;
   height: 85vh;
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+
+.article-cover-image {
+  max-width: 100%;
+  margin-bottom: 1rem;
 }

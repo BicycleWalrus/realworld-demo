@@ -406,6 +406,30 @@ tools are not added to any auto-approval allowlist in
 requires the normal Claude Code permission prompt rather than running
 unattended.
 
+### REQ-049 — Dark theme toggle with persisted, OS-aware default
+A control in the navbar, visible on every page regardless of
+authentication state, switches the application's color theme between
+light and dark without a page reload. The chosen theme is persisted (via
+`localStorage`) and re-applied on subsequent page loads and new visits in
+the same browser. When no theme has previously been chosen in that
+browser, the application defaults to dark if the browser reports a
+`prefers-color-scheme: dark` preference, and to light otherwise (including
+when the preference cannot be determined). The light theme's appearance is
+unchanged from before this control existed; dark-theme styling is applied
+only when the dark theme is active.
+
+### REQ-050 — Optional article cover image
+An article may optionally have a cover image, specified as a URL,
+mirroring how `User` already has an `image` field. This field is accepted
+but not required on article creation or update; article creation's
+required-field validation (title, description, body — REQ-015) is
+unaffected by its presence or absence. On update, it follows the same
+truthy-only boundary as `description`/`body` (REQ-017): a falsy submitted
+value leaves the existing stored image unchanged, while a truthy value
+replaces it. When an article has a cover image set, it is displayed on
+its preview card and on its detail page; when unset, no image element is
+rendered and the layout is unaffected.
+
 ### REQ-051 — Estimated reading time badge
 An estimated reading time is shown alongside an article's date, on both
 preview cards and the article detail page, derived from the article's

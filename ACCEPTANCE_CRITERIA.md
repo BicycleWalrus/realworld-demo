@@ -404,6 +404,39 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-029 — Dark theme toggle
+*(REQ-049)*
+
+- **AC-080** — Given any page of the application, when the visitor clicks
+  the theme toggle control, then the application switches between light
+  and dark themes immediately, without a page reload.
+- **AC-081** — Given a visitor has chosen a theme, when they reload the
+  page or return in a new visit in the same browser, then the previously
+  chosen theme is applied automatically.
+- **AC-082** — Given a visitor who has never chosen a theme in this
+  browser, when the page loads, then the application applies the dark
+  theme if the browser reports a `prefers-color-scheme: dark` preference,
+  and the light theme otherwise.
+- **AC-083** — Given a visitor has previously chosen a theme, when the
+  page loads, then that stored choice is applied regardless of the
+  browser's current `prefers-color-scheme` preference.
+
+### US-030 — Article cover image
+*(REQ-050)*
+
+- **AC-084** — Given an author creating or updating an article with an
+  image URL, when the article is saved, then the URL is stored as the
+  article's cover image; given a subsequent falsy image value on update,
+  then the previously stored image is left unchanged rather than cleared.
+- **AC-085** — Given an article with a cover image set, when its preview
+  card or detail page is rendered, then the cover image is displayed.
+- **AC-086** — Given an article with no cover image set, when its preview
+  card or detail page is rendered, then no image element is rendered and
+  the layout matches the existing (no-image) appearance.
+- **AC-087** — Given an article creation request with no image field,
+  when submitted, then creation still succeeds, with `REQ-015`'s required
+  fields unaffected.
+
 ### US-031 — Reading time badge
 *(REQ-051)*
 
@@ -472,4 +505,6 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-083 |
+| REQ-050 | US-030 | AC-084–AC-087 |
 | REQ-051 | US-031 | AC-088–AC-090 |
