@@ -122,33 +122,26 @@ function fakeArticleList(seedRows) {
     }
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
 
-    // Top-level where arrives either as a single clause or as an Op.and
-    // list (REQ-062/REQ-063 compose there); interpret each uniformly.
-    const whereClauses = where ? (where[Op.and] ?? [where]) : [];
-    for (const clause of whereClauses) {
-      if (clause?.userId) rows = rows.filter((r) => clause.userId.includes(r.author.id));
-
-      // Keyword-search clause (REQ-062): where[Op.or] holds one
-      // { field: { [Op.iLike]: "%term%" } } per searched column; a row
-      // matches when any searched column contains the term, ignoring case.
-      const searchClauses = clause?.[Op.or];
-      if (searchClauses) {
-        rows = rows.filter((r) =>
-          searchClauses.some((c) => {
-            const [field] = Object.keys(c);
-            const term = c[field][Op.iLike].slice(1, -1).toLowerCase();
-            return String(r.dataValues[field] ?? "")
-              .toLowerCase()
-              .includes(term);
-          }),
-        );
-      }
-
-      // Multi-tag id constraint (REQ-063): only rows whose id is in the
-      // resolved carry-all-tags id list survive.
-      const idIn = clause?.id?.[Op.in];
-      if (idIn) rows = rows.filter((r) => idIn.includes(r.id));
-    }
+    // Minimal recursive interpretation of the where shapes the list
+    // handlers build: Op.and/Op.or composition (REQ-062/REQ-063/REQ-065),
+    // the feed's followed-author userId list, an IN-list id constraint
+    // (multi-tag, followed-tag feed), and per-column case-insensitive
+    // Op.iLike substring search.
+    const rowMatches = (row, clause) => {
+      if (clause?.[Op.and]) return clause[Op.and].every((c) => rowMatches(row, c));
+      if (clause?.[Op.or]) return clause[Op.or].some((c) => rowMatches(row, c));
+      if (clause?.userId) return clause.userId.includes(row.author.id);
+      if (clause?.id?.[Op.in]) return clause.id[Op.in].includes(row.id);
+      const searchedColumns = Object.entries(clause ?? {}).filter(
+        ([, condition]) => condition?.[Op.iLike] !== undefined,
+      );
+      return searchedColumns.some(([field, condition]) =>
+        String(row.dataValues[field] ?? "")
+          .toLowerCase()
+          .includes(condition[Op.iLike].slice(1, -1).toLowerCase()),
+      );
+    };
+    if (where) rows = rows.filter((row) => rowMatches(row, where));
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -1096,7 +1089,10 @@ describe("articlesFeed", () => {
     Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
     const loggedUser = makeInstance(
       { id: 99 },
-      { getFollowing: vi.fn().mockResolvedValue([{ id: 10 }]) },
+      {
+        getFollowing: vi.fn().mockResolvedValue([{ id: 10 }]),
+        getFollowedTags: vi.fn().mockResolvedValue([]),
+      },
     );
     const res = makeRes();
 
@@ -1111,7 +1107,13 @@ describe("articlesFeed", () => {
   test("following no one -> empty feed, not an error", async () => {
     const seed = [makeArticle({ author: makeFollowableUser() })];
     Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
-    const loggedUser = makeInstance({ id: 99 }, { getFollowing: vi.fn().mockResolvedValue([]) });
+    const loggedUser = makeInstance(
+      { id: 99 },
+      {
+        getFollowing: vi.fn().mockResolvedValue([]),
+        getFollowedTags: vi.fn().mockResolvedValue([]),
+      },
+    );
     const res = makeRes();
     const next = vi.fn();
 
@@ -1121,5 +1123,100 @@ describe("articlesFeed", () => {
     const { articles, articlesCount } = res.json.mock.calls[0][0];
     expect(articles).toEqual([]);
     expect(articlesCount).toBe(0);
+  });
+
+  // REQ-065 (amending REQ-018): followed tags pull matching articles
+  // into the feed even when no authors are followed.
+  test("followed tag, no followed authors -> feed includes articles carrying the tag", async () => {
+    const stranger = makeFollowableUser({ id: 30, username: "stranger" });
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "tagged",
+        author: stranger,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "untagged",
+        author: makeFollowableUser({ id: 31, username: "other" }),
+        tags: [],
+        createdAt: new Date("2020-01-02"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    TagList.findAll.mockResolvedValue([{ articleId: 1 }]);
+    const loggedUser = makeInstance(
+      { id: 99 },
+      {
+        getFollowing: vi.fn().mockResolvedValue([]),
+        getFollowedTags: vi.fn().mockResolvedValue([makeInstance({ name: "dragons" })]),
+      },
+    );
+    const res = makeRes();
+
+    await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles.map((a) => a.slug)).toEqual(["tagged"]);
+  });
+
+  // REQ-065: the feed is the union of followed-author and followed-tag
+  // matches, with an article matching both appearing exactly once.
+  test("followed authors and followed tags -> union feed, no duplicates", async () => {
+    const followedAuthor = makeFollowableUser({ id: 10, username: "followed" });
+    const stranger = makeFollowableUser({ id: 30, username: "stranger" });
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "both",
+        author: followedAuthor,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "tag-only",
+        author: stranger,
+        tags: [{ name: "dragons" }],
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "author-only",
+        author: followedAuthor,
+        tags: [],
+        createdAt: new Date("2020-01-03"),
+      }),
+      makeArticle({
+        id: 4,
+        slug: "neither",
+        author: stranger,
+        tags: [],
+        createdAt: new Date("2020-01-04"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    TagList.findAll.mockResolvedValue([{ articleId: 1 }, { articleId: 2 }]);
+    const loggedUser = makeInstance(
+      { id: 99 },
+      {
+        getFollowing: vi.fn().mockResolvedValue([{ id: 10 }]),
+        getFollowedTags: vi.fn().mockResolvedValue([makeInstance({ name: "dragons" })]),
+      },
+    );
+    const res = makeRes();
+
+    await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(3);
+    expect(articles.map((a) => a.slug)).toEqual([
+      "author-only",
+      "tag-only",
+      "both",
+    ]);
   });
 });
