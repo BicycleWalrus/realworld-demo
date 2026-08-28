@@ -1,5 +1,7 @@
 import readingTime from "./readingTime";
 
+// AC-089: empty/missing/short/long bodies all produce a sensible,
+// non-crashing estimate with a minimum of "1 min read".
 describe("readingTime", () => {
   it("returns the 1-minute minimum for an empty body", () => {
     expect(readingTime("")).toBe("1 min read");

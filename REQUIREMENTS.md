@@ -405,3 +405,14 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-051 — Estimated reading time badge
+An estimated reading time is shown alongside an article's date, on both
+preview cards and the article detail page, derived from the article's
+body word count at a fixed reading speed of 200 words per minute, rounded
+up to the next whole minute. The displayed estimate has a minimum of "1
+min read", including for empty, very short, or missing bodies — it never
+displays a value below one minute, and never displays `NaN` or throws
+regardless of body length. The existing date's own display and format
+(REQ-040) are unaffected; the reading-time estimate is a separate element
+shown alongside it, not a replacement.

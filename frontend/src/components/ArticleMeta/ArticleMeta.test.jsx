@@ -14,6 +14,7 @@ function renderMeta(body) {
 }
 
 describe("ArticleMeta", () => {
+  // AC-088
   it("renders the reading time next to the date, without altering the date", () => {
     renderMeta("A short article.");
 
@@ -21,6 +22,7 @@ describe("ArticleMeta", () => {
     expect(screen.getByText("1 min read")).toBeInTheDocument();
   });
 
+  // AC-090
   it("updates the reading time when the body changes", () => {
     const { rerender } = renderMeta("A short article.");
 
