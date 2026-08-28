@@ -460,3 +460,34 @@ visitors of a profile page, identically, and are correct as of the
 current data when the profile page loads — including when the page is
 reached via a link that supplies partial profile data that does not
 already include these stats.
+
+---
+
+### REQ-057 — Article search by keyword
+A search input lets a visitor enter a keyword and view the articles that
+match it. On the frontend, submitting a keyword sets an independent
+"search" feed tab (distinct from the Global Feed, an author's articles,
+a tag, or favorites) that carries the submitted term, and a pill in the
+feed area shows the active search term while that tab is selected.
+
+### REQ-058 — Search matches title, description, or body, case-insensitively
+A search keyword matches an article if it is a case-insensitive substring
+of that article's title, description, or body (matching any one of the
+three is sufficient). The backend `allArticles` listing accepts a
+`search` query parameter and, when it is a non-blank string, restricts
+results to matches on at least one of those three fields.
+
+### REQ-059 — Search results are paginated like any other listing
+Search results are paginated the same way as the rest of the article
+listing (REQ-013): a page size of 3 by default, newest first, with the
+reported total reflecting every match rather than only the current page.
+
+### REQ-060 — Empty search falls back to the full listing; backend search composes with other filters
+A missing, empty, or whitespace-only `search` value does not filter the
+listing and does not error — the full listing (or the result of any other
+filters present) is returned, exactly as if `search` had not been
+supplied. On the frontend, submitting a blank/whitespace search term
+falls back to the Global Feed rather than an empty search tab. On the
+backend, `search` is additive: when combined with the existing
+author/tag/favorited filters (REQ-013), a request is restricted by all of
+the supplied filters together (a logical AND), not by `search` alone.

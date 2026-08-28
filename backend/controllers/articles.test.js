@@ -6,6 +6,7 @@ const {
   UnauthorizedError,
 } = require("../helper/customErrors");
 const { makeInstance, toPlainJSON, makeRes, mockRequire } = require("../test-utils/fakeModels");
+const { Op } = require("sequelize");
 
 const Article = { findOne: vi.fn(), findAndCountAll: vi.fn(), create: vi.fn() };
 const Tag = { findByPk: vi.fn(), create: vi.fn() };
@@ -67,6 +68,21 @@ function fakeArticleList(seedRows) {
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+    // AC-088: mirrors allArticles' Op.or/Op.iLike search where - the
+    // keyword is recovered from the (title) iLike pattern's surrounding
+    // "%...%" and matched case-insensitively against title/description/body.
+    if (where?.[Op.or]) {
+      const titlePattern = where[Op.or][0]?.title?.[Op.iLike] ?? "";
+      const keyword = titlePattern.slice(1, -1).toLowerCase();
+      rows = rows.filter((r) => {
+        const { title = "", description = "", body = "" } = r.dataValues;
+        return (
+          title.toLowerCase().includes(keyword) ||
+          description.toLowerCase().includes(keyword) ||
+          body.toLowerCase().includes(keyword)
+        );
+      });
+    }
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -434,6 +450,131 @@ describe("allArticles", () => {
     const error = next.mock.calls[0][0];
     expect(error).not.toBeInstanceOf(NotFoundError);
     expect(error).not.toBeInstanceOf(FieldRequiredError);
+  });
+
+  // Seed articles with distinct title/description/body text so a search
+  // hit can be attributed to a single field.
+  function makeSearchSeed() {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const bob = makeFollowableUser({ id: 2, username: "bob" });
+    return [
+      makeArticle({
+        id: 1,
+        slug: "dragon-title",
+        author: jane,
+        title: "Dragons of the North",
+        description: "a travel piece",
+        body: "irrelevant body text",
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "dragon-description",
+        author: jane,
+        title: "Untitled",
+        description: "features a friendly DRAGON",
+        body: "irrelevant body text",
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "dragon-body",
+        author: bob,
+        title: "Untitled",
+        description: "unrelated",
+        body: "the body mentions a dragon in passing",
+        createdAt: new Date("2020-01-03"),
+      }),
+      makeArticle({
+        id: 4,
+        slug: "no-match",
+        author: bob,
+        title: "Unrelated",
+        description: "nothing here",
+        body: "no keyword at all",
+        createdAt: new Date("2020-01-04"),
+      }),
+    ];
+  }
+
+  // AC-088: a keyword matches title, description, or body, case-insensitively.
+  test("search matches title, description, or body, case-insensitively", async () => {
+    const seed = makeSearchSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { search: "DrAgOn" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(3);
+    expect(articles.map((a) => a.slug).sort()).toEqual([
+      "dragon-body",
+      "dragon-description",
+      "dragon-title",
+    ]);
+  });
+
+  // AC-090: search results are capped at 3 per page, newest first, while
+  // the total count still reflects every match.
+  test("search results paginate at 3 per page with the true total match count", async () => {
+    const seed = [
+      ...makeSearchSeed(),
+      makeArticle({
+        id: 5,
+        slug: "dragon-extra",
+        author: makeFollowableUser({ id: 3, username: "amy" }),
+        title: "Another dragon tale",
+        description: "d",
+        body: "b",
+        createdAt: new Date("2020-01-05"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { search: "dragon" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(4);
+    expect(articles).toHaveLength(3);
+    expect(articles[0].slug).toBe("dragon-extra");
+  });
+
+  // AC-091: an empty or whitespace-only search returns the full listing,
+  // not an error and not an empty result.
+  test.each([[""], ["   "]])(
+    "search %j -> full listing, no error",
+    async (search) => {
+      const seed = makeSearchSeed();
+      Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+      const res = makeRes();
+      const next = vi.fn();
+
+      await allArticles({ loggedUser: undefined, query: { search } }, res, next);
+
+      expect(next).not.toHaveBeenCalled();
+      const { articlesCount } = res.json.mock.calls[0][0];
+      expect(articlesCount).toBe(seed.length);
+    },
+  );
+
+  // AC-091: on the backend, search combines (AND) with an existing author
+  // filter rather than replacing it - only that author's matching articles
+  // are returned.
+  test("search combined with an author filter -> only that author's matching articles", async () => {
+    const seed = makeSearchSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "dragon", author: "bob" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles.map((a) => a.slug)).toEqual(["dragon-body"]);
   });
 });
 

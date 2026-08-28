@@ -9,9 +9,10 @@ export function useFeedContext() {
 
 function FeedProvider({ children }) {
   const { isAuth } = useAuth();
-  const [{ tabName, tagName }, setTab] = useState({
+  const [{ tabName, tagName, searchTerm }, setTab] = useState({
     tabName: isAuth ? "feed" : "global",
     tagName: "",
+    searchTerm: "",
   });
 
   useEffect(() => {
@@ -21,11 +22,26 @@ function FeedProvider({ children }) {
   const changeTab = async (e, tabName) => {
     const tagName = e.target.innerText.trim();
 
-    setTab({ tabName, tagName });
+    setTab({ tabName, tagName, searchTerm: "" });
+  };
+
+  // REQ-057/REQ-060: search is its own feed tab, independent of the
+  // author/tag/favorited tabs above. A blank/whitespace-only term falls
+  // back to the Global Feed (full listing) rather than an empty search.
+  const search = (term) => {
+    const trimmed = term.trim();
+
+    if (!trimmed) {
+      setTab({ tabName: "global", tagName: "", searchTerm: "" });
+    } else {
+      setTab({ tabName: "search", tagName: "", searchTerm: trimmed });
+    }
   };
 
   return (
-    <FeedContext.Provider value={{ changeTab, tabName, tagName }}>
+    <FeedContext.Provider
+      value={{ changeTab, search, searchTerm, tabName, tagName }}
+    >
       {children}
     </FeedContext.Provider>
   );

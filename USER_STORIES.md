@@ -155,3 +155,9 @@ read comfortably in low light or according to my preference.
 favorites received, and member-since date, so that I can gauge them
 before reading.
 *Related requirements: REQ-053, REQ-054, REQ-055, REQ-056*
+
+---
+
+**US-031** — As a user, I want to search articles by keyword, so that I
+can find content without already knowing the author or tag.
+*Related requirements: REQ-057, REQ-058, REQ-059, REQ-060*

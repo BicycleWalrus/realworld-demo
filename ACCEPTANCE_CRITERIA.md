@@ -442,6 +442,30 @@ changed.
   is reached via a link that supplies partial profile data (e.g. bio,
   follower count) without these stats.
 
+### US-031 — Search articles by keyword
+*(REQ-057, REQ-058, REQ-059, REQ-060)*
+
+- **AC-088** — Given a search keyword, when the article list is requested
+  with that keyword, then articles whose title, description, or body
+  contains the keyword as a case-insensitive substring are returned, and
+  articles matching in none of those three fields are excluded.
+- **AC-089** — Given the search input in the feed area, when a keyword is
+  submitted, then the frontend switches to an independent "search" feed
+  tab carrying that term, fetches the matching articles, renders them,
+  and shows a pill with the active search term.
+- **AC-090** — Given a search keyword that matches more than 3 articles,
+  when the article list is requested with that keyword, then results are
+  capped at 3 per page, ordered newest first, while the reported total
+  count reflects every match.
+- **AC-091** — Given a missing, empty, or whitespace-only search value,
+  when the article list is requested, then the full listing (or the
+  result of any other filters present) is returned unchanged and no error
+  occurs; on the frontend, submitting a blank/whitespace search term
+  falls back to the Global Feed; and given a search keyword combined with
+  an existing author filter, when the article list is requested, then
+  only that author's matching articles are returned (the backend filters
+  compose rather than the search replacing them).
+
 ---
 
 ## Traceability Matrix
@@ -504,3 +528,7 @@ changed.
 | REQ-054 | US-030 | AC-085 |
 | REQ-055 | US-030 | AC-086 |
 | REQ-056 | US-030 | AC-087 |
+| REQ-057 | US-031 | AC-089 |
+| REQ-058 | US-031 | AC-088 |
+| REQ-059 | US-031 | AC-090 |
+| REQ-060 | US-031 | AC-091 |
