@@ -404,6 +404,24 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-030 — Light/dark theme toggle
+*(REQ-050)*
+
+- **AC-084** — Given any page of the application, when the navbar theme
+  control is clicked, then the page's colors switch between light and
+  dark immediately, with no full page reload.
+- **AC-085** — Given a theme has been selected, when the page is reloaded
+  or revisited in a new session, then the same theme is restored from
+  `localStorage` rather than resetting to a default.
+- **AC-086** — Given no theme has ever been explicitly selected (no
+  stored preference), when the page loads, then the active theme matches
+  the operating system's `prefers-color-scheme` value (dark OS setting →
+  dark theme; light or no-preference OS setting → light theme).
+- **AC-087** — Given the light theme is active, when any existing page or
+  component is rendered, then it is visually identical to its appearance
+  before this feature was introduced (no color, spacing, or layout
+  changes).
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +476,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-050 | US-030 | AC-084–AC-087 |

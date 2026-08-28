@@ -142,3 +142,11 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-030** — As a user, I want to switch between a light and dark theme
+from any page, so that I can read the application comfortably in
+different lighting conditions without losing that preference between
+visits.
+*Related requirements: REQ-050*

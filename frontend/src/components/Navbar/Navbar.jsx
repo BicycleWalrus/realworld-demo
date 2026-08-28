@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import NavItem from "../NavItem";
 import SourceCodeLink from "../SourceCodeLink";
 import DropdownMenu from "./DropdownMenu";
+import ThemeToggle from "./ThemeToggle";
 
 function Navbar() {
   const { isAuth } = useAuth();
@@ -17,6 +18,8 @@ function Navbar() {
         <SourceCodeLink left />
 
         <ul className="nav navbar-nav pull-xs-right">
+          <ThemeToggle />
+
           <NavItem text="Home" icon="ion-compose" url="/" />
 
           {isAuth && (
