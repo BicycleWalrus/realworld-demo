@@ -404,6 +404,37 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-031 — In-app notifications center
+*(REQ-053, REQ-054)*
+
+- **AC-095** — Given a user follows another user, when the follow
+  succeeds, then the followed user receives a "follow" notification
+  identifying who followed them.
+- **AC-096** — Given a user comments on another user's article, when the
+  comment succeeds, then the article's author receives a "comment"
+  notification identifying who commented and on which article.
+- **AC-097** — Given a user favorites another user's article, when the
+  favorite succeeds, then the article's author receives a "favorite"
+  notification identifying who favorited it and which article.
+- **AC-098** — Given a user follows, comments on, or favorites their own
+  content, when that action succeeds, then no notification is generated
+  for it.
+- **AC-099** — Given any of the above three actions, when it succeeds or
+  fails, then its own response is unaffected by whether the notification
+  was successfully created — a notification-creation failure never turns
+  a successful follow/comment/favorite into an error response.
+- **AC-100** — Given a user's own notifications, when requested, then
+  they are returned newest first along with an accurate unread count,
+  and no endpoint returns another user's notifications.
+- **AC-101** — Given one of a user's own unread notifications, when they
+  mark it read by id, then only that notification becomes read.
+- **AC-102** — Given several of a user's own unread notifications, when
+  they mark notifications as read with no specific id, then all of that
+  user's unread notifications become read.
+- **AC-103** — Given a notification belonging to a different recipient,
+  when a user attempts to mark it read, then the request is rejected
+  with an authorization error and the notification is not changed.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +489,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-053 | US-031 | AC-095–AC-099 |
+| REQ-054 | US-031 | AC-100–AC-103 |

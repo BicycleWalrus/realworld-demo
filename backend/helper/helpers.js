@@ -39,4 +39,28 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+// Lazily required (rather than at module scope) so files that never call
+// notifyUser - like this helper's own plain-function tests - never trigger
+// loading the real ../models/index.js (which opens a live DB connection
+// config). Controllers that DO call this already mockRequire ../models'
+// resolved path before requiring anything that transitively reaches here,
+// so the lazy require below picks up that same mock via Node's require
+// cache, keyed by resolved path.
+const notifyUser = async ({ type, recipientId, actorId, articleId, commentId }) => {
+  if (recipientId === actorId) return;
+
+  try {
+    const { Notification } = require("../models");
+    await Notification.create({ type, recipientId, actorId, articleId, commentId });
+  } catch (error) {
+    console.error("Failed to create notification:", error);
+  }
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  notifyUser,
+};

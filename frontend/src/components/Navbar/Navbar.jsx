@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import NavItem from "../NavItem";
 import SourceCodeLink from "../SourceCodeLink";
 import DropdownMenu from "./DropdownMenu";
+import NotificationBell from "./NotificationBell";
 
 function Navbar() {
   const { isAuth } = useAuth();
@@ -22,6 +23,7 @@ function Navbar() {
           {isAuth && (
             <>
               <NavItem text="New Article" icon="ion-compose" url="/editor" />
+              <NotificationBell />
               <DropdownMenu />
             </>
           )}

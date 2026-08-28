@@ -8,7 +8,8 @@ const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels
 
 const Article = { findOne: vi.fn() };
 const Comment = { create: vi.fn(), findByPk: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Comment, User: {} });
+const Notification = { create: vi.fn() };
+mockRequire(require.resolve("../models"), { Article, Comment, Notification, User: {} });
 
 const { allComments, createComment, deleteComment } = require("./comments");
 
@@ -30,6 +31,7 @@ beforeEach(() => {
   Article.findOne.mockReset();
   Comment.create.mockReset();
   Comment.findByPk.mockReset();
+  Notification.create.mockReset();
 });
 
 describe("allComments", () => {
@@ -109,6 +111,36 @@ describe("createComment", () => {
 
     expect(Comment.create).toHaveBeenCalledWith(expect.objectContaining({ body: "   " }));
     expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  // A comment notification is created for the article's author.
+  test("creates a comment notification for the article's author", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5, userId: 9 }));
+    Comment.create.mockResolvedValue(makeInstance({ id: 1, body: "hi" }));
+
+    await createComment(
+      { loggedUser: makeFollowableUser({ id: 1 }), body: { comment: { body: "hi" } }, params: { slug: "a" } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "comment", recipientId: 9, actorId: 1 }),
+    );
+  });
+
+  // No self-notification: commenting on your own article doesn't notify you.
+  test("commenting on your own article does not create a notification", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5, userId: 1 }));
+    Comment.create.mockResolvedValue(makeInstance({ id: 1, body: "hi" }));
+
+    await createComment(
+      { loggedUser: makeFollowableUser({ id: 1 }), body: { comment: { body: "hi" } }, params: { slug: "a" } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Notification.create).not.toHaveBeenCalled();
   });
 });
 

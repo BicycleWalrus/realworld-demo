@@ -2,7 +2,8 @@ const { NotFoundError, UnauthorizedError } = require("../helper/customErrors");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
 const User = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { User });
+const Notification = { create: vi.fn() };
+mockRequire(require.resolve("../models"), { User, Notification });
 
 const { getProfile, followToggler } = require("./profiles");
 
@@ -22,6 +23,7 @@ const loggedUser = makeInstance({ id: 2, username: "reader" });
 
 beforeEach(() => {
   User.findOne.mockReset();
+  Notification.create.mockReset();
 });
 
 describe("getProfile", () => {
@@ -79,6 +81,30 @@ describe("followToggler", () => {
     expect(profile.addFollower).toHaveBeenCalledWith(loggedUser);
     expect(profile.dataValues.following).toBe(true);
     expect(profile.dataValues.followersCount).toBe(3);
+  });
+
+  // A follow notification is created for the person being followed.
+  test("POST creates a follow notification for the followed account", async () => {
+    const profile = makeProfile({ hasFollower: true, followersCount: 3 });
+    User.findOne.mockResolvedValue(profile);
+
+    await followToggler({ loggedUser, params: { username: "author" }, method: "POST" }, makeRes(), vi.fn());
+
+    expect(Notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "follow", recipientId: 1, actorId: 2 }),
+    );
+  });
+
+  // No self-notification: following yourself (if ever possible) doesn't
+  // notify you.
+  test("following yourself does not create a notification", async () => {
+    const self = makeProfile({ hasFollower: true, followersCount: 1 });
+    self.dataValues.id = 2;
+    User.findOne.mockResolvedValue(self);
+
+    await followToggler({ loggedUser, params: { username: "reader" }, method: "POST" }, makeRes(), vi.fn());
+
+    expect(Notification.create).not.toHaveBeenCalled();
   });
 
   // AC-052: unfollowing a currently-followed account.

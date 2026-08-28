@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-031** — As a user, I want to see notifications for new followers,
+comments, and favorites on my content, so that I know when someone has
+engaged with me without having to check manually.
+*Related requirements: REQ-053, REQ-054*

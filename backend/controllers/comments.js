@@ -4,7 +4,7 @@ const {
   FieldRequiredError,
   ForbiddenError,
 } = require("../helper/customErrors");
-const { appendFollowers } = require("../helper/helpers");
+const { appendFollowers, notifyUser } = require("../helper/helpers");
 const { Article, Comment, User } = require("../models");
 
 //? All Comments for Article
@@ -49,6 +49,14 @@ const createComment = async (req, res, next) => {
       body: body,
       articleId: article.id,
       userId: loggedUser.id,
+    });
+
+    await notifyUser({
+      type: "comment",
+      recipientId: article.userId,
+      actorId: loggedUser.id,
+      articleId: article.id,
+      commentId: comment.id,
     });
 
     delete loggedUser.dataValues.token;

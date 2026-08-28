@@ -2,7 +2,8 @@ const { NotFoundError, UnauthorizedError } = require("../helper/customErrors");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
 const Article = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Tag: {}, User: {} });
+const Notification = { create: vi.fn() };
+mockRequire(require.resolve("../models"), { Article, Notification, Tag: {}, User: {} });
 
 const { favoriteToggler } = require("./favorites");
 
@@ -31,6 +32,7 @@ const loggedUser = makeInstance({ id: 2, username: "reader" });
 
 beforeEach(() => {
   Article.findOne.mockReset();
+  Notification.create.mockReset();
 });
 
 describe("favoriteToggler", () => {
@@ -81,6 +83,29 @@ describe("favoriteToggler", () => {
     expect(article.removeUser).toHaveBeenCalledWith(loggedUser);
     expect(article.dataValues.favorited).toBe(false);
     expect(article.dataValues.favoritesCount).toBe(3);
+  });
+
+  // A favorite notification is created for the article's author.
+  test("POST creates a favorite notification for the article's author", async () => {
+    const article = makeArticle({ author: makeFollowableAuthor({ id: 1 }), hasUser: true, favoritesCount: 4 });
+    Article.findOne.mockResolvedValue(article);
+
+    await favoriteToggler({ loggedUser, params: { slug: "a-slug" }, method: "POST" }, makeRes(), vi.fn());
+
+    expect(Notification.create).toHaveBeenCalledWith(
+      expect.objectContaining({ type: "favorite", recipientId: 1, actorId: 2 }),
+    );
+  });
+
+  // No self-notification: favoriting your own article doesn't notify you.
+  test("favoriting your own article does not create a notification", async () => {
+    const self = makeFollowableAuthor({ id: 2 });
+    const article = makeArticle({ author: self, hasUser: true, favoritesCount: 1 });
+    Article.findOne.mockResolvedValue(article);
+
+    await favoriteToggler({ loggedUser, params: { slug: "a-slug" }, method: "POST" }, makeRes(), vi.fn());
+
+    expect(Notification.create).not.toHaveBeenCalled();
   });
 
   // Favoriting/unfavoriting itself always requires authentication (REQ-025);

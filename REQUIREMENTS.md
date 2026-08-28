@@ -405,3 +405,24 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-053 — In-app notifications are generated for follow, comment, and favorite actions
+A notification is generated for the recipient when another user follows
+them, comments on one of their articles, or favorites one of their
+articles — as a side effect of those existing actions, not a gate on
+them. A user never receives a notification for their own action on their
+own content (e.g., there is no follow notification when the acting user
+and the followed account are the same, and likewise for commenting on or
+favoriting one's own article). This requirement does not alter the
+follow, comment-creation, or favorite behaviors themselves (REQ-022
+through REQ-028): a failure while generating a notification never causes
+the underlying follow/comment/favorite action to fail or its response to
+change.
+
+### REQ-054 — Notifications are private and can be marked read individually or in bulk
+A user's notifications are retrievable only by that same authenticated
+user, newest first, together with an unread count; no endpoint exposes
+another user's notifications. A user may mark a single notification of
+their own as read, or mark all of their currently-unread notifications
+as read in one request. Attempting to mark a notification that belongs
+to a different recipient is rejected with an authorization error.
