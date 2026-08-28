@@ -16,12 +16,14 @@ function renderWidget() {
 }
 
 describe("RecentlyViewed", () => {
+  // AC-119
   it("renders nothing when no articles have been viewed", () => {
     const { container } = renderWidget();
 
     expect(container).toBeEmptyDOMElement();
   });
 
+  // AC-117
   it("renders viewed articles most-recently-viewed first", () => {
     recordView({ slug: "first", title: "First Article" });
     recordView({ slug: "second", title: "Second Article" });

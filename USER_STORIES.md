@@ -187,3 +187,10 @@ that I can quickly jump to the section I'm interested in.
 presences on my profile, so that readers who like my writing can find me
 elsewhere.
 *Related requirements: REQ-055*
+
+---
+
+**US-038** — As a user, I want to see a list of articles I've recently
+viewed, so that I can easily get back to something I was reading without
+searching for it again.
+*Related requirements: REQ-058*

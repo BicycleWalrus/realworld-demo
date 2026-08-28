@@ -35,6 +35,7 @@ describe("recordView", () => {
     ]);
   });
 
+  // AC-118
   it("moves a re-viewed article to the front instead of duplicating it", () => {
     recordView({ slug: "a", title: "A" });
     recordView({ slug: "b", title: "B" });

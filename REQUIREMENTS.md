@@ -497,3 +497,17 @@ user's social links (bio unchanged) is not detected as stale by it — a
 visitor already holding an older snapshot may continue to see the
 pre-change links until an unrelated bio change, or a page load without
 navigation state, triggers a real refetch.
+
+### REQ-058 — Recently viewed articles widget
+Opening an article's detail page records it, in the visitor's browser
+(via `localStorage`, available to both authenticated and anonymous
+visitors), as their most recently viewed article. The recorded list
+holds at most 5 entries, most-recently-viewed first; viewing an
+already-recorded article again moves it to the front rather than adding
+a duplicate entry. This list is displayed in the home page's sidebar,
+below Popular Tags, linking to each article by its current slug. The
+article's title is recorded at view time and is not refreshed if the
+article is later renamed; the link itself always points to the correct,
+current article regardless. This feature is purely additive and does
+not change the article detail page's existing fetch/navigation-state
+behavior (REQ-043).

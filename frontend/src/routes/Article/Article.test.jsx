@@ -66,6 +66,7 @@ it("renders no table of contents when the article has no headings", () => {
   ).not.toBeInTheDocument();
 });
 
+// AC-116
 it("records the article as recently viewed when opened", () => {
   renderArticle(makeArticleState());
 
