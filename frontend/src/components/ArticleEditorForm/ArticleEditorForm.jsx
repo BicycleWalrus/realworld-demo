@@ -51,7 +51,9 @@ function ArticleEditorForm() {
   const formSubmit = (e) => {
     e.preventDefault();
 
-    setArticle({ headers, slug, body, description, tagList, title })
+    const published = e.nativeEvent.submitter?.value !== "false";
+
+    setArticle({ headers, slug, body, description, tagList, title, published })
       .then((slug) => navigate(`/article/${slug}`))
       .catch(setErrorMessage);
   };
@@ -99,8 +101,20 @@ function ArticleEditorForm() {
           <div className="tag-list"></div>
         </FormFieldset>
 
-        <button className="btn btn-lg pull-xs-right btn-primary" type="submit">
+        <button
+          className="btn btn-lg pull-xs-right btn-primary"
+          type="submit"
+          value="true"
+        >
           {slug ? "Update Article" : "Publish Article"}
+        </button>
+
+        <button
+          className="btn btn-lg pull-xs-right btn-outline-secondary"
+          type="submit"
+          value="false"
+        >
+          Save as Draft
         </button>
       </fieldset>
     </form>

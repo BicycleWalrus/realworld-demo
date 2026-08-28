@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-033** — As an article's author, I want to save it as a draft instead
+of publishing it immediately, so that I can keep working on it privately
+and publish it later when it's ready.
+*Related requirements: REQ-053, REQ-054*

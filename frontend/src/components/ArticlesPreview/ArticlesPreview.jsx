@@ -32,6 +32,9 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
             state={article}
             className="preview-link"
           >
+            {article.published === false && (
+              <span className="tag-pill tag-default">Draft</span>
+            )}
             <h1>{article.title}</h1>
             <p>{article.description}</p>
             <span>Read more...</span>
