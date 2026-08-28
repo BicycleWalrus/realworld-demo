@@ -118,7 +118,7 @@ const createArticle = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { title, description, body, tagList } = req.body.article;
+    const { title, description, body, tagList, image } = req.body.article;
     if (!title) throw new FieldRequiredError("A title");
     if (!description) throw new FieldRequiredError("A description");
     if (!body) throw new FieldRequiredError("An article body");
@@ -132,12 +132,15 @@ const createArticle = async (req, res, next) => {
     const slugInDB = await Article.findOne({ where: { slug: slug } });
     if (slugInDB) throw new AlreadyTakenError("Title");
 
+    // REQ-077: a cover image URL is optional - omitting it is not a
+    // validation error, unlike title/description/body above.
     const article = await Article.create({
       slug: slug,
       title: title,
       description: description,
       body: body,
       published: published,
+      image: image,
     });
 
     for (const tag of tagList) {
@@ -242,7 +245,7 @@ const updateArticle = async (req, res, next) => {
       throw new ForbiddenError("article");
     }
 
-    const { title, description, body, published } = req.body.article;
+    const { title, description, body, published, image } = req.body.article;
     if (title) {
       article.slug = slugify(title);
       article.title = title;
@@ -252,6 +255,9 @@ const updateArticle = async (req, res, next) => {
     // REQ-072: an author may publish a draft (or unpublish a published
     // article) by setting `published` explicitly on update.
     if (typeof published === "boolean") article.published = published;
+    // REQ-077: an author may set or clear the optional cover image on
+    // update; `undefined` (field omitted) leaves the existing value alone.
+    if (image !== undefined) article.image = image;
     await article.save();
 
     appendTagList(article.tagList, article);

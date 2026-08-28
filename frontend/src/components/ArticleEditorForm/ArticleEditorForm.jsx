@@ -5,11 +5,11 @@ import getArticle from "../../services/getArticle";
 import setArticle from "../../services/setArticle";
 import FormFieldset from "../FormFieldset";
 
-const emptyForm = { title: "", description: "", body: "", tagList: "" };
+const emptyForm = { title: "", description: "", body: "", tagList: "", image: "" };
 
 function ArticleEditorForm() {
   const { state } = useLocation();
-  const [{ title, description, body, tagList }, setForm] = useState(
+  const [{ title, description, body, tagList, image }, setForm] = useState(
     state || emptyForm,
   );
   const [errorMessage, setErrorMessage] = useState("");
@@ -25,10 +25,10 @@ function ArticleEditorForm() {
     if (state || !slug) return;
 
     getArticle({ headers, slug })
-      .then(({ author: { username }, body, description, tagList, title }) => {
+      .then(({ author: { username }, body, description, tagList, title, image }) => {
         if (username !== loggedUser.username) redirect();
 
-        setForm({ body, description, tagList, title });
+        setForm({ body, description, tagList, title, image: image || "" });
       })
       .catch(console.error);
 
@@ -51,7 +51,7 @@ function ArticleEditorForm() {
   const formSubmit = (e, published = true) => {
     e.preventDefault();
 
-    setArticle({ headers, slug, body, description, tagList, title, published })
+    setArticle({ headers, slug, body, description, tagList, title, published, image })
       .then((slug) => navigate(`/article/${slug}`))
       .catch(setErrorMessage);
   };
@@ -67,6 +67,14 @@ function ArticleEditorForm() {
           name="title"
           required
           value={title}
+          handler={inputHandler}
+        ></FormFieldset>
+
+        <FormFieldset
+          normal
+          placeholder="Cover image URL"
+          name="image"
+          value={image}
           handler={inputHandler}
         ></FormFieldset>
 

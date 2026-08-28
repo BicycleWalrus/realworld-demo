@@ -222,6 +222,51 @@ describe("createArticle", () => {
       expect.objectContaining({ published: true }),
     );
   });
+
+  // AC-108: a submitted cover image URL is passed through to Article.create;
+  // omitting it still succeeds (image is optional, unlike title/description/
+  // body - REQ-077 does not change REQ-015's required-field validation).
+  test("image URL is passed through to Article.create; omitting image still creates successfully", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+
+    await createArticle(
+      {
+        loggedUser,
+        body: {
+          article: {
+            title: "Cover Title",
+            description: "d",
+            body: "b",
+            tagList: [],
+            image: "http://example.com/cover.png",
+          },
+        },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Article.create).toHaveBeenCalledWith(
+      expect.objectContaining({ image: "http://example.com/cover.png" }),
+    );
+
+    Article.create.mockClear();
+    Article.findOne.mockResolvedValue(null);
+    const res = makeRes();
+
+    await createArticle(
+      {
+        loggedUser,
+        body: { article: { title: "No Cover Title", description: "d", body: "b", tagList: [] } },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(Article.create).toHaveBeenCalled();
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
 });
 
 describe("updateArticle", () => {
@@ -318,6 +363,41 @@ describe("updateArticle", () => {
 
     expect(article.published).toBe(true);
     expect(article.save).toHaveBeenCalled();
+  });
+
+  // AC-108: an author may set the article's cover image on update.
+  test("setting image on update saves the new cover image", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, image: undefined });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      {
+        loggedUser: author,
+        params: { slug: "a-slug" },
+        body: { article: { image: "http://example.com/new-cover.png" } },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.image).toBe("http://example.com/new-cover.png");
+    expect(article.save).toHaveBeenCalled();
+  });
+
+  // AC-108: omitting image on update leaves the existing value unchanged.
+  test("omitting image on update leaves the existing cover image unchanged", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, image: "http://example.com/original.png" });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      { loggedUser: author, params: { slug: "a-slug" }, body: { article: { title: "New Title" } } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.image).toBe("http://example.com/original.png");
   });
 });
 

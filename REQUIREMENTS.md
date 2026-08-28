@@ -593,3 +593,21 @@ request receives the same paginated listing as an authenticated one.
 ### REQ-076 — Directory entries link to full profiles
 Each entry in the user directory links to that user's full profile page
 at `/profile/:username`.
+
+---
+
+### REQ-077 — Optional article cover image URL
+An article may carry an optional cover image URL. The article editor
+accepts an `image` value on both creation and update; the field is
+optional and its presence or absence does not affect the required
+title/description/body validation of article creation (REQ-015). Omitting
+`image` on creation leaves it unset; omitting it on update leaves the
+article's existing value unchanged.
+
+### REQ-078 — Cover image display, or unchanged layout when absent
+When an article has a cover image, it is displayed on that article's
+preview card and on its detail page. When an article has no cover image,
+those layouts render exactly as they did before this requirement — no
+placeholder element and no layout shift. An invalid or unreachable image
+URL results, at most, in a broken image element; it does not prevent
+article creation, update, or rendering from succeeding.

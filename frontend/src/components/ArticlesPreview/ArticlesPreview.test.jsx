@@ -53,3 +53,23 @@ describe("ArticlesPreview draft marker", () => {
     expect(screen.queryByText("Draft")).not.toBeInTheDocument();
   });
 });
+
+// AC-109: a cover image is shown on the preview card when the article has
+// one, and no cover image element (or placeholder) is shown when it does
+// not, so the layout is unchanged for articles without a cover image.
+describe("ArticlesPreview cover image (REQ-078)", () => {
+  test("renders the cover image when the article has one", () => {
+    renderPreview([baseArticle({ image: "http://example.com/cover.png" })]);
+
+    const img = screen.getByRole("img", { name: "" });
+    expect(img).toHaveAttribute("src", "http://example.com/cover.png");
+  });
+
+  // Queries by the cover-specific class rather than role "img" - a preview
+  // also renders the author's Avatar <img>, which must be unaffected.
+  test("renders no cover image when the article has none", () => {
+    const { container } = renderPreview([baseArticle({ image: null })]);
+
+    expect(container.querySelector(".article-cover-preview")).not.toBeInTheDocument();
+  });
+});

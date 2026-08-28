@@ -557,6 +557,23 @@ changed.
 
 ---
 
+### US-036 — Article cover image
+*(REQ-077, REQ-078)*
+
+- **AC-108** — Given an author creating or updating an article with an
+  `image` URL, when the request is submitted, then the article is saved
+  with that cover image; given an article created or updated with no
+  `image` value, then creation/update still succeeds with the required
+  title/description/body validation unchanged (REQ-015), and an omitted
+  `image` on update leaves the article's existing image unchanged.
+- **AC-109** — Given an article that has a cover image, when its preview
+  card or detail page is rendered, then an image element with that URL is
+  shown; given an article with no cover image, when the same views are
+  rendered, then no cover image element or placeholder is shown, and the
+  layout is unchanged from before this requirement existed.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -637,3 +654,5 @@ changed.
 | REQ-074 | US-035 | AC-105 |
 | REQ-075 | US-035 | AC-106 |
 | REQ-076 | US-035 | AC-107 |
+| REQ-077 | US-036 | AC-108 |
+| REQ-078 | US-036 | AC-109 |
