@@ -4,12 +4,13 @@ import readingTime from "../../helpers/readingTime";
 import Avatar from "../Avatar";
 
 function ArticleMeta({ author, body, children, createdAt }) {
-  const { bio, followersCount, following, image, username } = author || {};
+  const { bio, followersCount, following, github, image, twitter, username, website } =
+    author || {};
 
   return (
     <div className="article-meta">
       <Link
-        state={{ bio, followersCount, following, image }}
+        state={{ bio, followersCount, following, github, image, twitter, website }}
         to={`/profile/${username}`}
       >
         <Avatar alt={username} src={image} />
@@ -17,7 +18,7 @@ function ArticleMeta({ author, body, children, createdAt }) {
       <div className="info">
         <Link
           className="author"
-          state={{ bio, followersCount, following, image }}
+          state={{ bio, followersCount, following, github, image, twitter, website }}
           to={`/profile/${username}`}
         >
           {username}

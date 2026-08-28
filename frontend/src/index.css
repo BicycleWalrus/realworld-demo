@@ -38,3 +38,11 @@ button:focus {
   max-width: 100%;
   margin-bottom: 1rem;
 }
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}

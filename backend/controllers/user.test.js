@@ -72,4 +72,55 @@ describe("updateUser", () => {
     expect(loggedUser.password).not.toBe("original-hash");
     await expect(bcryptCompare("", loggedUser.password)).resolves.toBe(true);
   });
+
+  // Profile social links (website/github/twitter) go through this same
+  // generic update path, so they inherit REQ-011's rule unchanged: a
+  // submitted value (including an empty string) is applied, and a field
+  // absent from the submission is left unchanged.
+  test("social links are set when submitted", async () => {
+    const loggedUser = makeInstance(
+      { username: "jane", website: null, github: null, twitter: null },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = {
+      loggedUser,
+      body: {
+        user: {
+          website: "https://jane.dev",
+          github: "https://github.com/jane",
+          twitter: "https://twitter.com/jane",
+        },
+      },
+    };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.website).toBe("https://jane.dev");
+    expect(loggedUser.github).toBe("https://github.com/jane");
+    expect(loggedUser.twitter).toBe("https://twitter.com/jane");
+  });
+
+  test("a blank submitted social link clears the previously stored value", async () => {
+    const loggedUser = makeInstance(
+      { username: "jane", website: "https://old.dev" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = { loggedUser, body: { user: { website: "" } } };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.website).toBe("");
+  });
+
+  test("a social link omitted from the submission is left unchanged", async () => {
+    const loggedUser = makeInstance(
+      { username: "jane", website: "https://jane.dev" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = { loggedUser, body: { user: { username: "jane" } } };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.website).toBe("https://jane.dev");
+  });
 });

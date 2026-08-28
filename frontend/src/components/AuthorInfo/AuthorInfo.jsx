@@ -8,9 +8,10 @@ import FollowButton from "../FollowButton";
 
 function AuthorInfo() {
   const { state } = useLocation();
-  const [{ bio, followersCount, following, image }, setAuthor] = useState(
-    state || {}
-  );
+  const [
+    { bio, followersCount, following, github, image, twitter, website },
+    setAuthor,
+  ] = useState(state || {});
   const { headers, loggedUser } = useAuth();
   const { username } = useParams();
   const navigate = useNavigate();
@@ -36,6 +37,32 @@ function AuthorInfo() {
       <h4>{username}</h4>
 
       {bio && <Markdown options={{ forceBlock: true }}>{bio}</Markdown>}
+
+      {(website || github || twitter) && (
+        <ul className="social-links">
+          {website && (
+            <li>
+              <a href={website} target="_blank" rel="noreferrer">
+                <i className="ion-earth"></i> Website
+              </a>
+            </li>
+          )}
+          {github && (
+            <li>
+              <a href={github} target="_blank" rel="noreferrer">
+                <i className="ion-social-github"></i> GitHub
+              </a>
+            </li>
+          )}
+          {twitter && (
+            <li>
+              <a href={twitter} target="_blank" rel="noreferrer">
+                <i className="ion-social-twitter"></i> Twitter
+              </a>
+            </li>
+          )}
+        </ul>
+      )}
 
       {username === loggedUser.username ? (
         <Link
