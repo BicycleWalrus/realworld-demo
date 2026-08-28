@@ -406,6 +406,29 @@ changed.
 
 ---
 
+### US-029 — Profile social links
+*(REQ-049, REQ-050)*
+
+- **AC-080** — Given an authenticated user submitting a profile update
+  with a `websiteUrl`, `githubUrl`, and/or `twitterUrl` value, when the
+  update is applied, then each submitted value is saved, and any of these
+  three fields submitted as `undefined` is left unchanged (mirrors
+  AC-017).
+- **AC-081** — Given an authenticated user submitting one of these three
+  fields as an empty string, when the update is applied, then that field
+  is cleared (a plain assignment; unlike `password`'s AC-018 special
+  case, there is no always-rewrite behavior for these fields).
+- **AC-082** — Given a user account with one or more of `websiteUrl`,
+  `githubUrl`, `twitterUrl` set, when any visitor (authenticated or
+  anonymous) views that user's profile page, then a link is displayed for
+  each set field, pointing to the submitted URL.
+- **AC-083** — Given a user account with none of these three fields set,
+  when its profile page is viewed, then the page renders identically to
+  its appearance before this feature existed — no placeholder and no
+  layout shift.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +481,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080, AC-081 |
+| REQ-050 | US-029 | AC-082, AC-083 |

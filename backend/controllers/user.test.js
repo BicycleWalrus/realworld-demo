@@ -72,4 +72,45 @@ describe("updateUser", () => {
     expect(loggedUser.password).not.toBe("original-hash");
     await expect(bcryptCompare("", loggedUser.password)).resolves.toBe(true);
   });
+
+  // AC-080: social link fields follow the same partial-update rule as
+  // every other profile field (REQ-011) - provided values are applied,
+  // fields submitted as `undefined` are left unchanged.
+  test("social link fields are applied when provided, left unchanged when undefined", async () => {
+    const loggedUser = makeInstance(
+      { username: "jane", websiteUrl: "https://old.example", githubUrl: "old-gh", twitterUrl: "old-tw" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = {
+      loggedUser,
+      body: {
+        user: {
+          username: "jane",
+          websiteUrl: "https://new.example",
+          githubUrl: undefined,
+          twitterUrl: undefined,
+        },
+      },
+    };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.websiteUrl).toBe("https://new.example");
+    expect(loggedUser.githubUrl).toBe("old-gh");
+    expect(loggedUser.twitterUrl).toBe("old-tw");
+  });
+
+  // AC-081: submitting a social link field as an empty string clears it
+  // (a plain assignment, unlike password's always-rehash special case).
+  test("social link field submitted as an empty string clears it", async () => {
+    const loggedUser = makeInstance(
+      { username: "jane", githubUrl: "old-gh" },
+      { save: vi.fn().mockResolvedValue() },
+    );
+    const req = { loggedUser, body: { user: { username: "jane", githubUrl: "" } } };
+
+    await updateUser(req, makeRes(), vi.fn());
+
+    expect(loggedUser.githubUrl).toBe("");
+  });
 });

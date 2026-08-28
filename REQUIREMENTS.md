@@ -405,3 +405,18 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — Profile social link fields follow the same partial-update rule as REQ-011
+A user account has three additional optional fields — `websiteUrl`,
+`githubUrl`, and `twitterUrl` — updated through the same account-update
+mechanism described in REQ-011: a submitted value is applied, a field
+submitted as `undefined` is left unchanged, and a field submitted as an
+empty string clears it. This is purely additive to REQ-011; it does not
+alter how `username`, `email`, `bio`, `image`, or `password` are handled.
+
+### REQ-050 — Public profile displays social links
+A user's profile page displays a link for each of `websiteUrl`,
+`githubUrl`, and `twitterUrl` that the account has set, pointing to the
+submitted URL, visible to both authenticated and anonymous visitors. An
+account with none of these fields set renders its profile identically to
+before this requirement existed — no placeholder or layout change.
