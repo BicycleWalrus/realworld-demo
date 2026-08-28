@@ -17,10 +17,17 @@ readable copy of the same content, grouped with the shared context above.
    assignee) and self-assign it — see `GITHUB.md` section 4, "Claim your
    ticket first" — so no one else starts the same one. Check "Known
    overlap" below before picking one of the flagged pairs.
-4. Build the feature, add tests (see `test/CLAUDE.md` for this repo's
-   testing conventions), and extend `REQUIREMENTS.md` / `USER_STORIES.md`
-   / `ACCEPTANCE_CRITERIA.md` per the Definition of Done below.
-5. Open a PR referencing your issue (`Closes #<number>`) — see
+4. Draft new, numbered `REQUIREMENTS.md` / `USER_STORIES.md` /
+   `ACCEPTANCE_CRITERIA.md` entries for the ticket's behavior *before*
+   writing any implementation code — this is the target spec you'll
+   build against, not yet a record of verified behavior (see
+   `CLAUDE.md`'s "Adding new behavior (spec-first)").
+5. Build the feature, add tests (see `test/CLAUDE.md` for this repo's
+   testing conventions), per the Definition of Done below.
+6. Reconcile the drafted entries from step 4 against what you actually
+   built and tested, before opening the PR — update them if
+   implementation revealed a gap or necessary deviation from the draft.
+7. Open a PR referencing your issue (`Closes #<number>`) — see
    `GITHUB.md` section 5. It needs a passing `Run Tests` check and one
    approving review before it can merge into `main`.
 
@@ -39,19 +46,26 @@ readable copy of the same content, grouped with the shared context above.
 - Every ticket shares the same **Definition of Done** — reproduced in
   full in each issue so it's self-contained on GitHub, but the substance
   is identical across all 20:
-  1. Feature works end-to-end (backend + frontend, where applicable).
-  2. Automated tests cover the new behavior (mirror existing test style
-     in `backend/**/*.test.js` / `frontend/src/**/*.test.js`).
-  3. `REQUIREMENTS.md`, `USER_STORIES.md`, and `ACCEPTANCE_CRITERIA.md`
+  1. `REQUIREMENTS.md`, `USER_STORIES.md`, and `ACCEPTANCE_CRITERIA.md`
      are each extended with new, numbered entries for this feature,
+     drafted *before* implementation as the spec to build against,
      following the existing `REQ-###`/`US-###`/`AC-###` conventions and
      cross-referencing each other (see the `REQ-046`/`US-027`
      "Pending Changes" entries for the established pattern). **Use the
-     next unused number at the time you open your PR** — don't hardcode
+     next unused number at the time you start drafting, and double-check
+     it's still unused right before you open your PR** — don't hardcode
      a number from this doc, since other tickets may land first.
-  4. No existing `REQ-001`–`REQ-046` behavior changes, unless a
+  2. Feature works end-to-end (backend + frontend, where applicable),
+     matching the drafted entries from step 1.
+  3. Automated tests cover the new behavior (mirror existing test style
+     in `backend/**/*.test.js` / `frontend/src/**/*.test.js`).
+  4. The entries from step 1 are reconciled against the actual,
+     verified implementation before the PR is opened — update them if
+     building the feature revealed a gap or necessary deviation from the
+     original draft.
+  5. No existing `REQ-001`–`REQ-046` behavior changes, unless a
      constraint below explicitly says this feature supersedes one.
-  5. PR opened following `GITHUB.md`.
+  6. PR opened following `GITHUB.md`.
 
 ## Known overlap — coordinate before starting
 
