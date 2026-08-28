@@ -142,3 +142,9 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-029** — As a reader, I want to download an article as a Markdown
+file, so that I can save or read it offline in my own editor/notes app.
+*Related requirements: REQ-049, REQ-050*
