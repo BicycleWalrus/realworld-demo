@@ -405,3 +405,14 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — Estimated reading time on article previews and detail view
+Every article preview card and the article detail page display an
+estimated reading time (e.g., "4 min read"), computed from the word count
+of the article's `body` at 200 words per minute and rounded up, with a
+floor of one minute so an empty or very short body never displays "0 min
+read" or a non-numeric value. The reading time is shown alongside the
+existing article/comment date display (REQ-040) without altering that
+date's format.
+
+*(Directly verified by `frontend/src/helpers/readingTime.test.js`.)*
