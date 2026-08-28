@@ -5,6 +5,7 @@ import dateFormatter from "../../helpers/dateFormatter";
 import deleteComment from "../../services/deleteComment";
 import getComments from "../../services/getComments";
 import CommentAuthor from "./CommentAuthor";
+import CommentBody from "./CommentBody";
 
 function CommentList({ triggerUpdate, updateComments }) {
   const [comments, setComments] = useState([]);
@@ -31,7 +32,7 @@ function CommentList({ triggerUpdate, updateComments }) {
       return (
         <div className="card" key={id}>
           <div className="card-block">
-            <p className="card-text">{body}</p>
+            <CommentBody body={body} />
           </div>
           <div className="card-footer">
             <CommentAuthor {...author} />

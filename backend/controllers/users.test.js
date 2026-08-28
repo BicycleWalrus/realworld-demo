@@ -1,5 +1,6 @@
 process.env.JWT_KEY = process.env.JWT_KEY || "test-jwt-key";
 
+const { Op } = require("sequelize");
 const {
   AlreadyTakenError,
   FieldRequiredError,
@@ -9,14 +10,15 @@ const {
 const { bcryptHash } = require("../helper/bcrypt");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn(), create: vi.fn() };
+const User = { findOne: vi.fn(), create: vi.fn(), findAll: vi.fn() };
 mockRequire(require.resolve("../models"), { User });
 
-const { signUp, signIn } = require("./users");
+const { signUp, signIn, searchUsers } = require("./users");
 
 beforeEach(() => {
   User.findOne.mockReset();
   User.create.mockReset();
+  User.findAll.mockReset();
 });
 
 describe("signUp", () => {
@@ -107,5 +109,31 @@ describe("signIn", () => {
 
     expect(res.json).toHaveBeenCalledWith({ user: existentUser });
     expect(existentUser.dataValues.token).toEqual(expect.any(String));
+  });
+});
+
+describe("searchUsers", () => {
+  // AC-080: no query -> no suggestions, no lookup performed.
+  test("no q -> empty users list, no query issued", async () => {
+    const res = makeRes();
+
+    await searchUsers({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: [] });
+    expect(User.findAll).not.toHaveBeenCalled();
+  });
+
+  // AC-085: matching is case-insensitive and matches partial usernames.
+  test("q=ALI -> case-insensitive partial-match query against username", async () => {
+    const matches = [makeInstance({ username: "alice" }), makeInstance({ username: "alison" })];
+    User.findAll.mockResolvedValue(matches);
+    const res = makeRes();
+
+    await searchUsers({ query: { q: "ALI" } }, res, vi.fn());
+
+    expect(User.findAll).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { username: { [Op.iLike]: "%ALI%" } } }),
+    );
+    expect(res.json).toHaveBeenCalledWith({ users: matches });
   });
 });

@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const { User } = require("../models");
 const { jwtSign } = require("../helper/jwt");
 const { bcryptHash, bcryptCompare } = require("../helper/bcrypt");
@@ -56,4 +57,22 @@ const signIn = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn };
+// Search usernames (case-insensitive, partial match) for @mention autocomplete
+const searchUsers = async (req, res, next) => {
+  try {
+    const { q } = req.query;
+    if (!q) return res.json({ users: [] });
+
+    const users = await User.findAll({
+      attributes: { exclude: ["email", "password"] },
+      limit: 10,
+      where: { username: { [Op.iLike]: `%${q}%` } },
+    });
+
+    res.json({ users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signUp, signIn, searchUsers };
