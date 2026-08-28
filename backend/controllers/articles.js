@@ -31,6 +31,13 @@ const allArticles = async (req, res, next) => {
     // ORDER BY on a derived count). So for this branch every matching row is
     // fetched (limit/offset omitted here) and paged after sorting instead.
     const isTop = sort === "top";
+    // REQ-070: draft (unpublished) articles are excluded from every listing
+    // path (global/tag/search/favorited/top and other users' profiles)
+    // unless the viewer is looking at their own profile (author === the
+    // logged-in username), in which case their own drafts are included
+    // (REQ-071).
+    const viewingOwn = !!(author && loggedUser && author === loggedUser.username);
+    const publishedFilter = viewingOwn ? {} : { published: true };
     const searchOptions = {
       include: [
         {
@@ -51,16 +58,18 @@ const allArticles = async (req, res, next) => {
       // AC-088: keyword search matches title, description, or body,
       // case-insensitively (Postgres Op.iLike); additive to the existing
       // author/tag/favorited filters (REQ-013), so it combines (AND) with
-      // them rather than replacing them.
-      ...(term && {
-        where: {
+      // them rather than replacing them. REQ-070: the published filter is
+      // additive here too, alongside (not instead of) the search predicate.
+      where: {
+        ...publishedFilter,
+        ...(term && {
           [Op.or]: [
             { title: { [Op.iLike]: `%${term}%` } },
             { description: { [Op.iLike]: `%${term}%` } },
             { body: { [Op.iLike]: `%${term}%` } },
           ],
-        },
-      }),
+        }),
+      },
     };
 
     let articles = { rows: [], count: 0 };
@@ -114,6 +123,11 @@ const createArticle = async (req, res, next) => {
     if (!description) throw new FieldRequiredError("A description");
     if (!body) throw new FieldRequiredError("An article body");
 
+    // REQ-069: an article is published by default; only an explicit
+    // `published: false` creates a draft, so omitting the flag stays
+    // backward compatible with the pre-existing create behavior.
+    const published = req.body.article.published === false ? false : true;
+
     const slug = slugify(title);
     const slugInDB = await Article.findOne({ where: { slug: slug } });
     if (slugInDB) throw new AlreadyTakenError("Title");
@@ -123,6 +137,7 @@ const createArticle = async (req, res, next) => {
       title: title,
       description: description,
       body: body,
+      published: published,
     });
 
     for (const tag of tagList) {
@@ -165,7 +180,8 @@ const articlesFeed = async (req, res, next) => {
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
-      where: { userId: authors.map((author) => author.id) },
+      // REQ-070: drafts of followed authors never appear in the feed.
+      where: { userId: authors.map((author) => author.id), published: true },
     });
 
     for (const article of articles.rows) {
@@ -193,6 +209,11 @@ const singleArticle = async (req, res, next) => {
       include: includeOptions,
     });
     if (!article) throw new NotFoundError("Article");
+    // REQ-073: a draft is not-found for anyone but its own author (incl.
+    // anonymous visitors), so a draft's existence is never leaked.
+    if (!article.published && (!loggedUser || loggedUser.id !== article.author.id)) {
+      throw new NotFoundError("Article");
+    }
 
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
@@ -221,13 +242,16 @@ const updateArticle = async (req, res, next) => {
       throw new ForbiddenError("article");
     }
 
-    const { title, description, body } = req.body.article;
+    const { title, description, body, published } = req.body.article;
     if (title) {
       article.slug = slugify(title);
       article.title = title;
     }
     if (description) article.description = description;
     if (body) article.body = body;
+    // REQ-072: an author may publish a draft (or unpublish a published
+    // article) by setting `published` explicitly on update.
+    if (typeof published === "boolean") article.published = published;
     await article.save();
 
     appendTagList(article.tagList, article);

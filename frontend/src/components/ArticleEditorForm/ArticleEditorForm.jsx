@@ -48,13 +48,15 @@ function ArticleEditorForm() {
     setForm((form) => ({ ...form, tagList: value.split(/,| /) }));
   };
 
-  const formSubmit = (e) => {
+  const formSubmit = (e, published = true) => {
     e.preventDefault();
 
-    setArticle({ headers, slug, body, description, tagList, title })
+    setArticle({ headers, slug, body, description, tagList, title, published })
       .then((slug) => navigate(`/article/${slug}`))
       .catch(setErrorMessage);
   };
+
+  const saveAsDraft = (e) => formSubmit(e, false);
 
   return (
     <form onSubmit={formSubmit}>
@@ -100,7 +102,14 @@ function ArticleEditorForm() {
         </FormFieldset>
 
         <button className="btn btn-lg pull-xs-right btn-primary" type="submit">
-          {slug ? "Update Article" : "Publish Article"}
+          {slug ? "Update & Publish" : "Publish Article"}
+        </button>
+        <button
+          className="btn btn-lg pull-xs-right btn-outline-secondary"
+          type="button"
+          onClick={saveAsDraft}
+        >
+          Save as Draft
         </button>
       </fieldset>
     </form>

@@ -174,3 +174,10 @@ discover the most well-received content.
 after posting it, so that I can fix or clarify what I wrote without
 deleting it and losing its place in the thread.
 *Related requirements: REQ-065, REQ-066, REQ-067, REQ-068*
+
+---
+
+**US-034** — As an author, I want to save an article as a draft before
+publishing it, so that I can write or revise it without exposing
+unfinished work.
+*Related requirements: REQ-069, REQ-070, REQ-071, REQ-072, REQ-073*
