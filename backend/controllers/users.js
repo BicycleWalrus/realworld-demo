@@ -56,4 +56,22 @@ const signIn = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn };
+// List users (directory)
+const listUsers = async (req, res, next) => {
+  try {
+    const { limit = 3, offset = 0 } = req.query;
+
+    const users = await User.findAndCountAll({
+      attributes: { exclude: ["email"] },
+      limit: parseInt(limit),
+      offset: offset * limit,
+      order: [["username", "ASC"]],
+    });
+
+    res.json({ users: users.rows, usersCount: users.count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signUp, signIn, listUsers };

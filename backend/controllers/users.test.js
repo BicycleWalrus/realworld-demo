@@ -9,14 +9,15 @@ const {
 const { bcryptHash } = require("../helper/bcrypt");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn(), create: vi.fn() };
+const User = { findOne: vi.fn(), create: vi.fn(), findAndCountAll: vi.fn() };
 mockRequire(require.resolve("../models"), { User });
 
-const { signUp, signIn } = require("./users");
+const { signUp, signIn, listUsers } = require("./users");
 
 beforeEach(() => {
   User.findOne.mockReset();
   User.create.mockReset();
+  User.findAndCountAll.mockReset();
 });
 
 describe("signUp", () => {
@@ -107,5 +108,46 @@ describe("signIn", () => {
 
     expect(res.json).toHaveBeenCalledWith({ user: existentUser });
     expect(existentUser.dataValues.token).toEqual(expect.any(String));
+  });
+});
+
+describe("listUsers", () => {
+  const seedUsers = [
+    makeInstance({ id: 1, username: "jane" }),
+    makeInstance({ id: 2, username: "bob" }),
+  ];
+
+  // AC-080: unauthenticated request succeeds and excludes email/password.
+  test("no query params -> returns users and usersCount, excluding email", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: seedUsers, count: 2 });
+    const res = makeRes();
+
+    await listUsers({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: seedUsers, usersCount: 2 });
+    const queryArgs = User.findAndCountAll.mock.calls[0][0];
+    expect(queryArgs.attributes).toEqual({ exclude: ["email"] });
+  });
+
+  // AC-081: default page size is 3, offset 0, ordered by username ascending.
+  test("no query params -> defaults limit=3, offset=0, order by username ASC", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: seedUsers, count: 2 });
+
+    await listUsers({ query: {} }, makeRes(), vi.fn());
+
+    const queryArgs = User.findAndCountAll.mock.calls[0][0];
+    expect(queryArgs.limit).toBe(3);
+    expect(queryArgs.offset).toBe(0);
+    expect(queryArgs.order).toEqual([["username", "ASC"]]);
+  });
+
+  test("limit and offset query params are applied", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: seedUsers, count: 2 });
+
+    await listUsers({ query: { limit: "5", offset: "2" } }, makeRes(), vi.fn());
+
+    const queryArgs = User.findAndCountAll.mock.calls[0][0];
+    expect(queryArgs.limit).toBe(5);
+    expect(queryArgs.offset).toBe(10);
   });
 });
