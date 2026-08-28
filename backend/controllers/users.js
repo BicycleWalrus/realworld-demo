@@ -104,4 +104,41 @@ const verifyUsernames = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn, searchUsers, verifyUsernames };
+const DIRECTORY_PAGE_SIZE = 20;
+const DIRECTORY_MAX_PAGE_SIZE = 100;
+
+// Clamps a query-string pagination value to a safe integer: falls back to
+// `fallback` for anything that isn't a positive integer (missing, NaN,
+// negative, decimal), and never exceeds `max` when given. Guards this
+// no-auth, full-table-enumeration endpoint against an unbounded or
+// malformed limit/offset (e.g. ?limit=999999 or ?limit=abc).
+const clampPaginationValue = (value, fallback, max) => {
+  const parsed = parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed < 0) return fallback;
+  return max ? Math.min(parsed, max) : parsed;
+};
+
+// Paginated list of all users (username, avatar, bio only - no auth
+// required, no sensitive fields exposed) for the browsable author
+// directory. Distinct from searchUsers (unpaginated prefix match capped
+// at 5, built for @mention autocomplete) and verifyUsernames (exact-match
+// batch lookup) - this is the only one meant to be paged through in full.
+const directory = async (req, res, next) => {
+  try {
+    const limit = clampPaginationValue(req.query.limit, DIRECTORY_PAGE_SIZE, DIRECTORY_MAX_PAGE_SIZE);
+    const offset = clampPaginationValue(req.query.offset, 0);
+
+    const { rows, count } = await User.findAndCountAll({
+      attributes: ["username", "image", "bio"],
+      limit,
+      offset: offset * limit,
+      order: [["username", "ASC"]],
+    });
+
+    res.json({ users: rows, usersCount: count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signUp, signIn, searchUsers, verifyUsernames, directory };

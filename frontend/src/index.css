@@ -106,3 +106,21 @@ button:focus {
   color: #aaa;
   font-size: 0.9rem;
 }
+
+.user-directory-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.user-directory-list li {
+  border-bottom: 1px solid #eee;
+  padding: 1rem 0;
+}
+
+.user-directory-list .user-pic {
+  border-radius: 50%;
+  height: 32px;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+  width: 32px;
+}
