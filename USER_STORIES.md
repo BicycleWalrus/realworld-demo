@@ -142,3 +142,9 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-13.1** — As a reader, I want to see roughly how long an article will
+take to read, so that I can decide whether to read it now.
+*Related requirements: REQ-13.1*

@@ -406,6 +406,25 @@ changed.
 
 ---
 
+### US-13.1 — Reading time badge alongside article date
+*(REQ-13.1)*
+
+- **AC-13.1** — Given an article with a body, when its preview card or
+  detail page renders, then an estimated reading time (e.g. "4 min read")
+  is shown next to the existing date, without altering the date's own
+  formatting.
+- **AC-13.2** — Given an article's body is edited and re-rendered, when
+  the reading-time estimate is recomputed, then it reflects the new body
+  rather than the previous one.
+- **AC-13.3** — Given an article with an empty or near-empty body, when
+  the reading-time estimate is computed, then it displays "1 min read"
+  rather than "0 min read", a missing value, or `NaN`.
+- **AC-13.4** — Given an article with a very long body, when the
+  reading-time estimate is computed, then it displays a proportionally
+  larger, non-crashing numeric estimate.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +477,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-13.1 | US-13.1 | AC-13.1–AC-13.4 |

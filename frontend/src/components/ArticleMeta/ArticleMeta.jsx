@@ -1,9 +1,12 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import dateFormatter from "../../helpers/dateFormatter";
+import readingTime from "../../helpers/readingTime";
 import Avatar from "../Avatar";
 
-function ArticleMeta({ author, children, createdAt }) {
+function ArticleMeta({ author, body, children, createdAt }) {
   const { bio, followersCount, following, image, username } = author || {};
+  const estimatedReadingTime = useMemo(() => readingTime(body), [body]);
 
   return (
     <div className="article-meta">
@@ -22,6 +25,7 @@ function ArticleMeta({ author, children, createdAt }) {
           {username}
         </Link>
         <span className="date">{dateFormatter(createdAt)}</span>
+        <span className="reading-time">{estimatedReadingTime}</span>
       </div>
       {children}
     </div>
