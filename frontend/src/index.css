@@ -39,6 +39,29 @@ button:focus {
   margin-bottom: 1rem;
 }
 
+.table-of-contents {
+  margin-bottom: 1.5rem;
+}
+
+.table-of-contents ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.table-of-contents .toc-level-2 {
+  padding-left: 1rem;
+}
+
+.table-of-contents .toc-level-3 {
+  padding-left: 2rem;
+}
+
+.table-of-contents .toc-level-4,
+.table-of-contents .toc-level-5,
+.table-of-contents .toc-level-6 {
+  padding-left: 3rem;
+}
+
 .social-links {
   display: flex;
   gap: 1rem;

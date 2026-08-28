@@ -47,3 +47,16 @@ it("renders no image when the article has none", () => {
 
   expect(screen.queryByRole("img", { name: "A title" })).not.toBeInTheDocument();
 });
+
+// An empty body has no headings, so no table of contents should render.
+// (A non-empty body would additionally exercise markdown-to-jsx, which
+// hits a separate, pre-existing markdown-to-jsx/vitest-SSR incompatibility
+// unrelated to this feature - see extractHeadings.test.js for heading
+// extraction coverage against real Markdown bodies.)
+it("renders no table of contents when the article has no headings", () => {
+  renderArticle(makeArticleState());
+
+  expect(
+    screen.queryByRole("navigation", { name: "Table of contents" }),
+  ).not.toBeInTheDocument();
+});

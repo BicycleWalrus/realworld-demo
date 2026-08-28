@@ -170,6 +170,19 @@ file, so that I can save or read it offline in my own editor/notes app.
 
 ---
 
+**US-033** — As a comment author, I want to edit my own comment, so that I
+can fix a mistake or clarify what I said without deleting the whole
+comment and losing the thread position/replies context.
+*Related requirements: REQ-053*
+
+---
+
+**US-034** — As a reader, I want a table of contents for long articles, so
+that I can quickly jump to the section I'm interested in.
+*Related requirements: REQ-054*
+
+---
+
 **US-035** — As a user, I want to list links to my other online
 presences on my profile, so that readers who like my writing can find me
 elsewhere.
