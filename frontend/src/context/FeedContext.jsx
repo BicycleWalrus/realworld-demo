@@ -9,9 +9,10 @@ export function useFeedContext() {
 
 function FeedProvider({ children }) {
   const { isAuth } = useAuth();
-  const [{ tabName, tagName }, setTab] = useState({
+  const [{ tabName, tagName, keyword }, setTab] = useState({
     tabName: isAuth ? "feed" : "global",
     tagName: "",
+    keyword: "",
   });
 
   useEffect(() => {
@@ -21,11 +22,15 @@ function FeedProvider({ children }) {
   const changeTab = async (e, tabName) => {
     const tagName = e.target.innerText.trim();
 
-    setTab({ tabName, tagName });
+    setTab({ tabName, tagName, keyword: "" });
+  };
+
+  const search = (keyword) => {
+    setTab({ tabName: "search", tagName: "", keyword });
   };
 
   return (
-    <FeedContext.Provider value={{ changeTab, tabName, tagName }}>
+    <FeedContext.Provider value={{ changeTab, keyword, search, tabName, tagName }}>
       {children}
     </FeedContext.Provider>
   );

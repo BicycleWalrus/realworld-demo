@@ -11,6 +11,7 @@ const {
   appendTagList,
   slugify,
 } = require("../helper/helpers");
+const { Op } = require("sequelize");
 const { Article, Tag, User } = require("../models");
 
 const includeOptions = [
@@ -23,7 +24,7 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, keyword, limit = 3, offset = 0 } = req.query;
     const searchOptions = {
       include: [
         {
@@ -39,6 +40,13 @@ const allArticles = async (req, res, next) => {
           ...(author && { where: { username: author } }),
         },
       ],
+      ...(keyword?.trim() && {
+        where: {
+          [Op.or]: ["title", "description", "body"].map((field) => ({
+            [field]: { [Op.iLike]: `%${keyword.trim()}%` },
+          })),
+        },
+      }),
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],

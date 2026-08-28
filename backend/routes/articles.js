@@ -10,7 +10,7 @@ const {
   articlesFeed,
 } = require("../controllers/articles");
 
-//? All Articles - by Author/by Tag/Favorited by user
+//? All Articles - by Author/by Tag/Favorited by user/by Keyword
 router.get("/", verifyToken, allArticles);
 //* Create Article
 router.post("/", verifyToken, createArticle);

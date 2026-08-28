@@ -4,6 +4,7 @@ import getArticles from "../../services/getArticles";
 
 function ArticlesPagination({
   articlesCount,
+  keyword,
   location,
   tagName,
   updateArticles,
@@ -13,7 +14,7 @@ function ArticlesPagination({
   const { headers } = useAuth();
 
   const handlePageChange = ({ selected: page }) => {
-    getArticles({ headers, location, page, username, tagName })
+    getArticles({ headers, keyword, location, page, username, tagName })
       .then(updateArticles)
       .catch(console.error);
   };

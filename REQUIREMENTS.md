@@ -405,3 +405,16 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-055 — Article listing supports keyword search
+Article listing additionally accepts a `keyword` query parameter. When
+present and non-blank after trimming surrounding whitespace, results are
+restricted to articles whose title, description, or body contains that
+keyword, case-insensitively. A `keyword` that is absent, empty, or
+consists only of whitespace is treated as "no keyword" and does not
+restrict the results — the full listing (subject to any other filters)
+is returned rather than an empty result set. Keyword search composes
+with the existing author/tag/favorited filters (REQ-013) as an
+additional AND condition, and respects the existing page size
+(REQ-031); it does not change REQ-013's existing filters or REQ-031's
+default page size.
