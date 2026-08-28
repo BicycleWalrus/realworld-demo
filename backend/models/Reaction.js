@@ -35,6 +35,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       sequelize,
       modelName: "Reaction",
+      indexes: [{ unique: true, fields: ["userId", "articleId"] }],
     },
   );
   return Reaction;

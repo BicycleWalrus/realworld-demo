@@ -18,6 +18,13 @@ const reactionToggler = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
+    const { type } = req.body?.reaction || {};
+    if (req.method === "POST" && !REACTION_TYPES.includes(type)) {
+      throw new ValidationError(
+        `Reaction type must be one of: ${REACTION_TYPES.join(", ")}`,
+      );
+    }
+
     const { slug } = req.params;
 
     const article = await Article.findOne({
@@ -34,13 +41,6 @@ const reactionToggler = async (req, res, next) => {
     });
 
     if (req.method === "POST") {
-      const { type } = req.body.reaction || {};
-      if (!REACTION_TYPES.includes(type)) {
-        throw new ValidationError(
-          `Reaction type must be one of: ${REACTION_TYPES.join(", ")}`,
-        );
-      }
-
       if (existing) {
         existing.type = type;
         await existing.save();

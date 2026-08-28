@@ -57,10 +57,9 @@ describe("reactionToggler", () => {
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
   });
 
-  test("invalid reaction type -> ValidationError, no row created", async () => {
-    const article = makeArticle({ author: makeFollowableAuthor() });
-    Article.findOne.mockResolvedValue(article);
-    Reaction.findOne.mockResolvedValue(null);
+  // Validated before any lookup, so an invalid type can't be used to probe
+  // for the existence of an article/reaction via timing or side effects.
+  test("invalid reaction type -> ValidationError, no lookup or row created", async () => {
     const next = vi.fn();
 
     await reactionToggler(
@@ -70,6 +69,8 @@ describe("reactionToggler", () => {
     );
 
     expect(next.mock.calls[0][0]).toBeInstanceOf(ValidationError);
+    expect(Article.findOne).not.toHaveBeenCalled();
+    expect(Reaction.findOne).not.toHaveBeenCalled();
     expect(Reaction.create).not.toHaveBeenCalled();
   });
 
