@@ -45,6 +45,7 @@ function renderCommentList({ isAuth = true, loggedUser = author } = {}) {
 
 beforeEach(() => {
   getComments.mockResolvedValue([{ ...parentComment }]);
+  postComment.mockReset();
 });
 
 // Reply control is only shown to authenticated users.
@@ -96,4 +97,36 @@ test("renders replies nested under their parent", async () => {
 
   expect(await screen.findByText("top-level comment")).toBeInTheDocument();
   expect(screen.getByText("a nested reply")).toBeInTheDocument();
+});
+
+// A reply has no Reply control of its own - nesting is exactly one level.
+test("a reply itself has no Reply control", async () => {
+  const reply = {
+    id: 3,
+    body: "a nested reply",
+    createdAt: "2020-01-02T00:00:00.000Z",
+    author: { username: "jane", image: null },
+  };
+  getComments.mockResolvedValue([{ ...parentComment, replies: [reply] }]);
+
+  renderCommentList({ isAuth: true });
+
+  expect(await screen.findByText("a nested reply")).toBeInTheDocument();
+  // Exactly one "Reply" control on the page - the parent's, not the reply's.
+  expect(screen.getAllByText("Reply")).toHaveLength(1);
+});
+
+// Cancel discards the draft without posting.
+test("cancel discards the reply draft without calling postComment", async () => {
+  renderCommentList({ isAuth: true });
+
+  await screen.findByText("top-level comment");
+  await userEvent.click(screen.getByText("Reply"));
+
+  const textarea = screen.getByPlaceholderText("Write a reply...");
+  await userEvent.type(textarea, "never mind");
+  await userEvent.click(screen.getByText("Cancel"));
+
+  expect(postComment).not.toHaveBeenCalled();
+  expect(screen.queryByPlaceholderText("Write a reply...")).not.toBeInTheDocument();
 });

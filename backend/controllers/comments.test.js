@@ -74,6 +74,29 @@ describe("allComments", () => {
     expect(res.json).toHaveBeenCalledWith({ comments: [comment] });
     expect(reply.author.dataValues.following).toBe(false);
   });
+
+  // Replies are ordered oldest-first, regardless of the order the DB
+  // driver/mock happens to return them in.
+  test("replies are ordered oldest-first", async () => {
+    const author = makeFollowableUser();
+    const newerReply = makeInstance(
+      { id: 2, body: "newer", createdAt: new Date("2020-01-02") },
+      { author, getAuthor: vi.fn().mockResolvedValue(author) },
+    );
+    const olderReply = makeInstance(
+      { id: 1, body: "older", createdAt: new Date("2020-01-01") },
+      { author, getAuthor: vi.fn().mockResolvedValue(author) },
+    );
+    const comment = makeCommentWithAuthor(author, { replies: [newerReply, olderReply] });
+    const article = makeInstance({}, { getComments: vi.fn().mockResolvedValue([comment]) });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    const [{ comments: sent }] = res.json.mock.calls[0];
+    expect(sent[0].replies.map((r) => r.id)).toEqual([1, 2]);
+  });
 });
 
 describe("createComment", () => {
@@ -133,7 +156,7 @@ describe("createComment", () => {
   // A reply to a top-level comment is created with that comment's id as parentId.
   test("parentId of a top-level comment -> reply created with that parentId", async () => {
     Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
-    Comment.findByPk.mockResolvedValue(makeInstance({ id: 3, parentId: null }));
+    Comment.findByPk.mockResolvedValue(makeInstance({ id: 3, parentId: null, articleId: 5 }));
     Comment.create.mockResolvedValue(makeInstance({ id: 4, body: "a reply" }));
 
     await createComment(
@@ -152,7 +175,7 @@ describe("createComment", () => {
   // Replying to a reply flattens to that reply's own root parent.
   test("parentId of a reply -> new comment attached to the root parent instead", async () => {
     Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
-    Comment.findByPk.mockResolvedValue(makeInstance({ id: 4, parentId: 3 }));
+    Comment.findByPk.mockResolvedValue(makeInstance({ id: 4, parentId: 3, articleId: 5 }));
     Comment.create.mockResolvedValue(makeInstance({ id: 6, body: "another reply" }));
 
     await createComment(
@@ -178,6 +201,29 @@ describe("createComment", () => {
       {
         loggedUser: makeFollowableUser(),
         body: { comment: { body: "a reply", parentId: 999 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+    expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  // A parentId that resolves to a comment on a DIFFERENT article is
+  // rejected, exactly like a nonexistent one - otherwise a reply could
+  // attach to (and render nested under, in allComments) another
+  // article's comment thread.
+  test("parentId belonging to a different article -> NotFoundError, no comment created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(makeInstance({ id: 3, parentId: null, articleId: 999 }));
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentId: 3 } },
         params: { slug: "a" },
       },
       makeRes(),

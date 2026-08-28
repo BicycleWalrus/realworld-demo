@@ -28,11 +28,13 @@ const allComments = async (req, res, next) => {
           ],
         },
       ],
+      order: [["createdAt", "ASC"]],
     });
 
     for (const comment of comments) {
       await appendFollowers(loggedUser, comment);
 
+      comment.replies.sort((a, b) => a.createdAt - b.createdAt);
       for (const reply of comment.replies) {
         await appendFollowers(loggedUser, reply);
       }
@@ -60,7 +62,9 @@ const createComment = async (req, res, next) => {
     let resolvedParentId = null;
     if (parentId) {
       const parent = await Comment.findByPk(parentId);
-      if (!parent) throw new NotFoundError("Comment");
+      if (!parent || parent.articleId !== article.id) {
+        throw new NotFoundError("Comment");
+      }
 
       // Replying to a reply flattens to that reply's own root parent,
       // keeping nesting to exactly one level.
