@@ -117,7 +117,7 @@ describe("listUsers", () => {
     makeInstance({ id: 2, username: "bob" }),
   ];
 
-  // AC-080: unauthenticated request succeeds and excludes email/password.
+  // AC-7.1: unauthenticated request succeeds and excludes email/password.
   test("no query params -> returns users and usersCount, excluding email", async () => {
     User.findAndCountAll.mockResolvedValue({ rows: seedUsers, count: 2 });
     const res = makeRes();
@@ -129,7 +129,7 @@ describe("listUsers", () => {
     expect(queryArgs.attributes).toEqual({ exclude: ["email"] });
   });
 
-  // AC-081: default page size is 3, offset 0, ordered by username ascending.
+  // AC-7.2: default page size is 3, offset 0, ordered by username ascending.
   test("no query params -> defaults limit=3, offset=0, order by username ASC", async () => {
     User.findAndCountAll.mockResolvedValue({ rows: seedUsers, count: 2 });
 

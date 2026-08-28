@@ -145,7 +145,7 @@ blocked at the database level, not just by the tool's own claims.
 
 ---
 
-**US-029** — As a visitor, I want to browse a directory of all authors, so
+**US-7.1** — As a visitor, I want to browse a directory of all authors, so
 that I can discover new people to follow without already knowing their
 username.
-*Related requirements: REQ-049, REQ-050*
+*Related requirements: REQ-7.1, REQ-7.2*
