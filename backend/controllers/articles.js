@@ -12,6 +12,7 @@ const {
   slugify,
 } = require("../helper/helpers");
 const { Article, Tag, User } = require("../models");
+const { Op } = require("sequelize");
 
 const includeOptions = [
   { model: Tag, as: "tagList", attributes: ["name"] },
@@ -23,7 +24,8 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0 } = req.query;
+    const { author, tag, favorited, search, limit = 3, offset = 0 } = req.query;
+    const term = typeof search === "string" ? search.trim() : "";
     const searchOptions = {
       include: [
         {
@@ -42,6 +44,19 @@ const allArticles = async (req, res, next) => {
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
+      // AC-088: keyword search matches title, description, or body,
+      // case-insensitively (Postgres Op.iLike); additive to the existing
+      // author/tag/favorited filters (REQ-013), so it combines (AND) with
+      // them rather than replacing them.
+      ...(term && {
+        where: {
+          [Op.or]: [
+            { title: { [Op.iLike]: `%${term}%` } },
+            { description: { [Op.iLike]: `%${term}%` } },
+            { body: { [Op.iLike]: `%${term}%` } },
+          ],
+        },
+      }),
     };
 
     let articles = { rows: [], count: 0 };
