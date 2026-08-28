@@ -4,6 +4,7 @@ import ArticleAuthorButtons from "../ArticleAuthorButtons";
 import DownloadArticleButton from "../DownloadArticleButton";
 import FavButton from "../FavButton";
 import FollowButton from "../FollowButton";
+import SaveLaterButton from "../SaveLaterButton";
 
 function ArticlesButtons({ article, setArticle }) {
   const { author: { username } = {}, author } = article || {};
@@ -29,6 +30,7 @@ function ArticlesButtons({ article, setArticle }) {
         </>
       )}
       <DownloadArticleButton {...article} slug={slug} />
+      <SaveLaterButton slug={slug} />
     </>
   );
 }

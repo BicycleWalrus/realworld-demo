@@ -17,6 +17,7 @@ import NotFound from "./routes/NotFound";
 import Profile from "./routes/Profile/Profile";
 import ProfileArticles from "./routes/Profile/ProfileArticles";
 import ProfileFavArticles from "./routes/Profile/ProfileFavArticles";
+import ReadLater from "./routes/ReadLater";
 import Settings from "./routes/Settings";
 import SignUp from "./routes/SignUp";
 
@@ -35,6 +36,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="register" element={<SignUp />} />
 
               <Route path="settings" element={<Settings />} />
+              <Route path="read-later" element={<ReadLater />} />
 
               <Route path="editor" element={<ArticleEditor />}>
                 <Route path=":slug" element={<ArticleEditor />} />

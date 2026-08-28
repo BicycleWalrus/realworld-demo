@@ -38,6 +38,7 @@ function DropdownMenu() {
           url={`/profile/${username}`}
           state={loggedUser}
         />
+        <DropdownItem icon="ion-bookmark" text="Read Later" url="/read-later" />
         <DropdownItem icon="ion-gear-a" text="Settings" url="/settings" />
         <div className="dropdown-divider"></div>
         <DropdownItem icon="ion-log-out" text="Logout" handler={logout} />
