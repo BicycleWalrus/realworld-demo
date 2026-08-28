@@ -10,15 +10,21 @@ const {
 const { bcryptHash } = require("../helper/bcrypt");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
-const User = { findOne: vi.fn(), create: vi.fn(), findAll: vi.fn() };
+const User = {
+  findOne: vi.fn(),
+  create: vi.fn(),
+  findAll: vi.fn(),
+  findAndCountAll: vi.fn(),
+};
 mockRequire(require.resolve("../models"), { User });
 
-const { signUp, signIn, searchUsers, verifyUsernames } = require("./users");
+const { signUp, signIn, searchUsers, verifyUsernames, directory } = require("./users");
 
 beforeEach(() => {
   User.findOne.mockReset();
   User.create.mockReset();
   User.findAll.mockReset();
+  User.findAndCountAll.mockReset();
 });
 
 describe("signUp", () => {
@@ -180,5 +186,54 @@ describe("verifyUsernames", () => {
 
     const [{ where }] = User.findAll.mock.calls[0];
     expect(where[Op.or]).toHaveLength(20);
+  });
+});
+
+describe("directory", () => {
+  test("returns a paginated page of users with only username, image, and bio", async () => {
+    User.findAndCountAll.mockResolvedValue({
+      rows: [makeInstance({ username: "jane", image: null, bio: "hi" })],
+      count: 1,
+    });
+    const res = makeRes();
+
+    await directory({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({
+      users: [expect.objectContaining({ username: "jane" })],
+      usersCount: 1,
+    });
+    const [{ attributes }] = User.findAndCountAll.mock.calls[0];
+    expect(attributes).toEqual(["username", "image", "bio"]);
+  });
+
+  test("does not require authentication (no loggedUser check)", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: {} }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ users: [], usersCount: 0 });
+  });
+
+  test("applies limit and offset from the query, defaulting to page size 20", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: { limit: "5", offset: "2" } }, res, vi.fn());
+
+    const [{ limit, offset }] = User.findAndCountAll.mock.calls[0];
+    expect(limit).toBe(5);
+    expect(offset).toBe(10);
+  });
+
+  test("defaults to a page size of 20 when no limit is given", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await directory({ query: {} }, res, vi.fn());
+
+    const [{ limit }] = User.findAndCountAll.mock.calls[0];
+    expect(limit).toBe(20);
   });
 });

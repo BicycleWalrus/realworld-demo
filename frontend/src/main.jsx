@@ -19,6 +19,7 @@ import ProfileArticles from "./routes/Profile/ProfileArticles";
 import ProfileFavArticles from "./routes/Profile/ProfileFavArticles";
 import Settings from "./routes/Settings";
 import SignUp from "./routes/SignUp";
+import UserDirectory from "./routes/UserDirectory";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
@@ -35,6 +36,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               <Route path="register" element={<SignUp />} />
 
               <Route path="settings" element={<Settings />} />
+
+              <Route path="directory" element={<UserDirectory />} />
 
               <Route path="editor" element={<ArticleEditor />}>
                 <Route path=":slug" element={<ArticleEditor />} />

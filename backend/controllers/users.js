@@ -104,4 +104,28 @@ const verifyUsernames = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn, searchUsers, verifyUsernames };
+const DIRECTORY_PAGE_SIZE = 20;
+
+// Paginated list of all users (username, avatar, bio only - no auth
+// required, no sensitive fields exposed) for the browsable author
+// directory. Distinct from searchUsers (unpaginated prefix match capped
+// at 5, built for @mention autocomplete) and verifyUsernames (exact-match
+// batch lookup) - this is the only one meant to be paged through in full.
+const directory = async (req, res, next) => {
+  try {
+    const { limit = DIRECTORY_PAGE_SIZE, offset = 0 } = req.query;
+
+    const { rows, count } = await User.findAndCountAll({
+      attributes: ["username", "image", "bio"],
+      limit: parseInt(limit),
+      offset: offset * limit,
+      order: [["username", "ASC"]],
+    });
+
+    res.json({ users: rows, usersCount: count });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signUp, signIn, searchUsers, verifyUsernames, directory };
