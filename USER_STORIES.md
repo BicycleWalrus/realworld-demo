@@ -142,3 +142,9 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-034** — As a visitor, I want to search articles by keyword, so that I
+can find articles about a topic without knowing the exact tag or author.
+*Related requirements: REQ-055*

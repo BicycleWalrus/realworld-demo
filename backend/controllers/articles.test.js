@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const {
   AlreadyTakenError,
   ForbiddenError,
@@ -67,6 +68,17 @@ function fakeArticleList(seedRows) {
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
     if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+
+    const orClauses = where?.[Op.or];
+    if (orClauses) {
+      rows = rows.filter((r) =>
+        orClauses.some((clause) => {
+          const [field] = Object.keys(clause);
+          const pattern = clause[field][Op.iLike].replace(/%/g, "").toLowerCase();
+          return (r.dataValues[field] || "").toLowerCase().includes(pattern);
+        }),
+      );
+    }
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -434,6 +446,113 @@ describe("allArticles", () => {
     const error = next.mock.calls[0][0];
     expect(error).not.toBeInstanceOf(NotFoundError);
     expect(error).not.toBeInstanceOf(FieldRequiredError);
+  });
+
+  function makeKeywordSeed() {
+    return [
+      makeArticle({
+        id: 1,
+        slug: "dragons-title",
+        title: "All About Dragons",
+        description: "unrelated",
+        body: "unrelated",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "dragons-description",
+        title: "unrelated",
+        description: "A story about dragons",
+        body: "unrelated",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "dragons-body",
+        title: "unrelated",
+        description: "unrelated",
+        body: "The dragons flew away",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        tags: [{ name: "fantasy" }],
+        createdAt: new Date("2020-01-03"),
+      }),
+      makeArticle({
+        id: 4,
+        slug: "no-match",
+        title: "Cooking Tips",
+        description: "recipes",
+        body: "how to cook",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        createdAt: new Date("2020-01-04"),
+      }),
+    ];
+  }
+
+  // AC-105/AC-106/AC-107: keyword matches title, description, or body,
+  // case-insensitively.
+  test("keyword matches articles by title, description, or body", async () => {
+    const seed = makeKeywordSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { keyword: "DRAGONS" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug).sort()).toEqual(
+      ["dragons-title", "dragons-description", "dragons-body"].sort(),
+    );
+  });
+
+  // AC-108: an empty/whitespace-only keyword returns the full listing.
+  test("blank/whitespace keyword -> full listing, not an error or empty result", async () => {
+    const seed = makeKeywordSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { keyword: "   " } }, res, vi.fn());
+
+    const { articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(4);
+  });
+
+  // AC-109: keyword composes as AND with an existing tag filter.
+  test("keyword combined with tag filter -> both must match", async () => {
+    const seed = makeKeywordSeed();
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { keyword: "dragons", tag: "fantasy" } },
+      res,
+      vi.fn(),
+    );
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["dragons-body"]);
+  });
+
+  // AC-110: keyword search still respects the default page size.
+  test("keyword search still paginates at the default page size", async () => {
+    const seed = [
+      ...makeKeywordSeed(),
+      makeArticle({
+        id: 5,
+        slug: "dragons-extra",
+        title: "More Dragons",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        createdAt: new Date("2020-01-05"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { keyword: "dragons" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(4);
+    expect(articles).toHaveLength(3);
   });
 });
 

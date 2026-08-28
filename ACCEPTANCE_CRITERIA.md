@@ -404,6 +404,28 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-034 — Keyword search across articles
+*(REQ-055)*
+
+- **AC-105** — Given articles with a keyword appearing only in their
+  title, when that keyword is searched, then those articles are included
+  in the results, case-insensitively.
+- **AC-106** — Given articles with a keyword appearing only in their
+  description, when that keyword is searched, then those articles are
+  included in the results, case-insensitively.
+- **AC-107** — Given articles with a keyword appearing only in their
+  body, when that keyword is searched, then those articles are included
+  in the results, case-insensitively.
+- **AC-108** — Given an empty or whitespace-only `keyword` value, when the
+  listing is requested, then the full (unfiltered-by-keyword) listing is
+  returned rather than an error or an empty result set.
+- **AC-109** — Given a `keyword` combined with an `author`, `tag`, or
+  `favorited` filter, when the listing is requested, then results satisfy
+  both the keyword match and the other filter (an AND, not an OR).
+- **AC-110** — Given a keyword search matching more articles than one
+  page, when results are requested, then they are paginated at the
+  existing default page size (3), exactly as the unfiltered listing is.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +480,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-055 | US-034 | AC-105–AC-110 |
