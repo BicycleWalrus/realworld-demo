@@ -871,3 +871,20 @@ first, capped at 10 entries. Re-viewing an article already present in the
 history moves it to the top rather than adding a second entry, so the
 history never contains duplicate entries for the same article. When the
 history is empty, the widget renders nothing.
+
+---
+
+## Multi-Tag (AND) Filtering
+
+### REQ-109 — Article listing accepts multiple tag filters, matched with logical AND
+Article listing accepts more than one `tag` filter value at once. When
+two or more tags are specified, only articles carrying every one of the
+specified tags are returned - a logical AND, not an OR. Multi-tag
+filtering respects the default page size described in REQ-031, and
+combines (AND) with the existing author and favorited filters the same
+way the existing search filter does.
+
+### REQ-110 — A single tag, or no tag, is unchanged by multi-tag filtering
+Providing a single tag, or no tag, continues to behave exactly as
+described in REQ-013. Multi-tag filtering is purely additive for the case
+of two or more tags and does not change single-tag or no-tag filtering.

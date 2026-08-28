@@ -810,6 +810,25 @@ changed.
 
 ---
 
+### US-048 — Filter articles by multiple tags at once
+
+*(REQ-109, REQ-110)*
+
+- **AC-140** — Given article listing is requested with two or more `tag`
+  values, when the results are computed, then only articles carrying
+  every one of the specified tags are returned (a logical AND, not an
+  OR); given more matching articles exist than the default page size,
+  then the results are paginated per REQ-031 with `articlesCount`
+  reflecting the full AND-filtered match total; given an author or
+  favorited filter is also present, then multi-tag filtering combines
+  (AND) with it.
+- **AC-141** — Given article listing is requested with exactly one `tag`
+  value, or no `tag` value at all, then the results are identical to the
+  existing single-tag/no-tag behavior described by AC-030/AC-033 - the
+  multi-tag AND filter is not applied.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -922,3 +941,5 @@ changed.
 | REQ-106 | US-046 | AC-137 |
 | REQ-107 | US-047 | AC-138 |
 | REQ-108 | US-047 | AC-139 |
+| REQ-109 | US-048 | AC-140 |
+| REQ-110 | US-048 | AC-141 |

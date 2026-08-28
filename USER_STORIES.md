@@ -263,3 +263,9 @@ file so that I can save it or read it offline.
 **US-047** — As a user, I want to see articles I've recently viewed so
 that I can get back to one without searching.
 *Related requirements: REQ-107, REQ-108*
+
+---
+
+**US-048** — As a user, I want to filter articles by multiple tags at
+once so that I can narrow to content matching several topics.
+*Related requirements: REQ-109, REQ-110*

@@ -46,6 +46,38 @@ describe("getArticles existing locations", () => {
   });
 });
 
+// AC-140/AC-141: the "tag" location accepts either a single tag name
+// (string, unchanged URL) or two-or-more tag names (array, repeated `tag=`
+// params) for the multi-tag AND filter (REQ-109/REQ-110).
+describe("getArticles tag location - single vs multi-tag", () => {
+  test("a single tag name (string) builds the same URL as today", async () => {
+    await getArticles({ location: "tag", tagName: "dragons" });
+
+    expect(axios).toHaveBeenCalledWith({
+      url: "api/articles?tag=dragons&&limit=3&&offset=0",
+      headers: undefined,
+    });
+  });
+
+  test("an array of two or more tag names builds repeated tag= params", async () => {
+    await getArticles({ location: "tag", tagName: ["a", "b"] });
+
+    expect(axios).toHaveBeenCalledWith({
+      url: "api/articles?tag=a&&tag=b&&limit=3&&offset=0",
+      headers: undefined,
+    });
+  });
+
+  test("carries a custom page/limit through with an array of tags", async () => {
+    await getArticles({ location: "tag", tagName: ["a", "b", "c"], limit: 3, page: 2 });
+
+    expect(axios).toHaveBeenCalledWith({
+      url: "api/articles?tag=a&&tag=b&&tag=c&&limit=3&&offset=2",
+      headers: undefined,
+    });
+  });
+});
+
 // REQ-061: the "top" feed tab is selected via `sort=top` on the existing
 // GET /api/articles listing (no new route), using the same 3/page paging.
 describe("getArticles top location", () => {
