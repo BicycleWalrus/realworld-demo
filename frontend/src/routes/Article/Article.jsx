@@ -11,7 +11,7 @@ import getArticle from "../../services/getArticle";
 function Article() {
   const { state } = useLocation();
   const [article, setArticle] = useState(state || {});
-  const { title, body, tagList, createdAt, author } = article || {};
+  const { title, body, image, tagList, createdAt, author } = article || {};
   const { headers, isAuth } = useAuth();
   const navigate = useNavigate();
   const { slug } = useParams();
@@ -31,7 +31,7 @@ function Article() {
     <div className="article-page">
       <BannerContainer>
         <h1>{title}</h1>
-        <ArticleMeta author={author} createdAt={createdAt}>
+        <ArticleMeta author={author} body={body} createdAt={createdAt}>
           <ArticlesButtons article={article} setArticle={setArticle} />
         </ArticleMeta>
       </BannerContainer>
@@ -39,6 +39,9 @@ function Article() {
       <div className="container page">
         <div className="row article-content">
           <div className="col-md-12">
+            {image && (
+              <img alt={title} className="article-cover-image" src={image} />
+            )}
             {body && <Markdown options={{ forceBlock: true }}>{body}</Markdown>}
             <ArticleTags tagList={tagList} />
           </div>
@@ -47,7 +50,7 @@ function Article() {
         <hr />
 
         <div className="article-actions">
-          <ArticleMeta author={author} createdAt={createdAt}>
+          <ArticleMeta author={author} body={body} createdAt={createdAt}>
             <ArticlesButtons article={article} setArticle={setArticle} />
           </ArticleMeta>
         </div>

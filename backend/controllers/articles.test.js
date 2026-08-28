@@ -155,6 +155,50 @@ describe("createArticle", () => {
     expect(created.addTagList).toHaveBeenCalledTimes(2);
     expect(res.status).toHaveBeenCalledWith(201);
   });
+
+  // AC-084: an optional image URL is stored when provided on creation.
+  test("image URL provided -> passed through to Article.create", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+
+    await createArticle(
+      {
+        loggedUser,
+        body: {
+          article: {
+            title: "T",
+            description: "d",
+            body: "b",
+            image: "https://example.com/cover.png",
+            tagList: [],
+          },
+        },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Article.create).toHaveBeenCalledWith(
+      expect.objectContaining({ image: "https://example.com/cover.png" }),
+    );
+  });
+
+  // AC-087: creation still succeeds without an image (REQ-015 unaffected -
+  // image is optional, not a required field).
+  test("no image provided -> creation still succeeds", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+    const res = makeRes();
+
+    await createArticle(
+      { loggedUser, body: { article: { title: "T", description: "d", body: "b", tagList: [] } } },
+      res,
+      vi.fn(),
+    );
+
+    expect(res.status).toHaveBeenCalledWith(201);
+    expect(Article.create).toHaveBeenCalledWith(expect.objectContaining({ image: undefined }));
+  });
 });
 
 describe("updateArticle", () => {
@@ -235,6 +279,42 @@ describe("updateArticle", () => {
 
     expect(article.description).toBe("original description");
     expect(article.body).toBe("original body");
+  });
+
+  // AC-084: a falsy image on update leaves the existing image unchanged,
+  // mirroring the description/body boundary above (REQ-017).
+  test("falsy image is left unchanged", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, image: "https://example.com/original.png" });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      { loggedUser: author, params: { slug: "a-slug" }, body: { article: { image: "" } } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.image).toBe("https://example.com/original.png");
+  });
+
+  // AC-084: a new image URL on update replaces the existing one.
+  test("truthy image on update replaces the existing one", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, image: "https://example.com/original.png" });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      {
+        loggedUser: author,
+        params: { slug: "a-slug" },
+        body: { article: { image: "https://example.com/new.png" } },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.image).toBe("https://example.com/new.png");
+    expect(article.save).toHaveBeenCalled();
   });
 });
 

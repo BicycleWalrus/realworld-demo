@@ -145,6 +145,25 @@ blocked at the database level, not just by the tool's own claims.
 
 ---
 
+**US-029** — As a user, I want to switch the site to a dark color theme, so
+that I can read comfortably in low light and according to my own
+preference.
+*Related requirements: REQ-049*
+
+---
+
+**US-030** — As an author, I want to add a cover image to my article, so
+that it's more visually distinctive in listings and on its own page.
+*Related requirements: REQ-050*
+
+---
+
+**US-031** — As a reader, I want to see roughly how long an article will
+take to read, so that I can decide whether to read it now.
+*Related requirements: REQ-051*
+
+---
+
 **US-032** — As a reader, I want to download an article as a Markdown
 file, so that I can save or read it offline in my own editor/notes app.
 *Related requirements: REQ-052*
