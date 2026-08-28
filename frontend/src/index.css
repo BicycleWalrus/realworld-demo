@@ -26,3 +26,13 @@ button:focus {
   justify-content: center;
   flex-direction: column;
 }
+
+.search-articles {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.search-articles .form-control {
+  flex: 1;
+}

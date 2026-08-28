@@ -406,6 +406,30 @@ changed.
 
 ---
 
+### US-029 — Search for articles by keyword
+*(REQ-049)*
+
+- **AC-080** — Given an article whose title, description, or body
+  contains a keyword (case-insensitive), when the article list is
+  requested with that keyword as `search`, then the article is included
+  in the results; an article matching none of the three fields is
+  excluded.
+- **AC-081** — Given an empty or whitespace-only `search` value, when the
+  article list is requested, then the full, unfiltered listing is
+  returned — identical to omitting `search` entirely.
+- **AC-082** — Given a `search` value combined with an existing `tag` (or
+  `author`) filter, when the article list is requested, then only
+  articles satisfying both conditions are returned.
+- **AC-083** — Given any `search` request, when results are returned,
+  then they respect the existing page size (REQ-031) and ordering
+  (newest first).
+- **AC-084** — Given the Home page, when a visitor submits a keyword in
+  the search input, then the feed switches to a dedicated search view
+  (distinct from "Your Feed"/"Global Feed"/tag) showing matching
+  articles, and paging through results preserves the active search term.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +482,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-084 |
