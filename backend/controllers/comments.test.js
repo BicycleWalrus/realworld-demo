@@ -262,3 +262,146 @@ describe("deleteComment", () => {
     expect(comment.destroy).not.toHaveBeenCalled();
   });
 });
+
+// Threaded replies (REQ-064).
+describe("threaded comment replies", () => {
+  // AC-146: a reply attaches to its parent comment.
+  test("createComment with a parentCommentId -> reply created with that parent", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(
+      makeInstance({ id: 9, articleId: 5, body: "parent" }),
+    );
+    Comment.create.mockResolvedValue(makeInstance({ id: 10, body: "a reply" }));
+    const res = makeRes();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentCommentId: 9 } },
+        params: { slug: "a" },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(Comment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ body: "a reply", parentCommentId: 9 }),
+    );
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  // AC-147: nesting is exactly one level — replying to a reply attaches
+  // under the same top-level parent.
+  test("replying to a reply -> attaches to the top-level parent instead", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(
+      makeInstance({ id: 10, articleId: 5, parentCommentId: 9, body: "a reply" }),
+    );
+    Comment.create.mockResolvedValue(makeInstance({ id: 11, body: "nested reply" }));
+    const res = makeRes();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "nested reply", parentCommentId: 10 } },
+        params: { slug: "a" },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(Comment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ parentCommentId: 9 }),
+    );
+  });
+
+  test("parentCommentId from another article -> NotFoundError, no reply created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(
+      makeInstance({ id: 9, articleId: 999, body: "other article" }),
+    );
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentCommentId: 9 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+    expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  test("nonexistent parentCommentId -> NotFoundError, no reply created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(null);
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentCommentId: 77 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+    expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  // AC-146: the listing returns top-level comments with their replies
+  // nested under them.
+  test("allComments -> replies nested under their parent", async () => {
+    const author = makeFollowableUser();
+    const bob = makeFollowableUser({ id: 2, username: "bob" });
+    const parent = makeInstance(
+      { id: 1, body: "parent" },
+      { author, getAuthor: vi.fn().mockResolvedValue(author) },
+    );
+    const other = makeInstance(
+      { id: 3, body: "other" },
+      { author: bob, getAuthor: vi.fn().mockResolvedValue(bob) },
+    );
+    const reply = makeInstance(
+      { id: 2, body: "reply", parentCommentId: 1 },
+      { author: bob, getAuthor: vi.fn().mockResolvedValue(bob) },
+    );
+
+    const article = makeInstance(
+      {},
+      { getComments: vi.fn().mockResolvedValue([parent, reply, other]) },
+    );
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    const { comments } = res.json.mock.calls[0][0];
+    expect(comments.map((c) => c.dataValues.id)).toEqual([1, 3]);
+    expect(comments[0].dataValues.replies).toEqual([reply]);
+    expect(comments[1].dataValues.replies).toEqual([]);
+  });
+
+  // AC-149: without replies the listing is unchanged apart from each
+  // comment carrying an empty replies list.
+  test("allComments with no replies -> top-level comments each gain an empty replies list", async () => {
+    const comment = makeCommentWithAuthor(makeFollowableUser());
+    const article = makeInstance(
+      {},
+      { getComments: vi.fn().mockResolvedValue([comment]) },
+    );
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ comments: [comment] });
+    expect(comment.dataValues.replies).toEqual([]);
+  });
+});

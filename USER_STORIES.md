@@ -241,3 +241,9 @@ tag. *Related requirements: REQ-062*
 **US-043** — As a user, I want to filter articles by multiple tags at
 once, so that I can narrow results to content matching several topics
 simultaneously. *Related requirements: REQ-063*
+
+---
+
+**US-044** — As a user, I want to reply to a specific comment, so that
+multi-person discussion on an article is easy to follow.
+*Related requirements: REQ-064*
