@@ -1,3 +1,4 @@
+const { Op } = require("sequelize");
 const { User } = require("../models");
 const { jwtSign } = require("../helper/jwt");
 const { bcryptHash, bcryptCompare } = require("../helper/bcrypt");
@@ -7,6 +8,8 @@ const {
   AlreadyTakenError,
   NotFoundError,
 } = require("../helper/customErrors");
+
+const MAX_SEARCH_RESULTS = 5;
 
 // Register
 const signUp = async (req, res, next) => {
@@ -56,4 +59,22 @@ const signIn = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn };
+// Search usernames (for @mention autocomplete and mention-link validation)
+const searchUsers = async (req, res, next) => {
+  try {
+    const search = req.query.search?.trim();
+    if (!search) return res.json({ users: [] });
+
+    const matches = await User.findAll({
+      where: { username: { [Op.iLike]: `${search}%` } },
+      attributes: ["username"],
+      limit: MAX_SEARCH_RESULTS,
+    });
+
+    res.json({ users: matches.map(({ username }) => username) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signUp, signIn, searchUsers };
