@@ -8,7 +8,8 @@ const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels
 
 const Article = { findOne: vi.fn() };
 const Comment = { create: vi.fn(), findByPk: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Comment, User: {} });
+const User = { findAll: vi.fn() };
+mockRequire(require.resolve("../models"), { Article, Comment, User });
 
 const { allComments, createComment, deleteComment, updateComment } = require("./comments");
 
@@ -30,6 +31,7 @@ beforeEach(() => {
   Article.findOne.mockReset();
   Comment.create.mockReset();
   Comment.findByPk.mockReset();
+  User.findAll.mockReset();
 });
 
 describe("allComments", () => {
@@ -54,6 +56,42 @@ describe("allComments", () => {
     await allComments({ params: { slug: "missing" } }, makeRes(), next);
 
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+  });
+
+  // AC-111/AC-112: only usernames that correspond to an existing user are
+  // attached as `mentions` - "@jane" resolves (a real user), "@ghost" does
+  // not, and is therefore left out.
+  test("mentions -> only valid usernames from the body are attached", async () => {
+    const author = makeFollowableUser();
+    const comment = makeCommentWithAuthor(author);
+    comment.dataValues.body = "hi @jane and @ghost";
+    const article = makeInstance({}, { getComments: vi.fn().mockResolvedValue([comment]) });
+    Article.findOne.mockResolvedValue(article);
+    User.findAll.mockResolvedValue([makeInstance({ username: "jane" })]);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(User.findAll).toHaveBeenCalledWith({
+      where: { username: ["jane", "ghost"] },
+      attributes: ["username"],
+    });
+    expect(comment.dataValues.mentions).toEqual(["jane"]);
+  });
+
+  // AC-111/AC-112: a body with no "@word" tokens attaches an empty
+  // `mentions` list without querying for users.
+  test("no @mention tokens -> mentions is empty and User.findAll is not called", async () => {
+    const author = makeFollowableUser();
+    const comment = makeCommentWithAuthor(author);
+    const article = makeInstance({}, { getComments: vi.fn().mockResolvedValue([comment]) });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(User.findAll).not.toHaveBeenCalled();
+    expect(comment.dataValues.mentions).toEqual([]);
   });
 });
 

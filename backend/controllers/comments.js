@@ -7,6 +7,15 @@ const {
 const { appendFollowers } = require("../helper/helpers");
 const { Article, Comment, User } = require("../models");
 
+// REQ-080/REQ-081: extract the unique `@username`-shaped tokens (without the
+// leading `@`) from a comment body. Does not check whether any of them
+// correspond to a real user - that happens in allComments, which is what
+// distinguishes a valid mention (REQ-080) from a plain-text one (REQ-081).
+const extractMentionTokens = (body) => {
+  const matches = body.match(/@(\w+)/g) || [];
+  return [...new Set(matches.map((token) => token.slice(1)))];
+};
+
 //? All Comments for Article
 const allComments = async (req, res, next) => {
   try {
@@ -24,6 +33,21 @@ const allComments = async (req, res, next) => {
 
     for (const comment of comments) {
       await appendFollowers(loggedUser, comment);
+
+      // REQ-080/REQ-081: resolve @mentions at render (list) time, not at
+      // comment-creation time, so this applies retroactively to comments
+      // that already existed before this feature - only usernames that
+      // actually exist end up in `mentions`.
+      const tokens = extractMentionTokens(comment.body);
+      if (tokens.length) {
+        const users = await User.findAll({
+          where: { username: tokens },
+          attributes: ["username"],
+        });
+        comment.dataValues.mentions = users.map((u) => u.username);
+      } else {
+        comment.dataValues.mentions = [];
+      }
     }
 
     res.json({ comments });

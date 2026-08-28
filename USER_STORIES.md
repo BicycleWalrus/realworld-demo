@@ -193,3 +193,10 @@ that I can discover people to follow without knowing their username.
 **US-036** — As an author, I want to add a cover image to my article so
 that it's more visually distinctive in listings and on its page.
 *Related requirements: REQ-077, REQ-078*
+
+---
+
+**US-037** — As a user writing a comment, I want to mention another user
+by username, so that the comment references them and readers can jump to
+their profile.
+*Related requirements: REQ-079, REQ-080, REQ-081*

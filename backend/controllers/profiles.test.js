@@ -1,5 +1,6 @@
 const { NotFoundError, UnauthorizedError } = require("../helper/customErrors");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
+const { Op } = require("sequelize");
 
 const User = { findOne: vi.fn(), findAndCountAll: vi.fn() };
 mockRequire(require.resolve("../models"), { User });
@@ -157,6 +158,40 @@ describe("listProfiles", () => {
     await listProfiles({ query: {}, loggedUser: undefined }, res, vi.fn());
 
     expect(res.json).toHaveBeenCalledWith({ profiles: fakeProfiles, profilesCount: 1 });
+  });
+
+  // AC-110: a `username` query param adds a case-insensitive prefix filter
+  // (reused by comment @mention autocomplete), additive to the existing
+  // pagination options.
+  test("username query param adds an Op.iLike prefix where", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await listProfiles({ query: { username: "jo" }, loggedUser: undefined }, res, vi.fn());
+
+    expect(User.findAndCountAll).toHaveBeenCalledWith({
+      attributes: { exclude: ["email"] },
+      limit: 10,
+      offset: 0,
+      order: [["username", "ASC"]],
+      where: { username: { [Op.iLike]: "jo%" } },
+    });
+  });
+
+  // AC-105: omitting `username` keeps today's no-where behavior (REQ-074
+  // must not regress when the new filter is unused).
+  test("no username query param -> no where clause added", async () => {
+    User.findAndCountAll.mockResolvedValue({ rows: [], count: 0 });
+    const res = makeRes();
+
+    await listProfiles({ query: {}, loggedUser: undefined }, res, vi.fn());
+
+    expect(User.findAndCountAll).toHaveBeenCalledWith({
+      attributes: { exclude: ["email"] },
+      limit: 10,
+      offset: 0,
+      order: [["username", "ASC"]],
+    });
   });
 });
 

@@ -1,11 +1,30 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import dateFormatter from "../../helpers/dateFormatter";
 import deleteComment from "../../services/deleteComment";
 import getComments from "../../services/getComments";
 import updateComment from "../../services/updateComment";
 import CommentAuthor from "./CommentAuthor";
+
+// REQ-080/REQ-081: split a comment body on `@word` tokens and render each
+// one that appears in `mentions` (the valid, server-resolved usernames for
+// this comment - see comments.js allComments) as a link to that user's
+// profile; any other `@word` (no matching user) is left as plain text.
+function renderBody(body, mentions) {
+  return body.split(/(@\w+)/g).map((part, index) => {
+    const match = part.match(/^@(\w+)$/);
+    const username = match?.[1];
+
+    return username && mentions.includes(username) ? (
+      <Link className="mention" key={index} to={`/profile/${username}`}>
+        @{username}
+      </Link>
+    ) : (
+      part
+    );
+  });
+}
 
 function CommentList({ triggerUpdate, updateComments }) {
   const [comments, setComments] = useState([]);
@@ -60,7 +79,7 @@ function CommentList({ triggerUpdate, updateComments }) {
   };
 
   return comments?.length > 0 ? (
-    comments.map(({ author, author: { username }, body, createdAt, id }) => {
+    comments.map(({ author, author: { username }, body, createdAt, id, mentions = [] }) => {
       const isAuthor = isAuth && loggedUser.username === username;
       const isEditing = editingId === id;
 
@@ -75,7 +94,7 @@ function CommentList({ triggerUpdate, updateComments }) {
                 value={editBody}
               ></textarea>
             ) : (
-              <p className="card-text">{body}</p>
+              <p className="card-text">{renderBody(body, mentions)}</p>
             )}
           </div>
           <div className="card-footer">
