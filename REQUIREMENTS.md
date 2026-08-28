@@ -405,3 +405,26 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-19.1 — Recently viewed articles are tracked per browser
+Opening an article's detail page (`/article/:slug`) records that article
+as "recently viewed" in the visitor's browser, regardless of whether the
+visitor is authenticated. The record is kept in the browser (not tied to
+the authenticated account), so it is scoped per browser rather than per
+user, and is shared identically between anonymous and authenticated
+visitors. The recently-viewed list contains at most 5 entries, ordered
+most-recently-viewed first. Viewing an article already present in the
+list moves its entry to the front instead of adding a second entry for
+that article — the list never contains more than one entry for the same
+article. This requirement is purely additive and does not alter the
+article detail page's existing fetch/navigation-state behavior
+(REQ-043).
+
+### REQ-19.2 — Recently viewed articles widget
+The home page displays a "Recently Viewed" widget in its sidebar,
+listing the current browser's recently-viewed articles (REQ-19.1),
+most-recently-viewed first, each linking to that article's detail page.
+The widget is visible to both authenticated and anonymous visitors. If
+the visitor has no recently-viewed articles yet, the widget displays a
+message indicating there is nothing to show, rather than being omitted
+or erroring.

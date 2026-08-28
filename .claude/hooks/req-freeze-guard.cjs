@@ -133,9 +133,13 @@ function diffProtectedEntries(basename, oldContent, newContent) {
   return violations;
 }
 
+// IDs are either legacy plain sequential numbers (REQ-049) or, for anything
+// tracing to an ISSUES.md ticket, ticket-scoped (REQ-7.1) so two branches
+// drafting entries for different tickets can never collide — see the
+// req-doc SKILL.md for the numbering scheme this parses.
 function parse(basename, content) {
-  if (basename === 'REQUIREMENTS.md') return parseHeadingBlocks(content, /^### (REQ-\d+)\b/);
-  if (basename === 'USER_STORIES.md') return parseHeadingBlocks(content, /^\*\*(US-\d+)\*\*/);
+  if (basename === 'REQUIREMENTS.md') return parseHeadingBlocks(content, /^### (REQ-\d+(?:\.\d+)?)\b/);
+  if (basename === 'USER_STORIES.md') return parseHeadingBlocks(content, /^\*\*(US-\d+(?:\.\d+)?)\*\*/);
   if (basename === 'ACCEPTANCE_CRITERIA.md') return parseAcceptanceCriteria(content);
   return new Map();
 }
@@ -177,7 +181,7 @@ function parseAcceptanceCriteria(content) {
   const boundaries = [];
   const usHeadingStarts = [];
   for (let i = 0; i < lines.length; i++) {
-    const acM = lines[i].match(/^- \*\*(AC-\d+)\*\*/);
+    const acM = lines[i].match(/^- \*\*(AC-\d+(?:\.\d+)?)\*\*/);
     if (acM) { acStarts.push({ line: i, id: acM[1] }); boundaries.push(i); }
     if (/^#{2,3} /.test(lines[i])) boundaries.push(i);
     // A bare "---" divider line (e.g. before "## Traceability Matrix") must
@@ -186,7 +190,7 @@ function parseAcceptanceCriteria(content) {
     // between the entry and the divider (a legitimate append) falsely
     // registers as that entry having "changed".
     if (/^-{3,}\s*$/.test(lines[i])) boundaries.push(i);
-    const usM = lines[i].match(/^### (US-\d+)\b/);
+    const usM = lines[i].match(/^### (US-\d+(?:\.\d+)?)\b/);
     if (usM) usHeadingStarts.push({ line: i, id: usM[1] });
   }
 
@@ -207,7 +211,7 @@ function parseAcceptanceCriteria(content) {
   // Traceability Matrix rows, keyed by REQ-### (unique per row — verified
   // against the current file).
   for (const line of lines) {
-    const m = line.match(/^\|\s*(REQ-\d+)\s*\|.*\|\s*$/);
+    const m = line.match(/^\|\s*(REQ-\d+(?:\.\d+)?)\s*\|.*\|\s*$/);
     if (m) map.set(`row:${m[1]}`, line.trimEnd());
   }
 

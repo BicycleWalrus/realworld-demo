@@ -404,6 +404,28 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-19.1 — Recently viewed articles
+*(REQ-19.1, REQ-19.2)*
+
+- **AC-19.1** — Given a visitor (anonymous or authenticated) opens an
+  article's detail page, when the recently-viewed list is inspected
+  afterward in that same browser, then that article appears at the front
+  of the list.
+- **AC-19.2** — Given an article already present in the recently-viewed
+  list, when its detail page is opened again, then its entry moves to the
+  front of the list rather than a second entry being added for it.
+- **AC-19.3** — Given more than 5 distinct articles have been viewed in a
+  browser, when the recently-viewed list is inspected, then it contains
+  only the 5 most-recently-viewed articles.
+- **AC-19.4** — Given a browser with recently-viewed articles recorded,
+  when the home page is loaded, then the "Recently Viewed" widget lists
+  them most-recently-viewed first, each linking to that article's detail
+  page.
+- **AC-19.5** — Given a browser with no recently-viewed articles, when the
+  home page is loaded, then the "Recently Viewed" widget displays a
+  message indicating there is nothing to show, instead of being omitted
+  or erroring.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +480,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-19.1 | US-19.1 | AC-19.1–AC-19.3 |
+| REQ-19.2 | US-19.1 | AC-19.4, AC-19.5 |
