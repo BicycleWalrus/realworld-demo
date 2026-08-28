@@ -183,7 +183,7 @@ describe("createArticle", () => {
     );
   });
 
-  // AC-085: creation still succeeds without an image (REQ-015 unaffected -
+  // AC-087: creation still succeeds without an image (REQ-015 unaffected -
   // image is optional, not a required field).
   test("no image provided -> creation still succeeds", async () => {
     Article.findOne.mockResolvedValue(null);
@@ -281,7 +281,7 @@ describe("updateArticle", () => {
     expect(article.body).toBe("original body");
   });
 
-  // AC-086: a falsy image on update leaves the existing image unchanged,
+  // AC-084: a falsy image on update leaves the existing image unchanged,
   // mirroring the description/body boundary above (REQ-017).
   test("falsy image is left unchanged", async () => {
     const author = makeFollowableUser();

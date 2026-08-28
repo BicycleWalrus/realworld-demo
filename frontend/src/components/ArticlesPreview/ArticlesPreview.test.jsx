@@ -27,7 +27,7 @@ function renderPreview(articles) {
   );
 }
 
-// AC-084: a set cover image is displayed on the article preview card.
+// AC-085: a set cover image is displayed on the article preview card.
 it("renders the cover image on a preview card when the article has one", () => {
   renderPreview([makeArticle({ image: "https://example.com/cover.png" })]);
 
@@ -35,7 +35,7 @@ it("renders the cover image on a preview card when the article has one", () => {
   expect(img).toHaveAttribute("src", "https://example.com/cover.png");
 });
 
-// AC-085: with no image, the preview card renders exactly as before.
+// AC-086: with no image, the preview card renders exactly as before.
 it("renders no image on a preview card when the article has none", () => {
   renderPreview([makeArticle()]);
 

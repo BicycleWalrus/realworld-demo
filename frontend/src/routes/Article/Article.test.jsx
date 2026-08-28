@@ -32,7 +32,7 @@ function makeArticleState(overrides = {}) {
   };
 }
 
-// AC-084: when an article has a cover image, it's displayed on the detail page.
+// AC-085: when an article has a cover image, it's displayed on the detail page.
 it("renders the cover image when the article has one", () => {
   renderArticle(makeArticleState({ image: "https://example.com/cover.png" }));
 
@@ -40,7 +40,7 @@ it("renders the cover image when the article has one", () => {
   expect(img).toHaveAttribute("src", "https://example.com/cover.png");
 });
 
-// AC-085: with no image, the layout renders exactly as before - no broken
+// AC-086: with no image, the layout renders exactly as before - no broken
 // image and no image element at all.
 it("renders no image when the article has none", () => {
   renderArticle(makeArticleState());
