@@ -404,6 +404,24 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-031 — Comment editing
+*(REQ-051)*
+
+- **AC-088** — Given a comment's author is logged in, when they submit an
+  edit with a non-empty body, then the comment's body is updated and the
+  response reflects the new text.
+- **AC-089** — Given a comment, when an authenticated non-author or an
+  unauthenticated visitor attempts to edit it (directly against the API),
+  then the request is rejected with a forbidden/unauthorized error and
+  the comment's body is unchanged.
+- **AC-090** — Given a comment edit request with an empty body, when
+  submitted, then it is rejected with a field-required error and the
+  comment's body is unchanged.
+- **AC-091** — Given a comment has just been edited successfully, when
+  the page is reloaded (or the comment list is re-fetched), then the text
+  shown is the server-persisted value, not merely a client-held
+  optimistic value.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +476,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-051 | US-031 | AC-088–AC-091 |

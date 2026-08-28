@@ -405,3 +405,17 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-051 — Comment editing is restricted to the comment's author and requires a non-empty body
+Editing a comment's body is only permitted for the account that authored
+it; any other authenticated account, or an unauthenticated request,
+attempting to edit the comment is rejected with an authorization error,
+mirroring REQ-023's delete-ownership rule. An edit request requires a
+non-empty `body`, consistent with the body requirement on comment
+creation (REQ-022); the server checks only for truthiness, not for
+whitespace-only content, matching REQ-022's existing behavior. After a
+successful edit, the article's comment list is re-fetched from the
+server so that the displayed text reflects what was actually persisted,
+rather than only an optimistic local update. This requirement does not
+change comment creation (REQ-022) or deletion (REQ-023, REQ-042)
+behavior.
