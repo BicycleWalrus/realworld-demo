@@ -64,6 +64,10 @@ module.exports = (sequelize, DataTypes) => {
       description: DataTypes.TEXT,
       body: DataTypes.TEXT,
       image: DataTypes.TEXT,
+      // Draft visibility (REQ-067): drafts are excluded from every
+      // listing except their author's own profile, and from direct
+      // slug access by anyone else.
+      draft: DataTypes.BOOLEAN,
     },
     {
       sequelize,

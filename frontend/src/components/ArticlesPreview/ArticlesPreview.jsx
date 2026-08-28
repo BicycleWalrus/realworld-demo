@@ -43,7 +43,10 @@ function ArticlesPreview({ articles, loading, updateArticles }) {
                 src={article.image}
               />
             )}
-            <h1>{article.title}</h1>
+            <h1>
+              {article.title}
+              {article.draft && <span className="draft-badge"> Draft</span>}
+            </h1>
             <p>{article.description}</p>
             <span>Read more...</span>
             <ArticleTags tagList={article.tagList} />

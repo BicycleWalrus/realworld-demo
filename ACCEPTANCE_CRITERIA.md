@@ -710,6 +710,24 @@ changed.
   added, changed, or removed, then favoriting behavior, counts, and
   controls are unaffected (reactions are a separate, independent
   concept; REQ-025/REQ-026 are not amended).
+- **AC-159** — Given an author creating an article, when they choose to
+  save it as a draft, then it is stored unpublished; publishing a draft
+  (or returning a published article to draft) happens through the same
+  edit path with the unchanged ownership rules of REQ-016.
+- **AC-160** — Given a draft article, when any listing is requested by
+  anyone other than its author — global feed, personalized feed, other
+  users' profile tabs, keyword search, or tag filtering — then the
+  draft does not appear in the results.
+- **AC-161** — Given the author viewing their own profile article
+  listing, when their drafts exist, then those drafts appear alongside
+  published articles, each visibly marked as a draft, and remain
+  openable for further editing.
+- **AC-162** — Given a draft article's slug, when anyone other than its
+  author — including an anonymous visitor — requests it directly, then
+  the response is not-found.
+- **AC-163** — Given a draft article, when its author publishes it,
+  then it subsequently appears in listings exactly like any other
+  article.
 
 ---
 
@@ -783,3 +801,4 @@ changed.
 | REQ-064 | US-044 | AC-145–AC-149 |
 | REQ-065 | US-045 (amends REQ-018) | AC-150–AC-154 |
 | REQ-066 | US-046 | AC-155–AC-158 |
+| REQ-067 | US-047 (supersedes create-is-public) | AC-159–AC-163 |

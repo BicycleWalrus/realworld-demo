@@ -78,7 +78,16 @@ const allArticles = async (req, res, next) => {
       }
     }
 
+    // Draft visibility (REQ-067): drafts never appear in any listing.
+    // The one exception is an author viewing their own profile's
+    // article listing (?author=<own username>), where drafts appear
+    // alongside published articles.
+    const viewingOwnProfile =
+      !!author && !!loggedUser && author === loggedUser.username;
+    const draftClause = viewingOwnProfile ? null : { draft: false };
+
     const whereClauses = [
+      draftClause,
       keywordWhere,
       requiredArticleIds && { id: { [Op.in]: requiredArticleIds } },
     ].filter(Boolean);
@@ -190,7 +199,7 @@ const createArticle = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { title, description, body, image, tagList } = req.body.article;
+    const { title, description, body, image, tagList, draft } = req.body.article;
     if (!title) throw new FieldRequiredError("A title");
     if (!description) throw new FieldRequiredError("A description");
     if (!body) throw new FieldRequiredError("An article body");
@@ -205,6 +214,7 @@ const createArticle = async (req, res, next) => {
       description: description,
       body: body,
       image: image,
+      draft: draft === true,
     });
 
     for (const tag of tagList) {
@@ -264,14 +274,21 @@ const articlesFeed = async (req, res, next) => {
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
-      where: followedTagArticleIds.length > 0
-        ? {
-            [Op.or]: [
-              { userId: authors.map((author) => author.id) },
-              { id: { [Op.in]: followedTagArticleIds } },
-            ],
-          }
-        : { userId: authors.map((author) => author.id) },
+      // Draft visibility (REQ-067): drafts never enter the feed, even
+      // for their author (the profile listing is where drafts surface).
+      where: {
+        [Op.and]: [
+          { draft: false },
+          followedTagArticleIds.length > 0
+            ? {
+                [Op.or]: [
+                  { userId: authors.map((author) => author.id) },
+                  { id: { [Op.in]: followedTagArticleIds } },
+                ],
+              }
+            : { userId: authors.map((author) => author.id) },
+        ],
+      },
     });
 
     for (const article of articles.rows) {
@@ -300,6 +317,12 @@ const singleArticle = async (req, res, next) => {
       include: includeOptions,
     });
     if (!article) throw new NotFoundError("Article");
+
+    // Draft visibility (REQ-067): a draft is directly accessible only
+    // to its own author, by slug as well as in listings.
+    if (article.draft && loggedUser?.id !== article.author?.id) {
+      throw new NotFoundError("Article");
+    }
 
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
@@ -330,7 +353,7 @@ const updateArticle = async (req, res, next) => {
       throw new ForbiddenError("article");
     }
 
-    const { title, description, body, image } = req.body.article;
+    const { title, description, body, image, draft } = req.body.article;
     if (title) {
       article.slug = slugify(title);
       article.title = title;
@@ -338,6 +361,10 @@ const updateArticle = async (req, res, next) => {
     if (description) article.description = description;
     if (body) article.body = body;
     if (image) article.image = image;
+    // Draft/publish toggle (REQ-067): publishing a draft (or returning
+    // a published article to draft) rides the same ownership rules as
+    // every other edit (REQ-016).
+    if (draft !== undefined) article.draft = draft === true;
     await article.save();
 
     appendTagList(article.tagList, article);

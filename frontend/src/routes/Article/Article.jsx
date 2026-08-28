@@ -47,7 +47,10 @@ function Article() {
   return (
     <div className="article-page">
       <BannerContainer>
-        <h1>{title}</h1>
+        <h1>
+          {title}
+          {article?.draft && <span className="draft-badge"> Draft</span>}
+        </h1>
         <ArticleMeta author={author} body={body} createdAt={createdAt}>
           <ArticlesButtons article={article} setArticle={setArticle} />
           <ReactionBar article={article} setArticle={setArticle} />

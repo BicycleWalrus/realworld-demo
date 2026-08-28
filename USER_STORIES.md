@@ -259,3 +259,10 @@ yet follow. *Related requirements: REQ-065 (amending REQ-018)*
 **US-046** — As a reader, I want to react to an article with more than
 one kind of response, so that I can express more than a single generic
 "favorite." *Related requirements: REQ-066*
+
+---
+
+**US-047** — As an author, I want to save an article as a draft before
+publishing it, so that I can write and revise content over time
+without exposing unfinished work. *Related requirements: REQ-067
+(superseding the prior create-is-public behavior)*

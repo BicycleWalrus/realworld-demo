@@ -664,3 +664,19 @@ reaction type outside the fixed set is rejected. In the web client the
 article page shows one control per reaction type with its live count;
 clicking the active reaction removes it, and the displayed state always
 comes from the server's response.
+
+### REQ-067 — Draft / publish workflow for articles
+**This entry supersedes the prior behavior that every created article
+is immediately public.** When creating or editing an article, the
+author can save it as an unpublished draft instead of publishing, and
+can publish a draft later (or return a published article to draft)
+through the same editing path, under the unchanged ownership rules of
+REQ-016. Draft articles appear in no listing — not the global feed,
+the personalized feed, other users' profile article tabs, keyword
+search, or tag filtering — for anyone other than the author, and
+direct slug access to a draft is restricted to its author (everyone
+else, including anonymous visitors, receives not-found). The one place
+drafts surface is the author's own profile article listing, where
+they appear alongside published articles, each visibly marked as a
+draft, and remain editable; a published article behaves exactly as
+articles did before this requirement.

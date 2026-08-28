@@ -133,6 +133,9 @@ function fakeArticleList(seedRows) {
       if (clause?.[Op.or]) return clause[Op.or].some((c) => rowMatches(row, c));
       if (clause?.userId) return clause.userId.includes(row.author.id);
       if (clause?.id?.[Op.in]) return clause.id[Op.in].includes(row.id);
+      // Draft visibility (REQ-067): a row with no draft flag reads as
+      // published.
+      if (clause && "draft" in clause) return (row.dataValues.draft ?? false) === clause.draft;
       const searchedColumns = Object.entries(clause ?? {}).filter(
         ([, condition]) => condition?.[Op.iLike] !== undefined,
       );
@@ -1222,5 +1225,230 @@ describe("articlesFeed", () => {
       "tag-only",
       "both",
     ]);
+  });
+});
+
+// Draft/publish workflow (REQ-067, superseding the prior
+// "every created article is immediately public" behavior).
+describe("draft visibility", () => {
+  function makeDraftSeed() {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    return [
+      makeArticle({
+        id: 1,
+        slug: "published",
+        title: "Published Piece",
+        body: "about dragons",
+        author: jane,
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "draft",
+        title: "Secret Draft",
+        body: "about dragons too",
+        draft: true,
+        author: jane,
+        createdAt: new Date("2020-01-02"),
+      }),
+    ];
+  }
+
+  // AC-160: drafts never appear in the global listing, search, or tag
+  // filtering for anyone other than the author.
+  test("global listing excludes drafts", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeDraftSeed()));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: {} }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(1);
+    expect(articles.map((a) => a.slug)).toEqual(["published"]);
+  });
+
+  test("search results exclude drafts even on keyword match", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeDraftSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      { loggedUser: undefined, query: { search: "dragons" } },
+      res,
+      vi.fn(),
+    );
+
+    expect(res.json.mock.calls[0][0].articles.map((a) => a.slug)).toEqual([
+      "published",
+    ]);
+  });
+
+  // AC-161: the author sees their own drafts on their own profile.
+  test("author's own profile listing includes their drafts", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeDraftSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      {
+        loggedUser: makeInstance({ id: 1, username: "jane" }),
+        query: { author: "jane" },
+      },
+      res,
+      vi.fn(),
+    );
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(2);
+    expect(articles.map((a) => a.slug)).toEqual(["draft", "published"]);
+  });
+
+  test("another viewer's profile listing excludes drafts", async () => {
+    Article.findAndCountAll.mockImplementation(fakeArticleList(makeDraftSeed()));
+    const res = makeRes();
+
+    await allArticles(
+      {
+        loggedUser: makeInstance({ id: 9, username: "bob" }),
+        query: { author: "jane" },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(res.json.mock.calls[0][0].articles.map((a) => a.slug)).toEqual([
+      "published",
+    ]);
+  });
+
+  // AC-160: drafts stay out of the personalized feed even for their
+  // author or a followed tag.
+  test("personalized feed excludes drafts", async () => {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "published",
+        author: jane,
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "draft",
+        draft: true,
+        author: jane,
+        createdAt: new Date("2020-01-02"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const loggedUser = makeInstance(
+      { id: 9 },
+      {
+        getFollowing: vi.fn().mockResolvedValue([{ id: 1 }]),
+        getFollowedTags: vi.fn().mockResolvedValue([]),
+      },
+    );
+    const res = makeRes();
+
+    await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
+
+    expect(res.json.mock.calls[0][0].articles.map((a) => a.slug)).toEqual([
+      "published",
+    ]);
+  });
+
+  // AC-159: creating with draft=true stores a draft.
+  test("createArticle with draft -> stored as draft", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeInstance({ slug: "s" }));
+    const loggedUser = makeFollowableUser();
+
+    await createArticle(
+      {
+        loggedUser,
+        body: {
+          article: { title: "T", description: "d", body: "b", tagList: [], draft: true },
+        },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Article.create).toHaveBeenCalledWith(
+      expect.objectContaining({ draft: true }),
+    );
+  });
+
+  // AC-163: publishing a draft rides the same update path/ownership.
+  test("updateArticle with draft false -> published and saved", async () => {
+    const author = makeFollowableUser({ id: 1 });
+    const article = makeInstance(
+      { id: 5, userId: 1, slug: "s", title: "T", draft: true },
+      { author, save: vi.fn().mockResolvedValue() },
+    );
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      {
+        loggedUser: author,
+        params: { slug: "s" },
+        body: { article: { draft: false } },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.draft).toBe(false);
+    expect(article.save).toHaveBeenCalled();
+  });
+
+  // AC-162: direct slug access to a draft is author-only; everyone
+  // else gets not found.
+  test("singleArticle draft by author -> returned", async () => {
+    const author = makeFollowableUser({ id: 1 });
+    Article.findOne.mockResolvedValue(
+      makeArticle({ slug: "draft", draft: true, author }),
+    );
+    const res = makeRes();
+
+    await singleArticle(
+      { loggedUser: makeInstance({ id: 1 }), params: { slug: "draft" } },
+      res,
+      vi.fn(),
+    );
+
+    expect(res.json).toHaveBeenCalled();
+  });
+
+  test("singleArticle draft by non-author -> NotFoundError", async () => {
+    Article.findOne.mockResolvedValue(
+      makeArticle({
+        slug: "draft",
+        draft: true,
+        author: makeFollowableUser({ id: 1 }),
+      }),
+    );
+    const next = vi.fn();
+
+    await singleArticle(
+      { loggedUser: makeInstance({ id: 9 }), params: { slug: "draft" } },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+  });
+
+  test("singleArticle draft by anonymous visitor -> NotFoundError", async () => {
+    Article.findOne.mockResolvedValue(
+      makeArticle({
+        slug: "draft",
+        draft: true,
+        author: makeFollowableUser({ id: 1 }),
+      }),
+    );
+    const next = vi.fn();
+
+    await singleArticle({ loggedUser: undefined, params: { slug: "draft" } }, makeRes(), next);
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
   });
 });
