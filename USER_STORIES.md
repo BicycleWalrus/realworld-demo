@@ -145,7 +145,7 @@ blocked at the database level, not just by the tool's own claims.
 
 ---
 
-**US-029** — As a user, I want to switch the site to a dark color theme,
+**US-1.1** — As a user, I want to switch the site to a dark color theme,
 so that I can read comfortably in low light and according to my own
 preference.
-*Related requirements: REQ-049, REQ-050, REQ-051*
+*Related requirements: REQ-1.1, REQ-1.2, REQ-1.3*

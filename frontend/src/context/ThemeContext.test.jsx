@@ -25,7 +25,7 @@ beforeEach(() => {
   mockMatchMedia(false);
 });
 
-// REQ-049: defaults to OS/browser color-scheme preference when unset
+// REQ-1.1: defaults to OS/browser color-scheme preference when unset
 describe("ThemeProvider", () => {
   test("defaults to light when no stored preference and OS prefers light", () => {
     mockMatchMedia(false);

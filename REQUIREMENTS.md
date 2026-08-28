@@ -408,7 +408,7 @@ unattended.
 
 ---
 
-### REQ-049 — Dark/light theme toggle available from any page
+### REQ-1.1 — Dark/light theme toggle available from any page
 A control in the navbar, present on every page regardless of
 authentication state, lets a visitor switch the site between a light and
 a dark color theme. Selecting a theme takes effect immediately, without a
@@ -417,7 +417,7 @@ on the document root. The chosen theme is written to `localStorage`
 (key `"theme"`) and is restored on subsequent page loads and future
 visits from the same browser.
 
-### REQ-050 — Unset theme preference defaults to OS/browser color-scheme preference
+### REQ-1.2 — Unset theme preference defaults to OS/browser color-scheme preference
 When no theme has been explicitly chosen in a given browser (no stored
 `localStorage` value), the site's theme is derived from the OS/browser
 `prefers-color-scheme` media query at load time: `dark` if the browser
@@ -425,10 +425,10 @@ reports a dark preference, `light` otherwise. Special case: for as long
 as no explicit choice has been made, a live change in the OS/browser
 preference (e.g. the OS switching color scheme while the site remains
 open) is picked up and reflected immediately. Once a visitor has
-explicitly chosen a theme via REQ-049's toggle, further OS/browser
+explicitly chosen a theme via REQ-1.1's toggle, further OS/browser
 preference changes no longer alter the displayed theme.
 
-### REQ-051 — Dark theme is additive; light theme is unmodified
+### REQ-1.3 — Dark theme is additive; light theme is unmodified
 The dark theme is implemented entirely as a new, additive stylesheet
 whose rules are scoped under a `[data-theme="dark"]` selector; the
 existing light-theme stylesheet is not modified. Consequently, the site's
