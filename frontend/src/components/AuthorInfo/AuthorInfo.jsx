@@ -8,9 +8,10 @@ import FollowButton from "../FollowButton";
 
 function AuthorInfo() {
   const { state } = useLocation();
-  const [{ bio, followersCount, following, image }, setAuthor] = useState(
-    state || {}
-  );
+  const [
+    { bio, followersCount, following, githubUrl, image, twitterUrl, websiteUrl },
+    setAuthor,
+  ] = useState(state || {});
   const { headers, loggedUser } = useAuth();
   const { username } = useParams();
   const navigate = useNavigate();
@@ -36,6 +37,44 @@ function AuthorInfo() {
       <h4>{username}</h4>
 
       {bio && <Markdown options={{ forceBlock: true }}>{bio}</Markdown>}
+
+      {(websiteUrl || githubUrl || twitterUrl) && (
+        <ul className="nav social-links">
+          {websiteUrl && (
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href={websiteUrl}
+                rel="noopener noreferrer"
+              >
+                <i className="ion-link"></i>
+              </a>
+            </li>
+          )}
+          {githubUrl && (
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href={githubUrl}
+                rel="noopener noreferrer"
+              >
+                <i className="ion-social-github"></i>
+              </a>
+            </li>
+          )}
+          {twitterUrl && (
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href={twitterUrl}
+                rel="noopener noreferrer"
+              >
+                <i className="ion-social-twitter"></i>
+              </a>
+            </li>
+          )}
+        </ul>
+      )}
 
       {username === loggedUser.username ? (
         <Link

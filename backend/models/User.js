@@ -56,6 +56,9 @@ module.exports = (sequelize, DataTypes) => {
       bio: DataTypes.TEXT,
       image: DataTypes.TEXT,
       password: DataTypes.STRING,
+      websiteUrl: DataTypes.TEXT,
+      githubUrl: DataTypes.TEXT,
+      twitterUrl: DataTypes.TEXT,
     },
     {
       sequelize,

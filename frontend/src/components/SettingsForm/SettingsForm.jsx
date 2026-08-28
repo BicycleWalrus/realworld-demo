@@ -6,12 +6,18 @@ import FormFieldset from "../FormFieldset";
 
 function SettingsForm() {
   const { headers, isAuth, loggedUser, setAuthState } = useAuth();
-  const [{ bio, email, image, password, username }, setForm] = useState({
+  const [
+    { bio, email, githubUrl, image, password, twitterUrl, username, websiteUrl },
+    setForm,
+  ] = useState({
     bio: loggedUser.bio || "",
     email: loggedUser.email,
+    githubUrl: loggedUser.githubUrl || "",
     image: loggedUser.image || "",
     password: loggedUser.password || "",
+    twitterUrl: loggedUser.twitterUrl || "",
     username: loggedUser.username,
+    websiteUrl: loggedUser.websiteUrl || "",
   });
 
   const [inactive, setInactive] = useState(false);
@@ -34,7 +40,17 @@ function SettingsForm() {
 
     if (inactive) return;
 
-    userUpdate({ headers, bio, email, image, password, username })
+    userUpdate({
+      headers,
+      bio,
+      email,
+      githubUrl,
+      image,
+      password,
+      twitterUrl,
+      username,
+      websiteUrl,
+    })
       .then(setAuthState)
       .catch(console.error);
     setInactive(true);
@@ -48,6 +64,27 @@ function SettingsForm() {
             placeholder="URL of profile picture"
             name="image"
             value={image}
+            handler={inputHandler}
+          ></FormFieldset>
+
+          <FormFieldset
+            placeholder="Website URL"
+            name="websiteUrl"
+            value={websiteUrl}
+            handler={inputHandler}
+          ></FormFieldset>
+
+          <FormFieldset
+            placeholder="GitHub URL"
+            name="githubUrl"
+            value={githubUrl}
+            handler={inputHandler}
+          ></FormFieldset>
+
+          <FormFieldset
+            placeholder="X (Twitter) URL"
+            name="twitterUrl"
+            value={twitterUrl}
             handler={inputHandler}
           ></FormFieldset>
 

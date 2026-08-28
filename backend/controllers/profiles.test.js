@@ -47,6 +47,33 @@ describe("getProfile", () => {
     expect(profile.dataValues.following).toBe(false);
     expect(profile.dataValues.followersCount).toBe(5);
   });
+
+  // AC-082: a profile's social link fields are returned as-is - getProfile
+  // only excludes `email`, so any set link passes straight through.
+  test("returns social link fields set on the profile", async () => {
+    const profile = makeInstance(
+      {
+        id: 1,
+        username: "author",
+        websiteUrl: "https://author.example",
+        githubUrl: "author-gh",
+        twitterUrl: "author-tw",
+      },
+      {
+        hasFollower: vi.fn().mockResolvedValue(false),
+        countFollowers: vi.fn().mockResolvedValue(0),
+      },
+    );
+    User.findOne.mockResolvedValue(profile);
+    const res = makeRes();
+
+    await getProfile({ loggedUser: undefined, params: { username: "author" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ profile });
+    expect(profile.dataValues.websiteUrl).toBe("https://author.example");
+    expect(profile.dataValues.githubUrl).toBe("author-gh");
+    expect(profile.dataValues.twitterUrl).toBe("author-tw");
+  });
 });
 
 describe("followToggler", () => {
