@@ -150,3 +150,20 @@ html[data-theme="dark"] .error-messages {
 html[data-theme="dark"] hr {
   border-color: #2c343a;
 }
+
+html[data-theme="dark"] .profile-page .user-info {
+  background: #1c2227;
+}
+
+html[data-theme="dark"] .profile-page .user-info h4 {
+  color: #d7dadc;
+}
+
+html[data-theme="dark"] .profile-page .user-info p {
+  color: #8a8f94;
+}
+
+html[data-theme="dark"] .profile-page .user-info .action-btn {
+  color: #d7dadc;
+  border-color: #6c757d;
+}
