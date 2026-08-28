@@ -31,6 +31,13 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "articleId",
         timestamps: false,
       });
+
+      // Read-later (distinct from Favorites - a private, per-user save list)
+      this.belongsToMany(User, {
+        through: "ReadLater",
+        as: "savedByUsers",
+        foreignKey: "articleId",
+      });
     }
 
     toJSON() {

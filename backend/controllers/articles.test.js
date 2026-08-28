@@ -46,7 +46,14 @@ function mockFavoriteCounts(countsByArticleId) {
   );
 }
 
-function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, ...data }) {
+function makeArticle({
+  author,
+  tags = [],
+  hasUser = false,
+  favoritesCount = 0,
+  isSaved = false,
+  ...data
+}) {
   return makeInstance(
     {
       id: 1,
@@ -66,6 +73,7 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
       setAuthor: vi.fn(),
       hasUser: vi.fn().mockResolvedValue(hasUser),
       countUsers: vi.fn().mockResolvedValue(favoritesCount),
+      hasSavedByUser: vi.fn().mockResolvedValue(isSaved),
       save: vi.fn().mockResolvedValue(),
       destroy: vi.fn().mockResolvedValue(),
     },
@@ -407,6 +415,20 @@ describe("singleArticle", () => {
     });
     expect(plain.author.username).toBe("jane");
     expect(plain.createdAt).toBeInstanceOf(Date);
+  });
+
+  // The article's actual saved-for-later state is appended the same way
+  // favorited/following are, so it's correct on a fresh page load - not
+  // just after a click in the current session.
+  test("appends the viewer's actual read-later save state", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, isSaved: true });
+    Article.findOne.mockResolvedValue(article);
+
+    await singleArticle({ loggedUser: author, params: { slug: "a-slug" } }, makeRes(), vi.fn());
+
+    expect(article.hasSavedByUser).toHaveBeenCalledWith(author);
+    expect(article.dataValues.isSaved).toBe(true);
   });
 
   // AC-050 / AC-054 (article half) and AC-006 (author half): an anonymous

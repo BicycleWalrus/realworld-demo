@@ -604,6 +604,25 @@ changed.
   the new tab renders, then no stale data from the previous tab is
   shown.
 
+### US-041 — Private read-later / bookmark list
+*(REQ-061)*
+
+- **AC-130** — Given an authenticated user, when they save or unsave an
+  article, then it is added to or removed from their personal
+  read-later list.
+- **AC-131** — Given a dedicated read-later page, when viewed by its
+  owner, then it lists their saved articles, most recently saved first.
+- **AC-132** — Given another user, when they view any means of
+  accessing the current user's read-later list, then it is not visible
+  to them, and the article's public favorite count is unaffected by
+  anyone's read-later saves.
+- **AC-133** — Given no `Authorization` header, when a save or unsave is
+  attempted, then the request is rejected with an
+  authentication-required error.
+- **AC-134** — Given an article the viewer has already saved, when its
+  detail page is loaded (not just after clicking save in the current
+  session), then the save control reflects its actual saved state.
+
 ---
 
 ## Traceability Matrix
@@ -670,3 +689,4 @@ changed.
 | REQ-058 | US-038 | AC-116–AC-119 |
 | REQ-059 | US-039 | AC-120–AC-124 |
 | REQ-060 | US-040 | AC-125–AC-129 |
+| REQ-061 | US-041 | AC-130–AC-134 |

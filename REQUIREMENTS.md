@@ -570,3 +570,15 @@ are present, and uses the same pagination page size as other listings
 (REQ-031). Switching to or from this tab behaves the same as switching
 between the existing tabs (no stale cross-tab data). The default tab
 selection logic for "Your Feed"/"Global Feed" (REQ-030) is unaffected.
+
+### REQ-061 — Private read-later / bookmark list
+An authenticated user can save or unsave an article to a personal "read
+later" list, distinct from favoriting (REQ-025/REQ-026) — a separate
+table, unaffected by and not affecting the Favorites table or its
+counts. A dedicated page lists the current user's own saved articles,
+most-recently-saved first; the list and the save/unsave actions are
+private, never visible to or actionable by any other user, and require
+authentication (unauthenticated attempts are rejected the same way
+favoriting is). The saved-article listing and the save-button's
+displayed state both reflect the article's actual current saved state —
+not just a locally-remembered value from the current session.
