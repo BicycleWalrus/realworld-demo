@@ -595,6 +595,29 @@ changed.
 
 ---
 
+### US-038 — Reply to a comment
+*(REQ-082, REQ-083, REQ-084, REQ-085)*
+
+- **AC-113** — Given an authenticated user viewing a top-level comment,
+  when they use its Reply control, type a non-empty body, and submit,
+  then a new comment is created with `parentId` set to that top-level
+  comment's id; given the target comment already has a `parentId` of its
+  own (it is itself a reply), then submitting a reply against it is
+  rejected and no comment is created.
+- **AC-114** — Given an article with top-level comments and replies, when
+  its comments are retrieved, then the response contains only top-level
+  comments, each with a nested `replies` list containing the comments
+  created against it, and both top-level comments and replies carry the
+  same author-follower and @mention enrichment.
+- **AC-115** — Given a top-level comment that has one or more replies,
+  when its author deletes it, then the comment and all of its replies are
+  removed.
+- **AC-116** — Given a comment with no `parentId`, when it is created,
+  listed, or deleted, then it behaves exactly as it did before replies
+  were introduced.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -680,3 +703,7 @@ changed.
 | REQ-079 | US-037 | AC-110 |
 | REQ-080 | US-037 | AC-111 |
 | REQ-081 | US-037 | AC-112 |
+| REQ-082 | US-038 | AC-113 |
+| REQ-083 | US-038 | AC-114 |
+| REQ-084 | US-038 | AC-115 |
+| REQ-085 | US-038 | AC-116 |

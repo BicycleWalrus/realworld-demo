@@ -1,10 +1,12 @@
 import axios from "axios";
 import errorHandler from "../helpers/errorHandler";
 
-async function postComment({ body, headers, slug }) {
+// REQ-082: `parentId` is optional - omitted (undefined) for a top-level
+// comment, set to a top-level comment's id when posting a reply to it.
+async function postComment({ body, headers, parentId, slug }) {
   try {
     const { data } = await axios({
-      data: { comment: { body } },
+      data: { comment: { body, parentId } },
       headers,
       method: "POST",
       url: `api/articles/${slug}/comments`,

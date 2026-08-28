@@ -16,6 +16,25 @@ const extractMentionTokens = (body) => {
   return [...new Set(matches.map((token) => token.slice(1)))];
 };
 
+// REQ-083/REQ-080/REQ-081: shared per-comment enrichment - attaches
+// REQ-018-style follower info for the comment's author, and resolves
+// @mentions (REQ-080/REQ-081). Applied to both top-level comments and
+// their replies (REQ-083) so the two render identically in this respect.
+const enrichComment = async (loggedUser, comment) => {
+  await appendFollowers(loggedUser, comment);
+
+  const tokens = extractMentionTokens(comment.body);
+  if (tokens.length) {
+    const users = await User.findAll({
+      where: { username: tokens },
+      attributes: ["username"],
+    });
+    comment.dataValues.mentions = users.map((u) => u.username);
+  } else {
+    comment.dataValues.mentions = [];
+  }
+};
+
 //? All Comments for Article
 const allComments = async (req, res, next) => {
   try {
@@ -25,28 +44,30 @@ const allComments = async (req, res, next) => {
     const article = await Article.findOne({ where: { slug: slug } });
     if (!article) throw new NotFoundError("Article");
 
+    // REQ-083: only top-level comments (parentId null) are returned at the
+    // top level; each carries its own replies nested underneath.
     const comments = await article.getComments({
+      where: { parentId: null },
       include: [
         { model: User, as: "author", attributes: { exclude: ["email"] } },
+        {
+          model: Comment,
+          as: "replies",
+          include: [
+            { model: User, as: "author", attributes: { exclude: ["email"] } },
+          ],
+          separate: true,
+          order: [["createdAt", "ASC"]],
+        },
       ],
     });
 
     for (const comment of comments) {
-      await appendFollowers(loggedUser, comment);
+      await enrichComment(loggedUser, comment);
 
-      // REQ-080/REQ-081: resolve @mentions at render (list) time, not at
-      // comment-creation time, so this applies retroactively to comments
-      // that already existed before this feature - only usernames that
-      // actually exist end up in `mentions`.
-      const tokens = extractMentionTokens(comment.body);
-      if (tokens.length) {
-        const users = await User.findAll({
-          where: { username: tokens },
-          attributes: ["username"],
-        });
-        comment.dataValues.mentions = users.map((u) => u.username);
-      } else {
-        comment.dataValues.mentions = [];
+      const replies = comment.dataValues.replies || [];
+      for (const reply of replies) {
+        await enrichComment(loggedUser, reply);
       }
     }
 
@@ -62,17 +83,28 @@ const createComment = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { body } = req.body.comment;
+    const { body, parentId } = req.body.comment;
     if (!body) throw new FieldRequiredError("Comment body");
 
     const { slug } = req.params;
     const article = await Article.findOne({ where: { slug: slug } });
     if (!article) throw new NotFoundError("Article");
 
+    // REQ-082: a reply must target an existing top-level comment on this
+    // same article - one level of nesting only, so replying to a reply
+    // (the target comment already has its own parentId) is rejected.
+    if (parentId) {
+      const parent = await Comment.findByPk(parentId);
+      if (!parent) throw new NotFoundError("Parent comment");
+      if (parent.articleId !== article.id) throw new NotFoundError("Parent comment");
+      if (parent.parentId) throw new ForbiddenError("reply");
+    }
+
     const comment = await Comment.create({
       body: body,
       articleId: article.id,
       userId: loggedUser.id,
+      parentId: parentId || undefined,
     });
 
     delete loggedUser.dataValues.token;

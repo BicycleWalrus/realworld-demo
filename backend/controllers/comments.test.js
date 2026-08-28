@@ -93,6 +93,29 @@ describe("allComments", () => {
     expect(User.findAll).not.toHaveBeenCalled();
     expect(comment.dataValues.mentions).toEqual([]);
   });
+
+  // AC-114: a top-level comment's nested replies get the same enrichment
+  // (follower info + resolved @mentions) as top-level comments, so both
+  // render identically with respect to REQ-018/REQ-080/REQ-081.
+  test("a top-level comment's replies are enriched with follower info and mentions", async () => {
+    const author = makeFollowableUser();
+    const replyAuthor = makeFollowableUser({ id: 2, username: "bob" });
+    const comment = makeCommentWithAuthor(author);
+    const reply = makeCommentWithAuthor(replyAuthor);
+    reply.dataValues.id = 2;
+    reply.dataValues.body = "welcome @jane";
+    comment.dataValues.replies = [reply];
+    const article = makeInstance({}, { getComments: vi.fn().mockResolvedValue([comment]) });
+    Article.findOne.mockResolvedValue(article);
+    User.findAll.mockResolvedValue([makeInstance({ username: "jane" })]);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(reply.author.dataValues.following).toBe(false);
+    expect(reply.dataValues.mentions).toEqual(["jane"]);
+    expect(res.json).toHaveBeenCalledWith({ comments: [comment] });
+  });
 });
 
 describe("createComment", () => {
@@ -147,6 +170,98 @@ describe("createComment", () => {
 
     expect(Comment.create).toHaveBeenCalledWith(expect.objectContaining({ body: "   " }));
     expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  // AC-113: a reply to an existing top-level comment on the same article is
+  // created with its parentId set.
+  test("valid parentId targeting a top-level comment on the same article -> reply created", async () => {
+    const article = makeInstance({ id: 10 });
+    Article.findOne.mockResolvedValue(article);
+    const parent = makeInstance({ id: 5, articleId: 10, parentId: null });
+    Comment.findByPk.mockResolvedValue(parent);
+    Comment.create.mockResolvedValue(makeInstance({ id: 2, body: "a reply" }));
+    const res = makeRes();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentId: 5 } },
+        params: { slug: "a" },
+      },
+      res,
+      vi.fn(),
+    );
+
+    expect(Comment.findByPk).toHaveBeenCalledWith(5);
+    expect(Comment.create).toHaveBeenCalledWith(
+      expect.objectContaining({ body: "a reply", articleId: 10, parentId: 5 }),
+    );
+    expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  // AC-113: one level of nesting only - replying to a comment that is
+  // itself already a reply (its own parentId is set) is rejected.
+  test("parentId targeting a reply (already nested) -> ForbiddenError, no comment created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 10 }));
+    const replyAsParent = makeInstance({ id: 6, articleId: 10, parentId: 5 });
+    Comment.findByPk.mockResolvedValue(replyAsParent);
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "nested reply", parentId: 6 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(ForbiddenError);
+    expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  // AC-113: a parentId that does not correspond to any existing comment is
+  // rejected.
+  test("nonexistent parentId -> NotFoundError, no comment created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 10 }));
+    Comment.findByPk.mockResolvedValue(null);
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "hi", parentId: 999 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+    expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  // AC-113: a parentId belonging to a comment on a different article is
+  // rejected, same as a nonexistent parentId.
+  test("parentId belonging to a comment on a different article -> NotFoundError, no comment created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 10 }));
+    const parentOnOtherArticle = makeInstance({ id: 7, articleId: 99, parentId: null });
+    Comment.findByPk.mockResolvedValue(parentOnOtherArticle);
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "hi", parentId: 7 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+    expect(Comment.create).not.toHaveBeenCalled();
   });
 });
 
