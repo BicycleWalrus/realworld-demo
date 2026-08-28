@@ -5,6 +5,7 @@ import ArticleMeta from "../../components/ArticleMeta";
 import ArticlesButtons from "../../components/ArticlesButtons";
 import ArticleTags from "../../components/ArticleTags";
 import BannerContainer from "../../components/BannerContainer";
+import ReactionBar from "../../components/ReactionBar/ReactionBar";
 import TableOfContents from "../../components/TableOfContents";
 import { useAuth } from "../../context/AuthContext";
 import extractHeadings, {
@@ -49,6 +50,7 @@ function Article() {
         <h1>{title}</h1>
         <ArticleMeta author={author} body={body} createdAt={createdAt}>
           <ArticlesButtons article={article} setArticle={setArticle} />
+          <ReactionBar article={article} setArticle={setArticle} />
         </ArticleMeta>
       </BannerContainer>
 

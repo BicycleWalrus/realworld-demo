@@ -8,6 +8,7 @@ const {
 const {
   appendFollowers,
   appendFavorites,
+  appendReactions,
   appendSavedForLater,
   appendTagList,
   slugify,
@@ -172,6 +173,7 @@ const allArticles = async (req, res, next) => {
       appendTagList(articleTags, article);
       await appendFollowers(loggedUser, article);
       await appendFavorites(loggedUser, article);
+      await appendReactions(loggedUser, article, sequelize);
 
       delete article.dataValues.Favorites;
     }
@@ -224,6 +226,7 @@ const createArticle = async (req, res, next) => {
     article.dataValues.author = loggedUser;
     await appendFollowers(loggedUser, loggedUser);
     await appendFavorites(loggedUser, article);
+    await appendReactions(loggedUser, article, sequelize);
 
     res.status(201).json({ article });
   } catch (error) {
@@ -277,6 +280,7 @@ const articlesFeed = async (req, res, next) => {
       appendTagList(articleTags, article);
       await appendFollowers(loggedUser, article);
       await appendFavorites(loggedUser, article);
+      await appendReactions(loggedUser, article, sequelize);
     }
 
     res.json({ articles: articles.rows, articlesCount: articles.count });
@@ -300,6 +304,7 @@ const singleArticle = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+    await appendReactions(loggedUser, article, sequelize);
     await appendSavedForLater(loggedUser, article);
 
     res.json({ article });
@@ -338,6 +343,7 @@ const updateArticle = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+    await appendReactions(loggedUser, article, sequelize);
 
     res.json({ article });
   } catch (error) {

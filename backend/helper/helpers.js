@@ -22,6 +22,28 @@ const appendSavedForLater = async (loggedUser, article) => {
   article.dataValues.isSaved = loggedUser ? isSaved : false;
 };
 
+// The fixed reaction set (REQ-066). Counts are reported for every type,
+// always, so the shape is stable regardless of what anyone reacted with.
+const REACTION_TYPES = ["like", "insightful", "celebrate"];
+
+const appendReactions = async (loggedUser, article, sequelize) => {
+  const rows = await sequelize.models.Reactions.findAll({
+    attributes: ["type", "userId"],
+    where: { articleId: article.id },
+    raw: true,
+  });
+
+  const reactions = Object.fromEntries(REACTION_TYPES.map((type) => [type, 0]));
+  let viewerReaction = null;
+  for (const { type, userId } of rows) {
+    if (reactions[type] !== undefined) reactions[type] += 1;
+    if (loggedUser && userId === loggedUser.id) viewerReaction = type;
+  }
+
+  article.dataValues.reactions = reactions;
+  article.dataValues.viewerReaction = viewerReaction;
+};
+
 const appendFollowers = async (loggedUser, toAppend) => {
   //
   if (toAppend?.author) {
@@ -67,4 +89,6 @@ module.exports = {
   appendFollowers,
   appendAuthorStats,
   appendSavedForLater,
+  appendReactions,
+  REACTION_TYPES,
 };

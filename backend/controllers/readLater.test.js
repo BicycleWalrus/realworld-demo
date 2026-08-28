@@ -3,11 +3,12 @@ const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels
 
 const Article = { findOne: vi.fn(), findAll: vi.fn() };
 const ReadLater = { findAll: vi.fn() };
+const Reactions = { findAll: vi.fn().mockResolvedValue([]) };
 mockRequire(require.resolve("../models"), {
   Article,
   Tag: {},
   User: {},
-  sequelize: { models: { ReadLater } },
+  sequelize: { models: { ReadLater, Reactions } },
 });
 
 const { readLaterToggler, readLaterList } = require("./readLater");

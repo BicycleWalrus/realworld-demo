@@ -2,7 +2,13 @@ const { NotFoundError, UnauthorizedError } = require("../helper/customErrors");
 const { makeInstance, makeRes, mockRequire } = require("../test-utils/fakeModels");
 
 const Article = { findOne: vi.fn() };
-mockRequire(require.resolve("../models"), { Article, Tag: {}, User: {} });
+const Reactions = { findAll: vi.fn().mockResolvedValue([]) };
+mockRequire(require.resolve("../models"), {
+  Article,
+  Tag: {},
+  User: {},
+  sequelize: { models: { Reactions } },
+});
 
 const { favoriteToggler } = require("./favorites");
 

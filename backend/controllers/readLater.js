@@ -1,5 +1,10 @@
 const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
-const { appendTagList, appendFollowers, appendFavorites } = require("../helper/helpers");
+const {
+  appendTagList,
+  appendFollowers,
+  appendFavorites,
+  appendReactions,
+} = require("../helper/helpers");
 const { Article, Tag, User, sequelize } = require("../models");
 
 //* Save/Un-save an article for later
@@ -52,6 +57,7 @@ const readLaterList = async (req, res, next) => {
       appendTagList(articleTags, article);
       await appendFollowers(loggedUser, article);
       await appendFavorites(loggedUser, article);
+      await appendReactions(loggedUser, article, sequelize);
 
       delete article.dataValues.Favorites;
     }
