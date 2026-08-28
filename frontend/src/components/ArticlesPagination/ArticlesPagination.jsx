@@ -6,6 +6,7 @@ function ArticlesPagination({
   articlesCount,
   location,
   tagName,
+  searchTerm,
   updateArticles,
   username,
 }) {
@@ -13,7 +14,7 @@ function ArticlesPagination({
   const { headers } = useAuth();
 
   const handlePageChange = ({ selected: page }) => {
-    getArticles({ headers, location, page, username, tagName })
+    getArticles({ headers, location, page, username, tagName, searchTerm })
       .then(updateArticles)
       .catch(console.error);
   };

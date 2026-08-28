@@ -582,3 +582,17 @@ authentication (unauthenticated attempts are rejected the same way
 favoriting is). The saved-article listing and the save-button's
 displayed state both reflect the article's actual current saved state —
 not just a locally-remembered value from the current session.
+
+### REQ-062 — Article keyword search
+The article listing supports an optional keyword search: only articles
+whose title, description, or body contains the keyword are returned,
+matched case-insensitively as substrings. The keyword composes with
+(ANDs into) the existing author/tag/favorited filters (REQ-013) rather
+than replacing any of them — the same mutual-composition rule those
+filters already follow — and also narrows the trending sort. Search
+results use the standard listing behavior unchanged: newest-first order,
+the default page size (REQ-031), and a total count reflecting every
+match. An empty or whitespace-only keyword applies no filter and returns
+the unfiltered listing for the active view. In the web client a search
+input sits above the feed on the home page; the keyword stays applied
+while switching feed views and persists across pagination.

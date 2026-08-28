@@ -2,7 +2,7 @@ import axios from "axios";
 import errorHandler from "../helpers/errorHandler";
 
 // prettier-ignore
-async function getArticles({ headers, limit = 3, location, page = 0, tagName, username }) {
+async function getArticles({ headers, limit = 3, location, page = 0, searchTerm, tagName, username }) {
   try {
     const url = {
       favorites: `api/articles?favorited=${username}&&limit=${limit}&&offset=${page}`,
@@ -13,7 +13,13 @@ async function getArticles({ headers, limit = 3, location, page = 0, tagName, us
       trending: `api/articles?sort=trending&&limit=${limit}&&offset=${page}`,
     };
 
-    const { data } = await axios({ url: url[location], headers });
+    // Keyword search (REQ-062) composes with whichever listing is active
+    // by appending the search param; an empty term adds nothing.
+    const withSearch = searchTerm
+      ? `${url[location]}&&search=${encodeURIComponent(searchTerm)}`
+      : url[location];
+
+    const { data } = await axios({ url: withSearch, headers });
 
     return data;
   } catch (error) {

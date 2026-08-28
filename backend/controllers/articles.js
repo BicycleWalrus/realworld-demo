@@ -12,6 +12,7 @@ const {
   appendTagList,
   slugify,
 } = require("../helper/helpers");
+const { Op } = require("sequelize");
 const { Article, Tag, User, sequelize } = require("../models");
 
 const includeOptions = [
@@ -24,8 +25,23 @@ const allArticles = async (req, res, next) => {
   try {
     const { loggedUser } = req;
 
-    const { author, tag, favorited, limit = 3, offset = 0, sort } = req.query;
+    const { author, tag, favorited, search, limit = 3, offset = 0, sort } = req.query;
+
+    // Keyword search (REQ-062): case-insensitive substring match against
+    // title, description, or body. ANDs into the author/tag/favorited
+    // filters rather than replacing them (same composition rule REQ-013
+    // gives those filters); an empty or whitespace-only keyword applies
+    // no filter. Flows through all three list paths below (plain,
+    // favorited, trending) because each builds from searchOptions.
+    const keyword = typeof search === "string" ? search.trim() : "";
+    const keywordWhere = keyword && {
+      [Op.or]: ["title", "description", "body"].map((field) => ({
+        [field]: { [Op.iLike]: `%${keyword}%` },
+      })),
+    };
+
     const searchOptions = {
+      ...(keywordWhere && { where: keywordWhere }),
       include: [
         {
           model: Tag,
