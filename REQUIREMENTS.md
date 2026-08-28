@@ -659,3 +659,28 @@ removed as a consequence.
 For a comment with no `parentId`, comment creation, listing, and deletion
 behave exactly as documented before REQ-082–REQ-084: this feature is
 additive and does not alter existing top-level comment behavior.
+
+---
+
+## Read Later
+
+### REQ-086 — Adding/removing an article to/from a private read-later list requires authentication
+An authenticated user can add or remove an article to/from a personal,
+private read-later list via `POST`/`DELETE /api/read-later/:slug`. This
+list is backed by a join table distinct from Favorites (REQ-025/REQ-026)
+and does not affect the article's public favorite count. Saving or
+unsaving an article requires a resolved, authenticated user, mirroring
+REQ-025's authentication rule for favoriting.
+
+### REQ-087 — Retrieving the read-later list
+`GET /api/read-later` returns the current authenticated user's saved
+articles, ordered most-recently-added first, using a bounded page size via
+`limit`/`offset` query parameters (defaulting to a page size of 3,
+consistent with REQ-013's article-listing pagination default).
+
+### REQ-088 — The read-later list is private and Favorites-independent
+The read-later list reflects only the requesting user's own saves: it is
+derived from the authenticated requester and is not exposed to other
+users. Adding or removing an article from the read-later list leaves
+Favorites (REQ-025/REQ-026) and the article's public favorite count
+unchanged.

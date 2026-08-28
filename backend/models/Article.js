@@ -31,6 +31,14 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: "articleId",
         timestamps: false,
       });
+
+      // Read Later (REQ-086/REQ-087/REQ-088): aliased so this does not
+      // clash with the unaliased Favorites association above.
+      this.belongsToMany(User, {
+        through: "ReadLater",
+        as: "readLaterUsers",
+        foreignKey: "articleId",
+      });
     }
 
     toJSON() {

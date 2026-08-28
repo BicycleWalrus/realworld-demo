@@ -3,6 +3,7 @@ import { useAuth } from "../../context/AuthContext";
 import ArticleAuthorButtons from "../ArticleAuthorButtons";
 import FavButton from "../FavButton";
 import FollowButton from "../FollowButton";
+import ReadLaterButton from "../ReadLaterButton";
 
 function ArticlesButtons({ article, setArticle }) {
   const { author: { username } = {}, author } = article || {};
@@ -17,12 +18,19 @@ function ArticlesButtons({ article, setArticle }) {
     setArticle((prev) => ({ ...prev, favorited, favoritesCount }));
   };
 
+  // REQ-086: additive - keeps the article's private readLater flag in
+  // sync after a save/unsave, alongside the existing favorite handling.
+  const handleReadLater = ({ readLater }) => {
+    setArticle((prev) => ({ ...prev, readLater }));
+  };
+
   return loggedUser.username === username ? (
     <ArticleAuthorButtons {...article} slug={slug} />
   ) : (
     <>
       <FollowButton {...author} handler={followHandler} />
       <FavButton {...article} handler={handleFav} text />
+      <ReadLaterButton readLater={article?.readLater} slug={slug} handler={handleReadLater} />
     </>
   );
 }

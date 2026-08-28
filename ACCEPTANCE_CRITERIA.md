@@ -618,6 +618,28 @@ changed.
 
 ---
 
+### US-039 — Read-later / bookmark list
+*(REQ-086, REQ-087, REQ-088)*
+
+- **AC-117** — Given an authenticated user and an existing article, when
+  they `POST /api/read-later/:slug`, then the article is added to their
+  read-later list without changing the article's favorite count; when
+  they `DELETE /api/read-later/:slug` for a saved article, then it is
+  removed from that list; given no authenticated user, then either
+  request is rejected with an authentication-required error.
+- **AC-118** — Given an authenticated user with saved articles, when they
+  `GET /api/read-later`, then the response contains that user's saved
+  articles ordered most-recently-added first, bounded by `limit`/`offset`
+  (default page size 3); given no authenticated user, then the request is
+  rejected with an authentication-required error.
+- **AC-119** — Given two different authenticated users, when one saves an
+  article to their read-later list, then the other user's read-later list
+  and the article's public favorite count are unaffected; an article's
+  representation additively carries a per-viewer `readLater` flag,
+  `false` for an anonymous viewer.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -707,3 +729,6 @@ changed.
 | REQ-083 | US-038 | AC-114 |
 | REQ-084 | US-038 | AC-115 |
 | REQ-085 | US-038 | AC-116 |
+| REQ-086 | US-039 | AC-117 |
+| REQ-087 | US-039 | AC-118 |
+| REQ-088 | US-039 | AC-119 |

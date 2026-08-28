@@ -25,7 +25,13 @@ const {
 function makeFollowableUser(overrides = {}) {
   return makeInstance(
     { id: 1, username: "author", ...overrides },
-    { hasFollower: vi.fn().mockResolvedValue(false), countFollowers: vi.fn().mockResolvedValue(0) },
+    {
+      hasFollower: vi.fn().mockResolvedValue(false),
+      countFollowers: vi.fn().mockResolvedValue(0),
+      // REQ-086/REQ-088: singleArticle additively calls hasReadLater on
+      // loggedUser to set the per-viewer readLater flag.
+      hasReadLater: vi.fn().mockResolvedValue(false),
+    },
   );
 }
 
@@ -489,6 +495,50 @@ describe("singleArticle", () => {
     expect(article.dataValues.favoritesCount).toBe(6);
     expect(article.author.dataValues.following).toBe(false);
     expect(article.author.dataValues.followersCount).toBe(9);
+  });
+
+  // AC-119: singleArticle additively exposes a per-viewer readLater flag,
+  // derived from loggedUser (private - never from a query parameter), and
+  // forced false for anonymous visitors since there is no loggedUser to
+  // derive it from.
+  describe("readLater flag (REQ-086/REQ-088)", () => {
+    test("loggedUser has saved the article -> readLater true", async () => {
+      const author = makeFollowableUser();
+      const loggedUser = makeFollowableUser({ id: 2, username: "reader" });
+      loggedUser.hasReadLater.mockResolvedValue(true);
+      const article = makeArticle({ author });
+      Article.findOne.mockResolvedValue(article);
+      const res = makeRes();
+
+      await singleArticle({ loggedUser, params: { slug: "a-slug" } }, res, vi.fn());
+
+      expect(loggedUser.hasReadLater).toHaveBeenCalledWith(article);
+      expect(article.dataValues.readLater).toBe(true);
+    });
+
+    test("loggedUser has not saved the article -> readLater false", async () => {
+      const author = makeFollowableUser();
+      const loggedUser = makeFollowableUser({ id: 2, username: "reader" });
+      loggedUser.hasReadLater.mockResolvedValue(false);
+      const article = makeArticle({ author });
+      Article.findOne.mockResolvedValue(article);
+      const res = makeRes();
+
+      await singleArticle({ loggedUser, params: { slug: "a-slug" } }, res, vi.fn());
+
+      expect(article.dataValues.readLater).toBe(false);
+    });
+
+    test("no loggedUser -> readLater false", async () => {
+      const author = makeFollowableUser();
+      const article = makeArticle({ author });
+      Article.findOne.mockResolvedValue(article);
+      const res = makeRes();
+
+      await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+      expect(article.dataValues.readLater).toBe(false);
+    });
   });
 
   // AC-104: a draft article is not-found for anyone but its own author,
