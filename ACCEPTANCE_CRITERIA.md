@@ -404,6 +404,35 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-029 — Threaded comment replies
+*(REQ-049, REQ-050)*
+
+- **AC-080** — Given an authenticated user viewing a top-level comment,
+  when they submit a reply with a non-empty body, then the reply is
+  created and linked to that comment.
+- **AC-081** — Given an unauthenticated visitor, when they view the
+  comment list, then no reply control is shown to them, consistent with
+  the reply control following the same auth rules as posting a
+  top-level comment.
+- **AC-082** — Given a reply, when a user attempts to reply to that
+  reply, then the new comment is attached to the reply's own top-level
+  parent instead of creating a second level of nesting.
+- **AC-083** — Given a `parentId` submitted with a comment that does not
+  correspond to any existing comment, when submitted, then the request
+  is rejected with a not-found error and no comment is created.
+- **AC-084** — Given a top-level comment with one or more replies, when
+  the comment list for its article is requested, then each reply is
+  returned nested under its parent, with its own author information
+  included.
+- **AC-085** — Given a top-level comment with replies, when that comment
+  is deleted by its author, then its replies are also removed.
+- **AC-086** — Given a top-level comment with no `parentId` submitted,
+  when created, then it behaves exactly as comment creation already did
+  before replies existed (REQ-022 unchanged).
+- **AC-087** — Given any comment, top-level or a reply, when a user who
+  is not its author attempts to delete it, then the request is rejected
+  with an authorization error, exactly as REQ-023 already states.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +487,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080, AC-082, AC-083, AC-086 |
+| REQ-050 | US-029 | AC-085, AC-087 |

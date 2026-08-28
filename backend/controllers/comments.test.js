@@ -19,9 +19,9 @@ function makeFollowableUser(overrides = {}) {
   );
 }
 
-function makeCommentWithAuthor(author) {
+function makeCommentWithAuthor(author, { replies = [] } = {}) {
   return makeInstance(
-    { id: 1, body: "hi" },
+    { id: 1, body: "hi", replies },
     { author, getAuthor: vi.fn().mockResolvedValue(author) },
   );
 }
@@ -54,6 +54,25 @@ describe("allComments", () => {
     await allComments({ params: { slug: "missing" } }, makeRes(), next);
 
     expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+  });
+
+  // A top-level comment's replies are also decorated with follower info.
+  test("replies are included and their authors decorated", async () => {
+    const parentAuthor = makeFollowableUser({ id: 1, username: "jane" });
+    const replyAuthor = makeFollowableUser({ id: 2, username: "bob" });
+    const reply = makeCommentWithAuthor(replyAuthor);
+    const comment = makeCommentWithAuthor(parentAuthor, { replies: [reply] });
+    const article = makeInstance({}, { getComments: vi.fn().mockResolvedValue([comment]) });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await allComments({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.getComments).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { parentId: null } }),
+    );
+    expect(res.json).toHaveBeenCalledWith({ comments: [comment] });
+    expect(reply.author.dataValues.following).toBe(false);
   });
 });
 
@@ -109,6 +128,79 @@ describe("createComment", () => {
 
     expect(Comment.create).toHaveBeenCalledWith(expect.objectContaining({ body: "   " }));
     expect(res.status).toHaveBeenCalledWith(201);
+  });
+
+  // A reply to a top-level comment is created with that comment's id as parentId.
+  test("parentId of a top-level comment -> reply created with that parentId", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(makeInstance({ id: 3, parentId: null }));
+    Comment.create.mockResolvedValue(makeInstance({ id: 4, body: "a reply" }));
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentId: 3 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Comment.create).toHaveBeenCalledWith(expect.objectContaining({ parentId: 3 }));
+  });
+
+  // Replying to a reply flattens to that reply's own root parent.
+  test("parentId of a reply -> new comment attached to the root parent instead", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(makeInstance({ id: 4, parentId: 3 }));
+    Comment.create.mockResolvedValue(makeInstance({ id: 6, body: "another reply" }));
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "another reply", parentId: 4 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Comment.create).toHaveBeenCalledWith(expect.objectContaining({ parentId: 3 }));
+  });
+
+  // A parentId that doesn't correspond to any comment is rejected.
+  test("nonexistent parentId -> NotFoundError, no comment created", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.findByPk.mockResolvedValue(null);
+    const next = vi.fn();
+
+    await createComment(
+      {
+        loggedUser: makeFollowableUser(),
+        body: { comment: { body: "a reply", parentId: 999 } },
+        params: { slug: "a" },
+      },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+    expect(Comment.create).not.toHaveBeenCalled();
+  });
+
+  // A top-level comment (no parentId) is unaffected by the reply logic.
+  test("no parentId -> comment created with parentId null", async () => {
+    Article.findOne.mockResolvedValue(makeInstance({ id: 5 }));
+    Comment.create.mockResolvedValue(makeInstance({ id: 1, body: "top-level" }));
+
+    await createComment(
+      { loggedUser: makeFollowableUser(), body: { comment: { body: "top-level" } }, params: { slug: "a" } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Comment.create).toHaveBeenCalledWith(expect.objectContaining({ parentId: null }));
+    expect(Comment.findByPk).not.toHaveBeenCalled();
   });
 });
 

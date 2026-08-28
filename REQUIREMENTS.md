@@ -405,3 +405,20 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-049 — Comments support one level of threaded replies
+A comment may optionally be created as a reply to an existing top-level
+comment, by submitting a `parentId` alongside the usual `body` (the same
+non-empty-body and existing-article requirements from REQ-022 apply
+unchanged to a reply). Replying to a comment that is itself a reply
+attaches the new comment to that reply's own top-level parent instead of
+creating a second level of nesting — nesting is limited to exactly one
+level. A `parentId` that does not correspond to any existing comment is
+rejected with a not-found error, the same way an unrecognized article
+slug already is.
+
+### REQ-050 — Deleting a comment cascades to its replies
+Deleting a top-level comment also deletes all of its replies. This does
+not change who may delete a comment: only the comment's own author may
+delete it, exactly as REQ-023 already states for any comment, top-level
+or reply.

@@ -17,13 +17,25 @@ const allComments = async (req, res, next) => {
     if (!article) throw new NotFoundError("Article");
 
     const comments = await article.getComments({
+      where: { parentId: null },
       include: [
         { model: User, as: "author", attributes: { exclude: ["email"] } },
+        {
+          model: Comment,
+          as: "replies",
+          include: [
+            { model: User, as: "author", attributes: { exclude: ["email"] } },
+          ],
+        },
       ],
     });
 
     for (const comment of comments) {
       await appendFollowers(loggedUser, comment);
+
+      for (const reply of comment.replies) {
+        await appendFollowers(loggedUser, reply);
+      }
     }
 
     res.json({ comments });
@@ -38,17 +50,28 @@ const createComment = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { body } = req.body.comment;
+    const { body, parentId } = req.body.comment;
     if (!body) throw new FieldRequiredError("Comment body");
 
     const { slug } = req.params;
     const article = await Article.findOne({ where: { slug: slug } });
     if (!article) throw new NotFoundError("Article");
 
+    let resolvedParentId = null;
+    if (parentId) {
+      const parent = await Comment.findByPk(parentId);
+      if (!parent) throw new NotFoundError("Comment");
+
+      // Replying to a reply flattens to that reply's own root parent,
+      // keeping nesting to exactly one level.
+      resolvedParentId = parent.parentId || parent.id;
+    }
+
     const comment = await Comment.create({
       body: body,
       articleId: article.id,
       userId: loggedUser.id,
+      parentId: resolvedParentId,
     });
 
     delete loggedUser.dataValues.token;
