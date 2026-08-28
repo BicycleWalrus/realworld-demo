@@ -39,9 +39,7 @@ function CommentList({ triggerUpdate, updateComments }) {
     setEditBody("");
   };
 
-  const handleEditSubmit = (e, commentId) => {
-    e.preventDefault();
-
+  const handleEditSubmit = (commentId) => {
     if (editBody.trim() === "") return;
 
     updateComment({ body: editBody, commentId, headers, slug })
@@ -61,14 +59,12 @@ function CommentList({ triggerUpdate, updateComments }) {
         <div className="card" key={id}>
           <div className="card-block">
             {isEditing ? (
-              <form onSubmit={(e) => handleEditSubmit(e, id)}>
-                <textarea
-                  className="form-control"
-                  onChange={(e) => setEditBody(e.target.value)}
-                  rows="3"
-                  value={editBody}
-                ></textarea>
-              </form>
+              <textarea
+                className="form-control"
+                onChange={(e) => setEditBody(e.target.value)}
+                rows="3"
+                value={editBody}
+              ></textarea>
             ) : (
               <p className="card-text">{body}</p>
             )}
@@ -80,7 +76,7 @@ function CommentList({ triggerUpdate, updateComments }) {
               <>
                 <button
                   className="btn btn-sm btn-primary pull-xs-right"
-                  onClick={(e) => handleEditSubmit(e, id)}
+                  onClick={() => handleEditSubmit(id)}
                 >
                   Save
                 </button>
