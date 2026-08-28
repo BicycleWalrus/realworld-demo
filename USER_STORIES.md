@@ -154,3 +154,9 @@ file, so that I can save or read it offline in my own editor/notes app.
 **US-030** — As a reader, I want to see roughly how long an article will
 take to read, so that I can decide whether to read it now.
 *Related requirements: REQ-051*
+
+---
+
+**US-031** — As a user, I want to switch to a dark theme, so that I can
+read comfortably in low light or according to my preference.
+*Related requirements: REQ-052, REQ-053, REQ-054, REQ-055*

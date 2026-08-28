@@ -434,6 +434,23 @@ changed.
   whole number of minutes with a floor of 1 (never "0 min read", `NaN`,
   or a crash).
 
+### US-031 — Dark theme toggle
+*(REQ-052, REQ-053, REQ-054, REQ-055)*
+
+- **AC-086** — Given any page with the navbar, when the visitor is
+  authenticated and when the visitor is not authenticated, then the theme
+  toggle control is rendered in both cases.
+- **AC-087** — Given a visitor has previously selected a theme, when they
+  reload the page or return in a new visit, then the same theme is applied
+  without requiring reselection.
+- **AC-088** — Given a visitor with no previously saved theme choice, when
+  the browser reports `prefers-color-scheme: dark`, then the dark theme is
+  applied; when it does not (or the preference is unavailable), then the
+  light theme is applied.
+- **AC-089** — Given the navbar theme toggle, when the visitor clicks it,
+  then the theme changes immediately with no page reload, and clicking it
+  again restores the previous theme, also with no reload.
+
 ---
 
 ## Traceability Matrix
@@ -491,3 +508,7 @@ changed.
 | REQ-049 | US-029 | AC-080, AC-083 |
 | REQ-050 | US-029 | AC-081, AC-082 |
 | REQ-051 | US-030 | AC-084, AC-085 |
+| REQ-052 | US-031 | AC-086 |
+| REQ-053 | US-031 | AC-087 |
+| REQ-054 | US-031 | AC-088 |
+| REQ-055 | US-031 | AC-089 |

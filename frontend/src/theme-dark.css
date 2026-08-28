@@ -1,0 +1,181 @@
+/*
+ * Dark theme overrides. REQ-052–REQ-055 / AC-086–AC-089.
+ *
+ * Every rule in this file is scoped under `[data-theme="dark"]`, which is
+ * only ever set on <html> when the dark theme is active (see
+ * ../helpers/theme.js and ../context/ThemeContext.jsx). Nothing here
+ * applies while the attribute is absent, so the existing light appearance
+ * (index.css, public/main.css) is left pixel-equivalent.
+ */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-theme="dark"] body {
+  background-color: #16181b;
+  color: #d8dadd;
+}
+
+[data-theme="dark"] header {
+  background-color: #16181b;
+}
+
+[data-theme="dark"] .navbar-brand,
+[data-theme="dark"] .navbar-light .navbar-brand {
+  color: #eceeef;
+}
+[data-theme="dark"] .navbar-brand:focus,
+[data-theme="dark"] .navbar-brand:hover,
+[data-theme="dark"] .navbar-light .navbar-brand:focus,
+[data-theme="dark"] .navbar-light .navbar-brand:hover {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link {
+  color: #aeb3b8;
+}
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link:focus,
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link:hover {
+  color: #ffffff;
+}
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link.active,
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link.active:focus,
+[data-theme="dark"] .navbar-light .navbar-nav .nav-link.active:hover {
+  color: #ffffff;
+}
+
+[data-theme="dark"] .banner {
+  background: #1f2226;
+}
+
+[data-theme="dark"] .home-page .sidebar {
+  background: #22262b;
+  color: #d8dadd;
+}
+[data-theme="dark"] .home-page .sidebar p {
+  color: #d8dadd;
+}
+
+[data-theme="dark"] .nav-pills.outline-active .nav-link {
+  color: #8b9096;
+}
+[data-theme="dark"] .nav-pills.outline-active .nav-link:hover {
+  color: #d8dadd;
+}
+[data-theme="dark"] .nav-pills.outline-active .nav-link.active {
+  background: #16181b !important;
+  color: #6cc96c !important;
+}
+
+[data-theme="dark"] .article-preview {
+  border-top-color: rgba(255, 255, 255, 0.1);
+  background-color: #16181b;
+}
+[data-theme="dark"] .article-preview .preview-link h1 {
+  color: #eceeef;
+}
+[data-theme="dark"] .article-preview .preview-link p {
+  color: #aeb3b8;
+}
+[data-theme="dark"] .article-preview .preview-link span {
+  color: #8b9096;
+}
+[data-theme="dark"] .article-meta .info .author {
+  color: #eceeef;
+}
+[data-theme="dark"] .article-meta .info .date {
+  color: #8b9096;
+}
+
+[data-theme="dark"] .card {
+  background-color: #1f2226;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+[data-theme="dark"] .card-header,
+[data-theme="dark"] .card-footer {
+  background-color: #22262b;
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .profile-page .user-info {
+  background: #1f2226;
+}
+[data-theme="dark"] .profile-page .user-info h4 {
+  color: #eceeef;
+}
+[data-theme="dark"] .profile-page .user-info p {
+  color: #aeb3b8;
+}
+[data-theme="dark"] .profile-page .user-info .action-btn {
+  color: #aeb3b8;
+  border-color: #aeb3b8;
+}
+
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] h4,
+[data-theme="dark"] h5,
+[data-theme="dark"] h6 {
+  color: #eceeef;
+}
+
+[data-theme="dark"] a {
+  color: #6cc96c;
+}
+[data-theme="dark"] a:hover {
+  color: #8fdb8f;
+}
+
+[data-theme="dark"] .btn-outline-primary {
+  color: #6cc96c;
+  border-color: #6cc96c;
+}
+[data-theme="dark"] .btn-outline-primary:hover,
+[data-theme="dark"] .btn-outline-primary:focus,
+[data-theme="dark"] .btn-outline-primary.focus,
+[data-theme="dark"] .btn-outline-primary:active,
+[data-theme="dark"] .btn-outline-primary.active {
+  color: #16181b;
+  background-color: #6cc96c;
+  border-color: #6cc96c;
+}
+
+[data-theme="dark"] .btn-outline-secondary {
+  color: #aeb3b8;
+  border-color: #aeb3b8;
+}
+[data-theme="dark"] .btn-outline-secondary:hover,
+[data-theme="dark"] .btn-outline-secondary:focus,
+[data-theme="dark"] .btn-outline-secondary.focus,
+[data-theme="dark"] .btn-outline-secondary:active,
+[data-theme="dark"] .btn-outline-secondary.active {
+  color: #16181b;
+  background-color: #aeb3b8;
+  border-color: #aeb3b8;
+}
+
+[data-theme="dark"] .form-control {
+  color: #eceeef;
+  background-color: #22262b;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+[data-theme="dark"] .form-control::placeholder {
+  color: #8b9096;
+}
+[data-theme="dark"] .form-control:disabled,
+[data-theme="dark"] .form-control[readonly] {
+  background-color: #1a1c1f;
+}
+
+[data-theme="dark"] .error-messages {
+  color: #ff8a8a !important;
+}
+
+[data-theme="dark"] footer {
+  background: #1f2226;
+}
+[data-theme="dark"] footer .attribution {
+  color: #8b9096;
+}
