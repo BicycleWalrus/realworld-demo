@@ -473,3 +473,27 @@ whatever headings are currently in the body — editing the article and
 changing its headings changes the table of contents accordingly the next
 time it is viewed. This feature does not change how the article body itself is rendered
 from Markdown.
+
+### REQ-055 — Optional profile social links
+A user account may optionally have `website`, `github`, and `twitter`
+fields, each a link to an external profile. These fields go through the
+same generic profile-update path as existing fields (REQ-011): a field
+submitted as an empty string clears the previously stored value, and a
+field omitted from the submission is left unchanged. A non-empty
+submitted value must have an `http://` or `https://` scheme; a value
+with any other scheme is rejected and the update does not proceed (the
+platform does not otherwise verify that a link is reachable). On the
+public profile page, each set link is rendered pointing to its stored
+value; a profile with none set renders with no social-links section (no
+empty placeholders). This is purely additive: existing profile fields
+(username, email, bio, image, password — REQ-011, REQ-012) are
+unaffected.
+
+**Boundary:** article and comment payloads embed a snapshot of the
+author's profile, used by the existing navigation-state shortcut
+(REQ-043) to skip a profile refetch when the snapshot's `bio` still
+matches. That freshness check compares only `bio`, so a change to only a
+user's social links (bio unchanged) is not detected as stale by it — a
+visitor already holding an older snapshot may continue to see the
+pre-change links until an unrelated bio change, or a page load without
+navigation state, triggers a real refetch.

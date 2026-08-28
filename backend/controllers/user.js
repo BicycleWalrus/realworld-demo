@@ -1,5 +1,8 @@
-const { UnauthorizedError } = require("../helper/customErrors");
+const { UnauthorizedError, ValidationError } = require("../helper/customErrors");
 const { bcryptHash } = require("../helper/bcrypt");
+
+const SOCIAL_LINK_FIELDS = ["website", "github", "twitter"];
+const isHttpUrl = (value) => /^https?:\/\//i.test(value);
 
 //* Current User
 const currentUser = async (req, res, next) => {
@@ -26,6 +29,13 @@ const updateUser = async (req, res, next) => {
       user: { password },
       user,
     } = req.body;
+
+    SOCIAL_LINK_FIELDS.forEach((field) => {
+      const value = user[field];
+      if (value && !isHttpUrl(value)) {
+        throw new ValidationError(`${field} must be a valid http(s) URL`);
+      }
+    });
 
     Object.entries(user).forEach((entry) => {
       const [key, value] = entry;

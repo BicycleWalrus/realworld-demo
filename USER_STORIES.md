@@ -180,3 +180,10 @@ comment and losing the thread position/replies context.
 **US-034** — As a reader, I want a table of contents for long articles, so
 that I can quickly jump to the section I'm interested in.
 *Related requirements: REQ-054*
+
+---
+
+**US-035** — As a user, I want to list links to my other online
+presences on my profile, so that readers who like my writing can find me
+elsewhere.
+*Related requirements: REQ-055*

@@ -61,3 +61,11 @@ button:focus {
 .table-of-contents .toc-level-6 {
   padding-left: 3rem;
 }
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+}
