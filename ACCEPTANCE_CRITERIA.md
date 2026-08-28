@@ -466,6 +466,26 @@ changed.
   only that author's matching articles are returned (the backend filters
   compose rather than the search replacing them).
 
+### US-032 — Sorted by favorites
+*(REQ-061, REQ-062, REQ-063, REQ-064)*
+
+- **AC-092** — Given a visitor, whether logged in or not, when they open
+  the feed area, then a "Top Articles" tab is present alongside Your Feed
+  and Global Feed, and selecting it (setting `sort=top` on the article
+  listing request) succeeds without requiring authentication.
+- **AC-093** — Given a set of articles with differing favorite counts,
+  when the Top Articles tab is requested, then the returned articles are
+  ordered by favorite count highest-first, and among articles with equal
+  favorite counts, the newest (by `createdAt`) is ordered first.
+- **AC-094** — Given more than 3 articles matching the Top Articles
+  listing, when a page is requested, then results are capped at 3 per
+  page, and the reported total count reflects every matching article
+  rather than only the current page.
+- **AC-095** — Given an article list currently showing a different feed
+  tab, when the visitor switches to or away from the Top Articles tab,
+  then the article listing is re-fetched, so the previously displayed
+  tab's articles are not left showing under the newly selected tab.
+
 ---
 
 ## Traceability Matrix
@@ -532,3 +552,7 @@ changed.
 | REQ-058 | US-031 | AC-088 |
 | REQ-059 | US-031 | AC-090 |
 | REQ-060 | US-031 | AC-091 |
+| REQ-061 | US-032 | AC-092 |
+| REQ-062 | US-032 | AC-093 |
+| REQ-063 | US-032 | AC-094 |
+| REQ-064 | US-032 | AC-095 |

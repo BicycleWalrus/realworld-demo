@@ -11,6 +11,7 @@ async function getArticles({ headers, limit = 3, location, page = 0, searchTerm,
       profile: `api/articles?author=${username}&&limit=${limit}&&offset=${page}`,
       search: `api/articles?search=${encodeURIComponent(searchTerm)}&&limit=${limit}&&offset=${page}`,
       tag: `api/articles?tag=${tagName}&&limit=${limit}&&offset=${page}`,
+      top: `api/articles?sort=top&&limit=${limit}&&offset=${page}`,
     };
 
     const { data } = await axios({ url: url[location], headers });

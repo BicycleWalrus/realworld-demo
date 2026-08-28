@@ -85,7 +85,11 @@ function fakeArticleList(seedRows) {
     }
 
     const count = rows.length;
-    rows = rows.slice(offset, offset + limit);
+    // REQ-062: sort=top omits limit/offset from the query (fetching every
+    // matching row so the controller can rank by favoritesCount before
+    // paging) - mirror that by returning every row unsliced when limit is
+    // absent, same as Sequelize would with no LIMIT clause.
+    rows = limit === undefined ? rows : rows.slice(offset, offset + limit);
     return Promise.resolve({ rows, count });
   };
 }
@@ -450,6 +454,74 @@ describe("allArticles", () => {
     const error = next.mock.calls[0][0];
     expect(error).not.toBeInstanceOf(NotFoundError);
     expect(error).not.toBeInstanceOf(FieldRequiredError);
+  });
+
+  // AC-093: sort=top ranks articles by favorite count descending, with
+  // equal favorite counts tie-broken by newest-first.
+  test("sort=top orders by favorite count desc, tie-break newest-first", async () => {
+    const seed = [
+      makeArticle({
+        id: 1,
+        slug: "low-favorites",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        favoritesCount: 5,
+        createdAt: new Date("2020-01-01"),
+      }),
+      makeArticle({
+        id: 2,
+        slug: "tied-older",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        favoritesCount: 10,
+        createdAt: new Date("2020-01-02"),
+      }),
+      makeArticle({
+        id: 3,
+        slug: "tied-newer",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        favoritesCount: 10,
+        createdAt: new Date("2020-01-03"),
+      }),
+      makeArticle({
+        id: 4,
+        slug: "no-favorites",
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        favoritesCount: 1,
+        createdAt: new Date("2020-01-04"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "top" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(4);
+    // Default page size is 3: tied-newer (10, newest) > tied-older (10,
+    // older) > low-favorites (5) > no-favorites (1, dropped off page 0).
+    expect(articles.map((a) => a.slug)).toEqual(["tied-newer", "tied-older", "low-favorites"]);
+  });
+
+  // AC-094: sort=top paginates at 3/page while the reported total count is
+  // every match, not just the current page.
+  test("sort=top paginates at 3 per page with the true total count", async () => {
+    const seed = [1, 2, 3, 4, 5].map((n) =>
+      makeArticle({
+        id: n,
+        slug: `article-${n}`,
+        author: makeFollowableUser({ id: 1, username: "jane" }),
+        favoritesCount: n,
+        createdAt: new Date(`2020-01-0${n}`),
+      }),
+    );
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { sort: "top" } }, res, vi.fn());
+
+    const { articles, articlesCount } = res.json.mock.calls[0][0];
+    expect(articlesCount).toBe(5);
+    expect(articles).toHaveLength(3);
+    expect(articles.map((a) => a.slug)).toEqual(["article-5", "article-4", "article-3"]);
   });
 
   // Seed articles with distinct title/description/body text so a search

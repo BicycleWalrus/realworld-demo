@@ -491,3 +491,28 @@ falls back to the Global Feed rather than an empty search tab. On the
 backend, `search` is additive: when combined with the existing
 author/tag/favorited filters (REQ-013), a request is restricted by all of
 the supplied filters together (a logical AND), not by `search` alone.
+
+---
+
+### REQ-061 — Top Articles feed tab available to any visitor
+A "Top Articles" feed tab is available next to the existing tabs (Your
+Feed, Global Feed) and is selectable by any visitor, whether or not they
+are logged in. It is selected via a `sort=top` query parameter on the
+existing `GET /api/articles` listing (REQ-013) rather than a separate
+route.
+
+### REQ-062 — Top Articles ordered by favorite count, ties broken by newest
+When the Top Articles tab is selected, the listing is ordered by each
+article's favorite count, highest first. Articles with equal favorite
+counts are ordered relative to each other newest-first (by `createdAt`).
+
+### REQ-063 — Top Articles paginated like any other listing
+The Top Articles listing is paginated the same way as the rest of the
+article listing (REQ-013): a page size of 3 by default, with the reported
+total reflecting every matching article rather than only the current
+page.
+
+### REQ-064 — Switching feed tabs re-fetches so no stale data is shown
+Switching to or away from the Top Articles tab re-fetches the article
+listing, so an article list from a previously selected tab is never left
+displayed under a different, newly selected tab.
