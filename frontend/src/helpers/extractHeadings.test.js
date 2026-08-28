@@ -45,4 +45,28 @@ describe("extractHeadings", () => {
       { level: 2, text: "Also Real", id: "also-real" },
     ]);
   });
+
+  it("ignores lines that look like headings inside a tilde-fenced code block", () => {
+    const body = "# Real Heading\n\n~~~\n# not a heading\n~~~\n\n## Also Real";
+
+    expect(extractHeadings(body)).toEqual([
+      { level: 1, text: "Real Heading", id: "real-heading" },
+      { level: 2, text: "Also Real", id: "also-real" },
+    ]);
+  });
+
+  // markdown-to-jsx's own heading rule needs no space after the #s and
+  // tolerates leading indentation - matched here so a heading it actually
+  // renders (with an id) is never silently missing from the TOC.
+  it("extracts a heading with no space after the hashes", () => {
+    expect(extractHeadings("#NoSpace")).toEqual([
+      { level: 1, text: "NoSpace", id: "nospace" },
+    ]);
+  });
+
+  it("extracts a heading with leading indentation", () => {
+    expect(extractHeadings("  ## Indented")).toEqual([
+      { level: 2, text: "Indented", id: "indented" },
+    ]);
+  });
 });

@@ -1,5 +1,11 @@
-const HEADING_LINE = /^(#{1,6})\s+(.+?)\s*#*\s*$/;
-const FENCE_LINE = /^```/;
+// Mirrors markdown-to-jsx's own (lenient, non-CommonMark-strict) heading
+// rule exactly: no space required after the #s, and leading spaces are
+// allowed. Diverging from this — even to be "more correct" — would mean a
+// heading the renderer actually produces an id for goes silently missing
+// from the table of contents.
+const HEADING_LINE = /^ *(#{1,6}) *(.+?)(?: +#*)?$/;
+// Mirrors markdown-to-jsx's fence rule: 3+ backticks OR 3+ tildes.
+const FENCE_LINE = /^\s*(`{3,}|~{3,})/;
 
 function slugifyHeading(text) {
   return (
