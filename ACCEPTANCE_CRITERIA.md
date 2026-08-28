@@ -675,6 +675,33 @@ changed.
 
 ---
 
+### US-042 — React to an article
+*(REQ-094, REQ-095, REQ-096)*
+
+- **AC-125** — Given an authenticated user and an existing article, when
+  they `POST /api/articles/:slug/reactions` with a type from `like`,
+  `insightful`, `celebrate`, then that reaction is recorded as their sole
+  reaction on the article; when they repeat the request with a different
+  valid type, then their existing reaction is changed rather than a
+  second one being added; when they `DELETE
+  /api/articles/:slug/reactions`, then their reaction is removed; given a
+  type outside the fixed set, then the request is rejected with a
+  validation error; given no authenticated user, then either request is
+  rejected with an authentication-required error.
+- **AC-126** — Given an article with reactions from one or more users,
+  when its representation is requested, then it includes a count of
+  reactions of each fixed type, visible to anonymous and authenticated
+  viewers alike; given an authenticated viewer, then the representation
+  additionally includes that viewer's own current reaction, or `null` if
+  they have none; given an anonymous viewer, then this is always `null`.
+- **AC-127** — Given an article a user has favorited, when that user
+  also sets, changes, or removes a reaction on it, then the article's
+  Favorites relation and favorite count are unaffected; conversely,
+  favoriting or unfavoriting the article never creates, changes, or
+  removes that user's reaction.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -772,3 +799,6 @@ changed.
 | REQ-091 | US-040 | AC-122 |
 | REQ-092 | US-041 | AC-123 |
 | REQ-093 | US-041 | AC-124 |
+| REQ-094 | US-042 | AC-125 |
+| REQ-095 | US-042 | AC-126 |
+| REQ-096 | US-042 | AC-127 |

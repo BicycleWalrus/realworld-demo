@@ -8,6 +8,7 @@ const {
 const {
   appendFollowers,
   appendFavorites,
+  appendReactions,
   appendTagList,
   slugify,
 } = require("../helper/helpers");
@@ -251,6 +252,9 @@ const singleArticle = async (req, res, next) => {
     // read-later button; unset (false) for anonymous visitors, since the
     // read-later list is private to the logged-in user.
     article.dataValues.readLater = loggedUser ? await loggedUser.hasReadLater(article) : false;
+    // REQ-095/REQ-096: additive reaction counts + per-viewer current
+    // reaction, independent of Favorites above.
+    await appendReactions(loggedUser, article);
 
     res.json({ article });
   } catch (error) {

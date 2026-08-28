@@ -731,3 +731,33 @@ The reading-time estimate is never less than "1 min read", including for
 an empty, whitespace-only, or missing body. The estimate is also
 well-defined for a very long body. The estimate never renders as `NaN`
 and never involves a division-by-zero.
+
+---
+
+## Reactions
+
+### REQ-094 — An authenticated user can set, change, or remove a reaction from a fixed set (mirrors REQ-025's authentication rule)
+An authenticated user can react to an existing article with exactly one
+type from the fixed set `like`, `insightful`, `celebrate`, via `POST
+/api/articles/:slug/reactions` with the desired type. A user has at most
+one reaction on a given article: reacting again with a different type
+changes the existing reaction rather than adding a second one. A user can
+explicitly remove their reaction via `DELETE
+/api/articles/:slug/reactions`. An unknown reaction type is rejected.
+Reacting requires a resolved, authenticated user, mirroring REQ-025's
+authentication rule for favoriting.
+
+### REQ-095 — An article's representation includes per-type reaction counts and the viewer's own reaction
+Any article representation returned by the API includes a count of
+reactions of each fixed type, visible to anonymous and authenticated
+visitors alike. An authenticated viewer's representation additionally
+includes their own current reaction on that article, or `null` if they
+have not reacted; for an anonymous request, this is always `null`.
+
+### REQ-096 — Reactions are a separate, independent concept from Favorites
+Reactions are backed by a distinct model and table from Favorites, joined
+the same way (per-user, per-article) but never combined with it. Setting,
+changing, or removing a reaction never creates, removes, or otherwise
+affects a Favorites relation, and never changes the article's favorite
+count (REQ-025/REQ-026); those remain governed entirely by REQ-025 and
+REQ-026, unamended by this feature.

@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({ User, Tag, Comment }) {
+    static associate({ User, Tag, Comment, Reaction }) {
       // define association here
 
       // Users
@@ -39,6 +39,11 @@ module.exports = (sequelize, DataTypes) => {
         as: "readLaterUsers",
         foreignKey: "articleId",
       });
+
+      // Reactions (REQ-094/REQ-095/REQ-096): a separate, independent
+      // concept from Favorites above - a distinct model/table, never
+      // folded into the favorite relation or its count.
+      this.hasMany(Reaction, { foreignKey: "articleId", onDelete: "CASCADE" });
     }
 
     toJSON() {
