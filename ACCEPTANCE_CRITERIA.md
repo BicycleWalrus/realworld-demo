@@ -421,6 +421,22 @@ changed.
   page loads, then that stored choice is applied regardless of the
   browser's current `prefers-color-scheme` preference.
 
+### US-030 — Article cover image
+*(REQ-050)*
+
+- **AC-084** — Given an author creating or updating an article with an
+  image URL, when the article is saved, then the URL is stored as the
+  article's cover image; given a subsequent falsy image value on update,
+  then the previously stored image is left unchanged rather than cleared.
+- **AC-085** — Given an article with a cover image set, when its preview
+  card or detail page is rendered, then the cover image is displayed.
+- **AC-086** — Given an article with no cover image set, when its preview
+  card or detail page is rendered, then no image element is rendered and
+  the layout matches the existing (no-image) appearance.
+- **AC-087** — Given an article creation request with no image field,
+  when submitted, then creation still succeeds, with `REQ-015`'s required
+  fields unaffected.
+
 ---
 
 ## Traceability Matrix
@@ -476,3 +492,4 @@ changed.
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
 | REQ-049 | US-029 | AC-080–AC-083 |
+| REQ-050 | US-030 | AC-084–AC-087 |
