@@ -392,6 +392,19 @@ existing application role's (`POSTGRES_USER`) privileges, and applies only
 to local development — no production database is reachable from this
 role.
 
+### REQ-7.1 — Public user directory listing
+The system provides a listing of user accounts (username, avatar image, and
+bio) that does not require authentication. Listing supports a page size
+(`limit`, default 3) and a page index (`offset`, default 0), with results
+ordered by username ascending. Each returned entry excludes the account's
+email and password.
+
+### REQ-7.2 — User directory page displays a paginated, linked list of authors
+The client renders the user directory as a paginated list of entries
+(username, avatar, bio snippet), fetched from REQ-7.1's listing. Each entry
+links to that user's full profile page. The page never loads or renders
+more than one page of entries at a time.
+
 ### REQ-048 — MCP server for read-only local Postgres access
 The repository's checked-in `.mcp.json` configures a Postgres MCP server
 (`postgres-readonly`) that connects using the `mcp_readonly` role

@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-7.1** — As a visitor, I want to browse a directory of all authors, so
+that I can discover new people to follow without already knowing their
+username.
+*Related requirements: REQ-7.1, REQ-7.2*

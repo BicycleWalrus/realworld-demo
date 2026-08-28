@@ -404,6 +404,23 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-7.1 — Browse a directory of authors
+*(REQ-7.1, REQ-7.2)*
+
+- **AC-7.1** — Given no `Authorization` header, when the user directory
+  endpoint is requested, then the request succeeds and returns a page of
+  user entries (username, avatar image, bio), each excluding email and
+  password.
+- **AC-7.2** — Given no explicit page size is provided, when the user
+  directory endpoint is requested, then results are limited to 3 users per
+  page, ordered by username ascending.
+- **AC-7.3** — Given the user directory page is rendered, when an entry is
+  selected, then the visitor navigates to that user's full profile page.
+- **AC-7.4** — Given more users exist than fit on one page, when the
+  directory page is viewed, then pagination controls allow navigating to
+  subsequent pages, and at most one page of entries is loaded/rendered at a
+  time.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +475,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-7.1 | US-7.1 | AC-7.1, AC-7.2 |
+| REQ-7.2 | US-7.1 | AC-7.3, AC-7.4 |
