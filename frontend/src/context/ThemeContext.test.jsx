@@ -52,6 +52,14 @@ describe("ThemeProvider", () => {
     expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
   });
 
+  it("defaults to light when the OS preference cannot be determined", () => {
+    window.matchMedia = undefined;
+
+    renderWithProvider();
+
+    expect(screen.getByText("light")).toBeInTheDocument();
+  });
+
   it("uses the previously stored theme over the OS preference", () => {
     localStorage.setItem("theme", "dark");
     mockPrefersDark(false);

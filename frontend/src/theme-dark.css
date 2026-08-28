@@ -119,6 +119,30 @@ html[data-theme="dark"] .home-page .sidebar {
   background-color: #1c2227;
 }
 
+html[data-theme="dark"] .page-link {
+  background-color: #1c2227;
+  border-color: #2c343a;
+}
+
+html[data-theme="dark"] .page-item.disabled .page-link,
+html[data-theme="dark"] .page-item.disabled .page-link:focus,
+html[data-theme="dark"] .page-item.disabled .page-link:hover {
+  background-color: #1c2227;
+  border-color: #2c343a;
+}
+
+html[data-theme="dark"] .nav-tabs {
+  border-bottom-color: #2c343a;
+}
+
+html[data-theme="dark"] .nav-tabs .nav-link.active,
+html[data-theme="dark"] .nav-tabs .nav-link.active:focus,
+html[data-theme="dark"] .nav-tabs .nav-link.active:hover {
+  color: #d7dadc;
+  background-color: #1c2227;
+  border-color: #2c343a #2c343a transparent;
+}
+
 html[data-theme="dark"] .error-messages {
   color: #e07a7a !important;
 }
