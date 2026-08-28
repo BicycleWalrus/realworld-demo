@@ -2,21 +2,26 @@ import Markdown from "markdown-to-jsx";
 import { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import dateFormatter from "../../helpers/dateFormatter";
 import getProfile from "../../services/getProfile";
 import Avatar from "../Avatar";
 import FollowButton from "../FollowButton";
 
 function AuthorInfo() {
   const { state } = useLocation();
-  const [{ bio, followersCount, following, image }, setAuthor] = useState(
-    state || {}
-  );
+  const [
+    { articleCount, bio, favoritesCount, followersCount, following, image, memberSince },
+    setAuthor,
+  ] = useState(state || {});
   const { headers, loggedUser } = useAuth();
   const { username } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (state && state.bio === bio) return;
+    // REQ-053..056: router `state` (e.g. from ArticleMeta's Link) never
+    // carries the author stats, so a fetch is still needed even when the
+    // rest of the state already matches — otherwise stats would never load.
+    if (state && state.bio === bio && articleCount !== undefined) return;
 
     getProfile({ headers, username })
       .then(setAuthor)
@@ -36,6 +41,14 @@ function AuthorInfo() {
       <h4>{username}</h4>
 
       {bio && <Markdown options={{ forceBlock: true }}>{bio}</Markdown>}
+
+      {memberSince !== undefined && (
+        <ul className="author-stats">
+          <li>{articleCount} articles</li>
+          <li>{favoritesCount} favorites</li>
+          <li>Member since {dateFormatter(memberSince)}</li>
+        </ul>
+      )}
 
       {username === loggedUser.username ? (
         <Link

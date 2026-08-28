@@ -423,6 +423,27 @@ changed.
 
 ---
 
+### US-030 — Author profile stats
+*(REQ-053, REQ-054, REQ-055, REQ-056)*
+
+- **AC-084** — Given an author's profile page, when it loads, then it
+  shows the total number of articles that author has published.
+- **AC-085** — Given an author's profile page, when it loads, then it
+  shows the total number of favorites summed across all of that author's
+  articles.
+- **AC-086** — Given an author's profile page, when it loads, then it
+  shows the author's member-since date, formatted the same way as other
+  dates in the application, without the serialized `User` gaining a raw
+  `createdAt`/`updatedAt`/`id` field it did not already expose.
+- **AC-087** — Given an author's profile page, when it is visited by an
+  authenticated visitor and when it is visited by an anonymous visitor,
+  then the same article count, favorites total, and member-since date are
+  shown in both cases, reflecting current data — including when the page
+  is reached via a link that supplies partial profile data (e.g. bio,
+  follower count) without these stats.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -479,3 +500,7 @@ changed.
 | REQ-050 | US-029 | AC-081 |
 | REQ-051 | US-029 | AC-082 |
 | REQ-052 | US-029 | AC-083 |
+| REQ-053 | US-030 | AC-084 |
+| REQ-054 | US-030 | AC-085 |
+| REQ-055 | US-030 | AC-086 |
+| REQ-056 | US-030 | AC-087 |

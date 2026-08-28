@@ -148,3 +148,10 @@ blocked at the database level, not just by the tool's own claims.
 **US-029** — As a user, I want to switch to a dark theme, so that I can
 read comfortably in low light or according to my preference.
 *Related requirements: REQ-049, REQ-050, REQ-051, REQ-052*
+
+---
+
+**US-030** — As a visitor, I want to see an author's article count, total
+favorites received, and member-since date, so that I can gauge them
+before reading.
+*Related requirements: REQ-053, REQ-054, REQ-055, REQ-056*
