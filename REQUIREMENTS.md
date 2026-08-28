@@ -405,3 +405,36 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-053 — Article creation and update support a draft/published state
+Creating or updating an article accepts an optional `published` boolean.
+On creation, a `published` value of `false` saves the article as a
+draft; omitting the field, or passing `true`, publishes it immediately —
+this default preserves prior behavior for callers that don't send the
+field. This amends REQ-015: creation still requires non-empty `title`,
+`description`, and `body` (unchanged), but no longer implies the created
+article is always immediately public. On update, `published` is only
+changed when the submitted value is a boolean (`true` or `false`); a
+missing or non-boolean value leaves the article's current published
+state unchanged, mirroring how `title`/`description`/`body` already
+treat an absent value on update (REQ-017). This is the only path by
+which a draft is published — the author calls the existing update
+endpoint with `published: true`; no separate publish endpoint exists.
+
+### REQ-054 — Draft articles are visible only to their author
+An article with `published: false` (a draft) is excluded from the global
+article listing, the personalized feed, tag filtering, keyword search,
+the favorited-by-user filter, and any other user's profile "articles"
+tab — for every viewer except the article's own author. When the article
+listing's `author` filter matches the requesting user's own username,
+that user's own drafts are included alongside their published articles;
+this exception does not extend to the `favorited` filter — an author's
+own drafts are excluded from the favorited-by-user listing even when the
+viewer is that same author. Retrieving a draft directly by slug fails
+with the same not-found error used for a slug that doesn't exist at all,
+for any requester other than the article's author, so a non-author
+cannot distinguish "no article here" from "a draft exists here that
+isn't yours." This requirement amends the scope of REQ-013 (listing),
+REQ-018 (feed), and REQ-019 (single-article retrieval) to exclude
+drafts as described above; it does not alter REQ-016, which applies
+unchanged to drafts and published articles alike.

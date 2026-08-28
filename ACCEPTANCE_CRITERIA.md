@@ -404,6 +404,39 @@ changed.
   use of the server in a session requires an interactive permission
   prompt.
 
+### US-033 — Save and publish articles as drafts
+*(REQ-053, REQ-054)*
+
+- **AC-096** — Given a new article submitted without a `published` field,
+  when it is created, then it is saved with `published: true` and appears
+  in listings/feeds like any other article.
+- **AC-097** — Given a new article submitted with `published: false`, when
+  it is created, then it is saved as a draft.
+- **AC-098** — Given an existing draft and its author, when the author
+  submits an update to it with `published: true`, then the article's
+  published state becomes `true` and it becomes visible like any other
+  article thereafter.
+- **AC-099** — Given an existing draft, when the global article listing,
+  tag-filtered listing, or another user's profile "articles" tab is
+  requested by anyone other than the draft's author (including
+  anonymously), then the draft is absent from the results.
+- **AC-100** — Given an existing draft, when the article listing is
+  requested with `author=<the draft's author's username>` by that same
+  logged-in author, then the draft is included in the results.
+- **AC-101** — Given an existing draft authored by a user the requester
+  follows, when the requester's personalized feed is requested, then the
+  draft is absent from the feed results.
+- **AC-102** — Given an existing draft, when it is requested directly by
+  slug by anyone other than its author (including anonymously), then the
+  request fails with a not-found error, identical to requesting a
+  nonexistent slug.
+- **AC-103** — Given an existing draft, when it is requested directly by
+  slug by its own author, then the full article is returned.
+- **AC-104** — Given an existing draft, when it is requested via the
+  favorited-by-user filter, then it is excluded from those results for
+  every viewer, including the draft's own author browsing their own
+  favorites tab.
+
 ---
 
 ## Traceability Matrix
@@ -458,3 +491,5 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-053 | US-033 | AC-096–AC-098 |
+| REQ-054 | US-033 | AC-099–AC-104 |

@@ -28,7 +28,7 @@ function makeFollowableUser(overrides = {}) {
   );
 }
 
-function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, ...data }) {
+function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, published = true, ...data }) {
   return makeInstance(
     {
       id: 1,
@@ -37,6 +37,7 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
       description: "d",
       body: "b",
       tagList: tags,
+      published,
       createdAt: new Date("2020-01-01"),
       author,
       ...data,
@@ -59,14 +60,15 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
 // behavior can be asserted on the returned response body rather than on
 // what arguments were passed to a mock.
 function fakeArticleList(seedRows) {
-  return ({ include = [], limit, offset, where } = {}) => {
+  return ({ include = [], limit, offset, where = {} } = {}) => {
     let rows = [...seedRows].sort((a, b) => b.dataValues.createdAt - a.dataValues.createdAt);
 
     const tagFilter = include.find((i) => i.as === "tagList")?.where?.name;
     const authorFilter = include.find((i) => i.as === "author")?.where?.username;
     if (tagFilter) rows = rows.filter((r) => r.tagList.some((t) => t.name === tagFilter));
     if (authorFilter) rows = rows.filter((r) => r.author.username === authorFilter);
-    if (where?.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+    if (where.userId) rows = rows.filter((r) => where.userId.includes(r.author.id));
+    if (where.published) rows = rows.filter((r) => r.dataValues.published !== false);
 
     const count = rows.length;
     rows = rows.slice(offset, offset + limit);
@@ -155,6 +157,37 @@ describe("createArticle", () => {
     expect(created.addTagList).toHaveBeenCalledTimes(2);
     expect(res.status).toHaveBeenCalledWith(201);
   });
+
+  // AC-096: omitting `published` defaults the article to published.
+  test("omitting published -> Article.create called with published: true", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+
+    await createArticle(
+      { loggedUser, body: { article: { title: "T", description: "d", body: "b", tagList: [] } } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Article.create).toHaveBeenCalledWith(expect.objectContaining({ published: true }));
+  });
+
+  // AC-097: an explicit published: false is passed through as a draft.
+  test("published: false -> Article.create called with published: false", async () => {
+    Article.findOne.mockResolvedValue(null);
+    Article.create.mockResolvedValue(makeArticle({ author: loggedUser }));
+
+    await createArticle(
+      {
+        loggedUser,
+        body: { article: { title: "T", description: "d", body: "b", tagList: [], published: false } },
+      },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(Article.create).toHaveBeenCalledWith(expect.objectContaining({ published: false }));
+  });
 });
 
 describe("updateArticle", () => {
@@ -235,6 +268,37 @@ describe("updateArticle", () => {
 
     expect(article.description).toBe("original description");
     expect(article.body).toBe("original body");
+  });
+
+  // AC-098: the author can publish a draft via this same endpoint.
+  test("published: true on a draft -> article.published becomes true", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, published: false });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      { loggedUser: author, params: { slug: "a-slug" }, body: { article: { published: true } } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.published).toBe(true);
+    expect(article.save).toHaveBeenCalled();
+  });
+
+  // A missing/non-boolean published value leaves the current state unchanged.
+  test("omitting published on update leaves the current published state unchanged", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, published: false });
+    Article.findOne.mockResolvedValue(article);
+
+    await updateArticle(
+      { loggedUser: author, params: { slug: "a-slug" }, body: { article: { title: "New" } } },
+      makeRes(),
+      vi.fn(),
+    );
+
+    expect(article.published).toBe(false);
   });
 });
 
@@ -326,6 +390,46 @@ describe("singleArticle", () => {
     expect(article.dataValues.favoritesCount).toBe(6);
     expect(article.author.dataValues.following).toBe(false);
     expect(article.author.dataValues.followersCount).toBe(9);
+  });
+
+  // AC-102: a draft is 404 (not 403) for anyone other than its author, so a
+  // non-author can't distinguish "no article" from "a draft exists here."
+  test("draft article, anonymous viewer -> NotFoundError", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, published: false });
+    Article.findOne.mockResolvedValue(article);
+    const next = vi.fn();
+
+    await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, makeRes(), next);
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+  });
+
+  test("draft article, different logged-in user -> NotFoundError", async () => {
+    const author = makeFollowableUser({ id: 1 });
+    const article = makeArticle({ author, published: false });
+    Article.findOne.mockResolvedValue(article);
+    const next = vi.fn();
+
+    await singleArticle(
+      { loggedUser: makeFollowableUser({ id: 2 }), params: { slug: "a-slug" } },
+      makeRes(),
+      next,
+    );
+
+    expect(next.mock.calls[0][0]).toBeInstanceOf(NotFoundError);
+  });
+
+  // AC-103: the draft's own author can retrieve it.
+  test("draft article, its own author -> full article returned", async () => {
+    const author = makeFollowableUser();
+    const article = makeArticle({ author, published: false });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: author, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(res.json).toHaveBeenCalledWith({ article });
   });
 });
 
@@ -435,6 +539,61 @@ describe("allArticles", () => {
     expect(error).not.toBeInstanceOf(NotFoundError);
     expect(error).not.toBeInstanceOf(FieldRequiredError);
   });
+
+  // AC-099: a draft is excluded from another viewer's (or anonymous) listing.
+  test("draft excluded from author filter for a different/anonymous viewer", async () => {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const seed = [
+      makeArticle({ id: 1, slug: "jane-published", author: jane, createdAt: new Date("2020-01-01") }),
+      makeArticle({ id: 2, slug: "jane-draft", author: jane, published: false, createdAt: new Date("2020-01-02") }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: undefined, query: { author: "jane" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["jane-published"]);
+  });
+
+  // AC-100: the draft's own author sees it via their own author filter.
+  test("draft included when the author filter matches the logged-in viewer", async () => {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const seed = [
+      makeArticle({ id: 1, slug: "jane-published", author: jane, createdAt: new Date("2020-01-01") }),
+      makeArticle({ id: 2, slug: "jane-draft", author: jane, published: false, createdAt: new Date("2020-01-02") }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const res = makeRes();
+
+    await allArticles({ loggedUser: jane, query: { author: "jane" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["jane-draft", "jane-published"]);
+  });
+
+  // AC-104: no self-exception on the favorited filter - the author's own
+  // draft stays excluded even when the author is the one browsing favorites.
+  test("draft excluded from the favorited filter even for its own author", async () => {
+    const jane = makeFollowableUser({ id: 1, username: "jane" });
+    const draft = makeArticle({ author: jane, slug: "jane-draft", published: false });
+    const fan = makeInstance(
+      { id: 1, username: "jane" },
+      {
+        getFavorites: vi.fn().mockImplementation((options) =>
+          Promise.resolve(options.where?.published ? [] : [draft]),
+        ),
+        countFavorites: vi.fn().mockResolvedValue(1),
+      },
+    );
+    User.findOne.mockResolvedValue(fan);
+    const res = makeRes();
+
+    await allArticles({ loggedUser: jane, query: { favorited: "jane" } }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles).toEqual([]);
+  });
 });
 
 describe("articlesFeed", () => {
@@ -483,5 +642,31 @@ describe("articlesFeed", () => {
     const { articles, articlesCount } = res.json.mock.calls[0][0];
     expect(articles).toEqual([]);
     expect(articlesCount).toBe(0);
+  });
+
+  // AC-101: a followed author's draft is excluded from the feed.
+  test("a followed author's draft is excluded from the feed", async () => {
+    const followedAuthor = makeFollowableUser({ id: 10, username: "followed" });
+    const seed = [
+      makeArticle({ id: 1, slug: "published", author: followedAuthor, createdAt: new Date("2020-01-01") }),
+      makeArticle({
+        id: 2,
+        slug: "draft",
+        author: followedAuthor,
+        published: false,
+        createdAt: new Date("2020-01-02"),
+      }),
+    ];
+    Article.findAndCountAll.mockImplementation(fakeArticleList(seed));
+    const loggedUser = makeInstance(
+      { id: 99 },
+      { getFollowing: vi.fn().mockResolvedValue([{ id: 10 }]) },
+    );
+    const res = makeRes();
+
+    await articlesFeed({ loggedUser, query: {} }, res, vi.fn());
+
+    const { articles } = res.json.mock.calls[0][0];
+    expect(articles.map((a) => a.slug)).toEqual(["published"]);
   });
 });

@@ -39,6 +39,7 @@ const allArticles = async (req, res, next) => {
           ...(author && { where: { username: author } }),
         },
       ],
+      where: author && author === loggedUser?.username ? {} : { published: true },
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
@@ -76,7 +77,7 @@ const createArticle = async (req, res, next) => {
     const { loggedUser } = req;
     if (!loggedUser) throw new UnauthorizedError();
 
-    const { title, description, body, tagList } = req.body.article;
+    const { title, description, body, tagList, published } = req.body.article;
     if (!title) throw new FieldRequiredError("A title");
     if (!description) throw new FieldRequiredError("A description");
     if (!body) throw new FieldRequiredError("An article body");
@@ -90,6 +91,7 @@ const createArticle = async (req, res, next) => {
       title: title,
       description: description,
       body: body,
+      published: typeof published === "boolean" ? published : true,
     });
 
     for (const tag of tagList) {
@@ -132,7 +134,7 @@ const articlesFeed = async (req, res, next) => {
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
-      where: { userId: authors.map((author) => author.id) },
+      where: { userId: authors.map((author) => author.id), published: true },
     });
 
     for (const article of articles.rows) {
@@ -161,6 +163,10 @@ const singleArticle = async (req, res, next) => {
     });
     if (!article) throw new NotFoundError("Article");
 
+    if (!article.published && loggedUser?.id !== article.author.id) {
+      throw new NotFoundError("Article");
+    }
+
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
@@ -188,13 +194,14 @@ const updateArticle = async (req, res, next) => {
       throw new ForbiddenError("article");
     }
 
-    const { title, description, body } = req.body.article;
+    const { title, description, body, published } = req.body.article;
     if (title) {
       article.slug = slugify(title);
       article.title = title;
     }
     if (description) article.description = description;
     if (body) article.body = body;
+    if (typeof published === "boolean") article.published = published;
     await article.save();
 
     appendTagList(article.tagList, article);
