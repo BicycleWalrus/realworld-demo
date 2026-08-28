@@ -422,6 +422,18 @@ changed.
   them the same as to any other viewer who can view the article — no
   additional or reduced access applies.
 
+### US-030 — Estimated reading time on articles
+*(REQ-051)*
+
+- **AC-084** — Given an article with a non-empty `body`, when its preview
+  card or detail page is rendered, then an estimated reading time (e.g.,
+  "4 min read") is displayed alongside the existing date, without
+  altering the date's own format (REQ-040).
+- **AC-085** — Given an article whose `body` is empty, near-empty, or very
+  long, when its reading time is computed, then the result is always a
+  whole number of minutes with a floor of 1 (never "0 min read", `NaN`,
+  or a crash).
+
 ---
 
 ## Traceability Matrix
@@ -478,3 +490,4 @@ changed.
 | REQ-048 | US-028 | AC-078, AC-079 |
 | REQ-049 | US-029 | AC-080, AC-083 |
 | REQ-050 | US-029 | AC-081, AC-082 |
+| REQ-051 | US-030 | AC-084, AC-085 |

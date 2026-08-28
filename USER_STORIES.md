@@ -148,3 +148,9 @@ blocked at the database level, not just by the tool's own claims.
 **US-029** — As a reader, I want to download an article as a Markdown
 file, so that I can save or read it offline in my own editor/notes app.
 *Related requirements: REQ-049, REQ-050*
+
+---
+
+**US-030** — As a reader, I want to see roughly how long an article will
+take to read, so that I can decide whether to read it now.
+*Related requirements: REQ-051*
