@@ -140,6 +140,20 @@ before the PR opens.
   scoped ID (`REQ-<issue>.<n>`, Step 3) in the heading, e.g.
   `### REQ-7.1 — <title>`; only amendment-mode entries (no ticket) use a
   bare `### REQ-<n>` heading.
+- **Get the insertion point right on the first try.** A pre-commit guard
+  in this repo blocks any edit that would remove or alter an existing
+  `REQ-###` entry's text — including moving it to fix ordering after the
+  fact, even within the same uncommitted change. Before inserting, run
+  `grep -n '^### REQ-' REQUIREMENTS.md | tail -1` to find the true last
+  entry, and anchor your `Edit`'s `old_string` on text *after* that
+  entry's full body ends (not on that entry's heading, which would insert
+  before it instead of after). If you land an entry out of numeric order
+  by mistake, do not try to fix it with a follow-up edit — the guard will
+  reject it as "removing" the entry; leave the ordering as-is and flag it
+  in your message back to the user instead. (In practice this matters
+  less now that new entries are ticket-scoped — a mis-anchored `REQ-7.1`
+  only affects ticket #7's own ordering, not the whole file's — but the
+  guard's append-only behavior is unconditional either way.)
 
 ## Step 5 — Draft the US entry
 
