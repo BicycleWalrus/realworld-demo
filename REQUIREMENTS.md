@@ -405,3 +405,26 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Author profile stats
+The profile endpoint (`GET /api/profiles/:username`) includes, on every
+response regardless of whether the caller is authenticated: the number of
+articles the profile's owner has published (`articlesCount`), the total
+favorite count summed across all of that owner's articles
+(`favoritesCount`), and the account's creation date, exposed as
+`memberSince` (a value distinct from the raw `createdAt` column, which
+`User.toJSON()` continues to strip from any serialized user representation
+as before). The client's profile page displays all three alongside the
+existing bio and article tabs, with `memberSince` formatted the same way
+as any other displayed date (REQ-040).
+
+On the client, these stats are fetched independently of the profile
+page's existing bio/avatar/follow-status logic (REQ-043): that existing
+logic skips re-fetching from the server when the page is reached via
+in-app navigation state whose `bio` already matches what's displayed, but
+navigation state never carries these stats, so a separate request always
+fetches them on page load regardless of whether the bio-matching fetch
+was skipped. REQ-043's own behavior (whether the bio/avatar/follow-status
+fetch itself runs) is unchanged.

@@ -406,6 +406,30 @@ changed.
 
 ---
 
+### US-029 — Author profile stats
+*(REQ-049)*
+
+- **AC-080** — Given an author who has published articles, when their
+  profile is requested (authenticated or not), then the response includes
+  their total published article count.
+- **AC-081** — Given an author whose articles have received favorites
+  (from one or more other users), when their profile is requested, then
+  the response includes the total favorite count summed across all of
+  that author's articles.
+- **AC-082** — Given any profile, when requested, then the response
+  includes a `memberSince` date, and the client displays it formatted the
+  same way as any other date in the app (REQ-040) — distinct from the raw
+  `createdAt` field, which remains stripped from any serialized user
+  representation.
+- **AC-083** — Given a visitor who reaches a profile page via an in-app
+  link whose navigation state's `bio` already matches what's displayed
+  (the path where REQ-043 skips its own bio/avatar/follow-status
+  refetch), when the page renders, then the article count, favorites
+  total, and member-since date are still fetched and displayed correctly
+  — they are not skipped along with the bio refetch.
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +482,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-083 |

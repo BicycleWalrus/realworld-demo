@@ -39,4 +39,26 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+const appendProfileStats = async (profile) => {
+  const articlesCount = await profile.countArticles();
+  profile.dataValues.articlesCount = articlesCount;
+
+  const articles = await profile.getArticles();
+  const favoritesCounts = await Promise.all(
+    articles.map((article) => article.countUsers()),
+  );
+  profile.dataValues.favoritesCount = favoritesCounts.reduce(
+    (total, count) => total + count,
+    0,
+  );
+
+  profile.dataValues.memberSince = profile.createdAt;
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendProfileStats,
+};
