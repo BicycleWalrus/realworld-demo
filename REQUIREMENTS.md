@@ -405,3 +405,36 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+### REQ-052 — User directory listing endpoint
+A paginated list of user profiles can be retrieved without
+authentication. Each returned profile includes username, bio, image, a
+follower count, and a following flag with the same per-viewer semantics
+as an individual profile lookup (REQ-028): for an authenticated caller,
+the flag reflects whether that caller currently follows the listed user;
+for an anonymous caller, the flag is always `false` while the follower
+count still reflects the true total. Listing supports a page size
+(`limit`, default 12) and a page index (`offset`, default 0), analogous
+to article listing (REQ-013), with results ordered by username in
+ascending order.
+
+### REQ-053 — Directory page displays a browsable grid of user profiles
+A page is available, without authentication, that displays user profiles
+as a paginated grid of cards sourced from the directory listing endpoint
+(REQ-052). Each card shows the user's avatar (falling back to the default
+placeholder image per REQ-033 when unset), username, and a bio snippet,
+and links to that user's full profile page.
+
+### REQ-054 — Directory cards support following without leaving the page
+Each card on the directory page (REQ-053) includes the same follow
+control already used elsewhere in the client for a user's profile: for an
+authenticated viewer it performs a follow or unfollow action against the
+corresponding user and updates the card's displayed following state and
+follower count in place, without navigating away from the directory page;
+for an unauthenticated viewer it displays only the follower count and
+does not perform a follow/unfollow action.
+
+### REQ-055 — Directory link in main navigation
+The client's main navigation header includes a link to the user directory
+page (REQ-053), visible to both authenticated and unauthenticated
+visitors.
