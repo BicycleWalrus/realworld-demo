@@ -167,3 +167,11 @@ html[data-theme="dark"] .profile-page .user-info .action-btn {
   color: #d7dadc;
   border-color: #6c757d;
 }
+
+html[data-theme="dark"] .mention-suggestions {
+  border-color: #2c343a;
+}
+
+html[data-theme="dark"] .mention-suggestions button:hover {
+  background-color: #2c343a;
+}

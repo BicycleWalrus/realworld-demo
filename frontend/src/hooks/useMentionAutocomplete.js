@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import searchUsers from "../services/searchUsers";
 
 const ACTIVE_MENTION = /@(\w*)$/;
@@ -10,6 +10,9 @@ const DEBOUNCE_MS = 150;
 function useMentionAutocomplete() {
   const [suggestions, setSuggestions] = useState([]);
   const debounceRef = useRef(null);
+  const latestRequest = useRef(0);
+
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
 
   const updateQuery = (text, cursor) => {
     const beforeCursor = text.slice(0, cursor);
@@ -22,9 +25,13 @@ function useMentionAutocomplete() {
       return;
     }
 
+    const requestId = ++latestRequest.current;
+
     debounceRef.current = setTimeout(() => {
       searchUsers({ search: match[1] })
-        .then((users) => setSuggestions(users || []))
+        .then((users) => {
+          if (requestId === latestRequest.current) setSuggestions(users || []);
+        })
         .catch(console.error);
     }, DEBOUNCE_MS);
   };

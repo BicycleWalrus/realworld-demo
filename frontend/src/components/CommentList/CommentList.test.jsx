@@ -4,6 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import getComments from "../../services/getComments";
 import searchUsers from "../../services/searchUsers";
 import updateComment from "../../services/updateComment";
+import verifyUsernames from "../../services/verifyUsernames";
 import CommentList from "./CommentList";
 
 vi.mock("../../context/AuthContext");
@@ -11,6 +12,7 @@ vi.mock("../../services/getComments");
 vi.mock("../../services/updateComment");
 vi.mock("../../services/deleteComment");
 vi.mock("../../services/searchUsers");
+vi.mock("../../services/verifyUsernames");
 
 function makeComment(overrides = {}) {
   return {
@@ -49,6 +51,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   getComments.mockResolvedValue([makeComment()]);
   searchUsers.mockResolvedValue([]);
+  verifyUsernames.mockResolvedValue([]);
 });
 
 // AC-097
@@ -135,7 +138,7 @@ describe("CommentList", () => {
   it("linkifies an @mention that matches a real user, in a pre-existing comment", async () => {
     mockAuth({ isAuth: true, username: "jane" });
     getComments.mockResolvedValue([makeComment({ body: "hi @bob!" })]);
-    searchUsers.mockResolvedValue(["bob"]);
+    verifyUsernames.mockResolvedValue(["bob"]);
     renderList();
 
     const link = await screen.findByRole("link", { name: "@bob" });
@@ -145,7 +148,7 @@ describe("CommentList", () => {
   it("leaves an @mention with no matching user as plain text", async () => {
     mockAuth({ isAuth: true, username: "jane" });
     getComments.mockResolvedValue([makeComment({ body: "hi @ghost!" })]);
-    searchUsers.mockResolvedValue([]);
+    verifyUsernames.mockResolvedValue([]);
     renderList();
 
     await screen.findByText("hi", { exact: false });

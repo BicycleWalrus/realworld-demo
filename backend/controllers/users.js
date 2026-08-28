@@ -77,4 +77,31 @@ const searchUsers = async (req, res, next) => {
   }
 };
 
-module.exports = { signUp, signIn, searchUsers };
+const MAX_VERIFY_USERNAMES = 20;
+
+// Verify which of a batch of *exact* usernames exist (for @mention
+// linkifying) - distinct from searchUsers' prefix match, which is unsuited
+// to exact-existence checks: a candidate's own username can be starved out
+// of an unordered, capped prefix result set by other usernames sharing the
+// same prefix. Returns each match's canonical (stored) casing.
+const verifyUsernames = async (req, res, next) => {
+  try {
+    const usernames = (req.query.usernames?.split(",") || [])
+      .map((name) => name.trim())
+      .filter(Boolean)
+      .slice(0, MAX_VERIFY_USERNAMES);
+
+    if (usernames.length === 0) return res.json({ users: [] });
+
+    const matches = await User.findAll({
+      where: { [Op.or]: usernames.map((name) => ({ username: { [Op.iLike]: name } })) },
+      attributes: ["username"],
+    });
+
+    res.json({ users: matches.map(({ username }) => username) });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signUp, signIn, searchUsers, verifyUsernames };
