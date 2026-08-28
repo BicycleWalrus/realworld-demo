@@ -91,3 +91,8 @@ button:focus {
 .mention-suggestions button:hover {
   background-color: #f3f3f3;
 }
+
+.author-stats {
+  color: #aaa;
+  font-size: 0.9rem;
+}
