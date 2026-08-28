@@ -247,3 +247,9 @@ simultaneously. *Related requirements: REQ-063*
 **US-044** — As a user, I want to reply to a specific comment, so that
 multi-person discussion on an article is easy to follow.
 *Related requirements: REQ-064*
+
+---
+
+**US-045** — As a user, I want to follow a topic tag, so that my
+personalized feed includes relevant articles even from authors I don't
+yet follow. *Related requirements: REQ-065 (amending REQ-018)*

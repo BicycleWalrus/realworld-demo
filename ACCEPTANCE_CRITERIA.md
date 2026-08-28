@@ -676,6 +676,24 @@ changed.
   listed, or deleted, then each of those operations behaves exactly as
   before this feature, with the listing additionally carrying an empty
   replies list per top-level comment.
+- **AC-150** — Given an authenticated user, when they follow or unfollow
+  a tag, then the follow state changes accordingly and is reported back;
+  unauthenticated attempts are rejected, and an unknown tag is rejected
+  as not found (consistent with REQ-027's rules for following users).
+- **AC-151** — Given a user with followed authors and/or followed tags,
+  when their personalized feed is requested, then it contains exactly
+  the articles by followed authors plus articles carrying at least one
+  followed tag, each such article appearing exactly once.
+- **AC-152** — Given a user who follows no authors but at least one tag,
+  when matching articles exist, then their personalized feed is
+  non-empty (amending REQ-018's followed-authors-only definition).
+- **AC-153** — Given a user who follows neither authors nor tags, when
+  their personalized feed is requested, then it is empty, unchanged from
+  REQ-018's behavior.
+- **AC-154** — Given a tag tab open to an authenticated visitor, when
+  the follow control is displayed, then its state matches the server's
+  current follow state for that viewer and tag — before and after any
+  toggle, not just within the current session.
 
 ---
 
@@ -747,3 +765,4 @@ changed.
 | REQ-062 | US-042 | AC-135–AC-139 |
 | REQ-063 | US-043 | AC-140–AC-144 |
 | REQ-064 | US-044 | AC-145–AC-149 |
+| REQ-065 | US-045 (amends REQ-018) | AC-150–AC-154 |

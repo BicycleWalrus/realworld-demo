@@ -629,3 +629,20 @@ the deleted comment's own author (REQ-023). Comments with no parent
 keep their existing creation, listing, and deletion behavior; in the
 listing each top-level comment additionally carries its (possibly
 empty) list of replies.
+
+### REQ-065 — Following tags and the tag-augmented personalized feed
+**This entry explicitly amends REQ-018.** An authenticated user can
+follow and unfollow a tag (mirroring how following a user works,
+REQ-027: authentication required, unknown tags rejected as not found).
+The personalized feed is hereby redefined as the union of articles by
+followed authors and articles carrying at least one followed tag —
+replacing REQ-018's "followed authors only" definition; an article
+matching both ways still appears exactly once. As a deliberate
+consequence (the reason for this amendment), a user who follows no
+authors but at least one tag receives a non-empty personalized feed
+whenever matching articles exist; a user who follows neither authors
+nor tags still receives an empty feed. Feed ordering, page size, and
+response shape are unchanged. A single-tag endpoint reports a tag
+together with the requesting viewer's current follow state; the web
+client shows a follow/unfollow control on an active tag tab whose
+displayed state always reflects that server-reported state.

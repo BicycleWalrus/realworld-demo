@@ -239,13 +239,36 @@ const articlesFeed = async (req, res, next) => {
 
     const { limit = 3, offset = 0 } = req.query;
     const authors = await loggedUser.getFollowing();
+    const followedTags = await loggedUser.getFollowedTags();
+
+    // Personalized feed (REQ-065, amending REQ-018): articles by
+    // followed authors UNION articles carrying a followed tag. Article
+    // ids carrying any followed tag resolve in one join-table query;
+    // the union itself is expressed as an OR so an article matching
+    // both ways still appears exactly once.
+    let followedTagArticleIds = [];
+    if (followedTags.length > 0) {
+      const tagRows = await sequelize.models.TagList.findAll({
+        attributes: ["articleId"],
+        where: { tagName: { [Op.in]: followedTags.map((tag) => tag.name) } },
+        raw: true,
+      });
+      followedTagArticleIds = [...new Set(tagRows.map(({ articleId }) => articleId))];
+    }
 
     const articles = await Article.findAndCountAll({
       include: includeOptions,
       limit: parseInt(limit),
       offset: offset * limit,
       order: [["createdAt", "DESC"]],
-      where: { userId: authors.map((author) => author.id) },
+      where: followedTagArticleIds.length > 0
+        ? {
+            [Op.or]: [
+              { userId: authors.map((author) => author.id) },
+              { id: { [Op.in]: followedTagArticleIds } },
+            ],
+          }
+        : { userId: authors.map((author) => author.id) },
     });
 
     for (const article of articles.rows) {

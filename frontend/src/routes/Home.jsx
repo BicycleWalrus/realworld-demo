@@ -3,6 +3,7 @@ import ArticleSearch from "../components/ArticleSearch/ArticleSearch";
 import BannerContainer from "../components/BannerContainer";
 import ContainerRow from "../components/ContainerRow";
 import FeedToggler from "../components/FeedToggler";
+import FollowTagButton from "../components/FollowTagButton/FollowTagButton";
 import RecentlyViewed from "../components/RecentlyViewed";
 import TagFilterInput from "../components/TagFilterInput/TagFilterInput";
 import { useAuth } from "../context/AuthContext";
@@ -25,6 +26,7 @@ function Home() {
           <div className="col-md-9">
             <ArticleSearch />
             <TagFilterInput />
+            <FollowTagButton />
             <FeedToggler />
             <Outlet />
           </div>
