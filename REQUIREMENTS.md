@@ -646,3 +646,21 @@ response shape are unchanged. A single-tag endpoint reports a tag
 together with the requesting viewer's current follow state; the web
 client shows a follow/unfollow control on an active tag tab whose
 displayed state always reflects that server-reported state.
+
+### REQ-066 — Multi-reaction articles
+An authenticated user can react to an article with exactly one
+reaction drawn from a fixed, documented set — like, insightful,
+celebrate — and can change it (replacing the previous type, one
+reaction per user per article) or remove it; reacting requires
+authentication exactly as favoriting does (REQ-025). **Reactions sit
+alongside the existing favorite feature as an independent concept:
+favoriting (REQ-025/REQ-026) is unchanged by this requirement — no
+amendment — and favoriting is not one of the reaction types.** An
+article's representation includes a per-type count for every type in
+the set (zero-filled, stable shape) plus the requesting viewer's own
+reaction (or null), visible to anonymous and authenticated visitors
+alike; an anonymous visitor sees accurate counts but cannot react. A
+reaction type outside the fixed set is rejected. In the web client the
+article page shows one control per reaction type with its live count;
+clicking the active reaction removes it, and the displayed state always
+comes from the server's response.

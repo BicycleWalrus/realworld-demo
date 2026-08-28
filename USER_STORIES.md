@@ -253,3 +253,9 @@ multi-person discussion on an article is easy to follow.
 **US-045** — As a user, I want to follow a topic tag, so that my
 personalized feed includes relevant articles even from authors I don't
 yet follow. *Related requirements: REQ-065 (amending REQ-018)*
+
+---
+
+**US-046** — As a reader, I want to react to an article with more than
+one kind of response, so that I can express more than a single generic
+"favorite." *Related requirements: REQ-066*

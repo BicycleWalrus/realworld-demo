@@ -2,9 +2,10 @@ const { UnauthorizedError, NotFoundError } = require("../helper/customErrors");
 const {
   appendFollowers,
   appendFavorites,
+  appendReactions,
   appendTagList,
 } = require("../helper/helpers");
-const { Article, Tag, User } = require("../models");
+const { Article, Tag, User, sequelize } = require("../models");
 
 //*  Favorite/Unfavorite Article
 const favoriteToggler = async (req, res, next) => {
@@ -37,6 +38,7 @@ const favoriteToggler = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+    await appendReactions(loggedUser, article, sequelize);
 
     res.json({ article });
   } catch (error) {

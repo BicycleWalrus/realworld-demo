@@ -694,6 +694,22 @@ changed.
   the follow control is displayed, then its state matches the server's
   current follow state for that viewer and tag — before and after any
   toggle, not just within the current session.
+- **AC-155** — Given an authenticated user, when they set a reaction
+  from the fixed set (like, insightful, celebrate) on an article, then
+  exactly one reaction of that type is stored for them on that article
+  — a different type replaces it, and removing it leaves none;
+  unauthenticated attempts are rejected (consistent with REQ-025), and
+  a type outside the fixed set is rejected.
+- **AC-156** — Given an article with reactions, when its representation
+  is returned, then it includes a count for every type in the fixed set
+  (zero-filled) and the requesting viewer's own reaction or null.
+- **AC-157** — Given an anonymous visitor, when they view an article,
+  then reaction counts are accurate and visible, and any attempt to
+  react is rejected without changing the counts.
+- **AC-158** — Given the existing favorite feature, when reactions are
+  added, changed, or removed, then favoriting behavior, counts, and
+  controls are unaffected (reactions are a separate, independent
+  concept; REQ-025/REQ-026 are not amended).
 
 ---
 
@@ -766,3 +782,4 @@ changed.
 | REQ-063 | US-043 | AC-140–AC-144 |
 | REQ-064 | US-044 | AC-145–AC-149 |
 | REQ-065 | US-045 (amends REQ-018) | AC-150–AC-154 |
+| REQ-066 | US-046 | AC-155–AC-158 |

@@ -26,6 +26,7 @@ router.delete("/:slug", verifyToken, deleteArticle);
 const favoritesRoutes = require("./articles/favorites");
 const commentsRoutes = require("./articles/comments");
 const readLaterRoutes = require("./articles/readLater");
+const reactionsRoutes = require("./articles/reactions");
 
 //> Favorites routes
 router.use("/", favoritesRoutes);
@@ -33,5 +34,7 @@ router.use("/", favoritesRoutes);
 router.use("/", commentsRoutes);
 //> Read-later routes
 router.use("/", readLaterRoutes);
+//> Reactions routes
+router.use("/", reactionsRoutes);
 
 module.exports = router;

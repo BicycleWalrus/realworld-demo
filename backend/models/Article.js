@@ -38,6 +38,15 @@ module.exports = (sequelize, DataTypes) => {
         as: "savedByUsers",
         foreignKey: "articleId",
       });
+
+      // Reactions (distinct from Favorites - one typed reaction per
+      // user per article, REQ-066)
+      this.belongsToMany(User, {
+        through: "Reactions",
+        as: "reactedUsers",
+        foreignKey: "articleId",
+        timestamps: false,
+      });
     }
 
     toJSON() {

@@ -13,8 +13,9 @@ const Tag = { findByPk: vi.fn(), create: vi.fn() };
 const User = { findOne: vi.fn() };
 const Favorites = { findAll: vi.fn() };
 const TagList = { findAll: vi.fn() };
+const Reactions = { findAll: vi.fn(), findOne: vi.fn(), create: vi.fn() };
 const sequelize = {
-  models: { Favorites, TagList },
+  models: { Favorites, TagList, Reactions },
   fn: (fnName, col) => ({ fnName, col }),
   col: (name) => ({ col: name }),
   where: (left, op, value) => ({ left, op, value }),
@@ -159,6 +160,9 @@ beforeEach(() => {
   User.findOne.mockReset();
   Favorites.findAll.mockReset();
   TagList.findAll.mockReset();
+  Reactions.findAll.mockReset().mockResolvedValue([]);
+  Reactions.findOne.mockReset();
+  Reactions.create.mockReset();
 });
 
 describe("createArticle", () => {
