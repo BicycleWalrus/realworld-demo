@@ -6,6 +6,7 @@ import ArticlesButtons from "../../components/ArticlesButtons";
 import ArticleTags from "../../components/ArticleTags";
 import BannerContainer from "../../components/BannerContainer";
 import { useAuth } from "../../context/AuthContext";
+import { recordRecentlyViewed } from "../../helpers/recentlyViewed";
 import getArticle from "../../services/getArticle";
 
 function Article() {
@@ -26,6 +27,12 @@ function Article() {
         navigate("/not-found", { replace: true });
       });
   }, [isAuth, slug, headers, state, navigate]);
+
+  useEffect(() => {
+    if (!title) return;
+
+    recordRecentlyViewed({ slug, title });
+  }, [slug, title]);
 
   return (
     <div className="article-page">

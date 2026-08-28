@@ -142,3 +142,10 @@ read-only MCP access to the local development database, so that I can
 inspect schema and data directly while any accidental write attempt is
 blocked at the database level, not just by the tool's own claims.
 *Related requirements: REQ-047, REQ-048*
+
+---
+
+**US-19.1** — As a user, I want to see a list of articles I have recently
+viewed, so that I can easily get back to something I was reading without
+searching for it again.
+*Related requirements: REQ-19.1, REQ-19.2*
