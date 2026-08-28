@@ -405,3 +405,35 @@ tools are not added to any auto-approval allowlist in
 `.claude/settings.json`, so the first use of the server in a session
 requires the normal Claude Code permission prompt rather than running
 unattended.
+
+---
+
+### REQ-049 — Multi-reaction articles
+An authenticated user can set one reaction on an article, from a fixed,
+documented set (`like`, `insightful`, `celebrate`) — one row per
+user/article pair in its own `Reaction` table. Setting a reaction when
+one already exists for that user/article changes its type in place
+(never more than one reaction per user per article); `DELETE
+/api/articles/:slug/reactions` removes it. Submitting a type outside
+the fixed set is rejected with a validation error (422), and neither
+creates nor changes a reaction.
+
+Reactions are an independent concept from favoriting: `Favorites`
+(REQ-025/REQ-026) is unchanged, and setting or removing a reaction does
+not read from or write to it. The single-article endpoint (`GET
+/api/articles/:slug`) reports a per-reaction-type count (`reactionsCounts`,
+covering every fixed type, including zero) and the requesting user's own
+reaction (`myReaction`, `null` if anonymous or not reacted) — visible to
+anonymous and authenticated visitors alike. Setting or removing a
+reaction requires an authenticated session; an anonymous request is
+rejected (401), the same as favoriting.
+
+On the client, a row of reaction buttons (with per-type counts) appears
+once on the article detail page — not duplicated in both places
+`ArticlesButtons` renders, and not shown on article preview cards.
+Clicking a reaction the user doesn't currently have sets/changes it;
+clicking the currently-active one removes it. Reaction status is
+fetched independently of the page's existing nav-state skip-fetch
+(REQ-043), since that navigation state never carries it — for any
+visitor, not gated on an active session, since reaction counts are
+public.

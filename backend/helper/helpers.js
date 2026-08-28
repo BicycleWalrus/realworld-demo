@@ -39,4 +39,33 @@ const appendFollowers = async (loggedUser, toAppend) => {
   }
 };
 
-module.exports = { slugify, appendTagList, appendFavorites, appendFollowers };
+// Fixed, documented set of reaction types. Favoriting remains a separate,
+// independent concept (Favorites is untouched) rather than being folded
+// into this set.
+const REACTION_TYPES = ["like", "insightful", "celebrate"];
+
+const appendReactions = async (loggedUser, article) => {
+  const reactions = await article.getReactions();
+
+  const reactionsCounts = Object.fromEntries(
+    REACTION_TYPES.map((type) => [type, 0]),
+  );
+  for (const reaction of reactions) {
+    reactionsCounts[reaction.type] += 1;
+  }
+  article.dataValues.reactionsCounts = reactionsCounts;
+
+  const mine = loggedUser
+    ? reactions.find((reaction) => reaction.userId === loggedUser.id)
+    : undefined;
+  article.dataValues.myReaction = mine ? mine.type : null;
+};
+
+module.exports = {
+  slugify,
+  appendTagList,
+  appendFavorites,
+  appendFollowers,
+  appendReactions,
+  REACTION_TYPES,
+};

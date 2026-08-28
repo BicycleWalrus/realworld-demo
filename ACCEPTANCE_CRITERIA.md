@@ -406,6 +406,33 @@ changed.
 
 ---
 
+### US-029 — React to an article
+*(REQ-049)*
+
+- **AC-080** — Given an authenticated user, when they set a reaction for
+  the first time, then it's created; when they set a different type
+  while one already exists, then it changes in place — never more than
+  one reaction row for that user/article.
+- **AC-081** — Given an authenticated user with an existing reaction,
+  when they remove it, then it's deleted.
+- **AC-082** — Given any visitor, when an article is requested, then its
+  representation includes a count for every fixed reaction type
+  (including zero) and, for an authenticated user, their own current
+  reaction (`null` if anonymous or none set) — counts are always
+  accurate regardless of authentication.
+- **AC-083** — Given an anonymous visitor, when setting or removing a
+  reaction is attempted, then it's rejected (401), consistent with
+  favoriting (REQ-025).
+- **AC-084** — Given a reaction type outside the fixed set, when
+  submitted, then it's rejected with a validation error (422) and no
+  reaction is created or changed.
+- **AC-085** — Given a user reacts to an article, when its favorited
+  state and count are checked, then they are unaffected — reactions and
+  favorites are independent, and setting a reaction never favorites the
+  article (or vice versa).
+
+---
+
 ## Traceability Matrix
 
 | Requirement | User Story | Acceptance Criteria |
@@ -458,3 +485,4 @@ changed.
 | REQ-046 | US-027 | AC-074, AC-075 |
 | REQ-047 | US-028 | AC-076, AC-077 |
 | REQ-048 | US-028 | AC-078, AC-079 |
+| REQ-049 | US-029 | AC-080–AC-085 |

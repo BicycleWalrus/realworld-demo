@@ -8,6 +8,7 @@ const {
 const {
   appendFollowers,
   appendFavorites,
+  appendReactions,
   appendTagList,
   slugify,
 } = require("../helper/helpers");
@@ -164,6 +165,7 @@ const singleArticle = async (req, res, next) => {
     appendTagList(article.tagList, article);
     await appendFollowers(loggedUser, article);
     await appendFavorites(loggedUser, article);
+    await appendReactions(loggedUser, article);
 
     res.json({ article });
   } catch (error) {

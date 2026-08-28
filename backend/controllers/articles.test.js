@@ -28,7 +28,7 @@ function makeFollowableUser(overrides = {}) {
   );
 }
 
-function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, ...data }) {
+function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, reactions = [], ...data }) {
   return makeInstance(
     {
       id: 1,
@@ -48,6 +48,7 @@ function makeArticle({ author, tags = [], hasUser = false, favoritesCount = 0, .
       setAuthor: vi.fn(),
       hasUser: vi.fn().mockResolvedValue(hasUser),
       countUsers: vi.fn().mockResolvedValue(favoritesCount),
+      getReactions: vi.fn().mockResolvedValue(reactions),
       save: vi.fn().mockResolvedValue(),
       destroy: vi.fn().mockResolvedValue(),
     },
@@ -307,6 +308,48 @@ describe("singleArticle", () => {
     });
     expect(plain.author.username).toBe("jane");
     expect(plain.createdAt).toBeInstanceOf(Date);
+  });
+
+  // AC-082: per-reaction-type counts (including zero for untouched types)
+  // and the requesting user's own reaction are both reported.
+  test("reactionsCounts covers every fixed type, myReaction reflects this user's own", async () => {
+    const author = makeFollowableUser();
+    const me = makeFollowableUser({ id: 9 });
+    const article = makeArticle({
+      author,
+      reactions: [
+        { type: "like", userId: 9 },
+        { type: "like", userId: 3 },
+        { type: "insightful", userId: 4 },
+      ],
+    });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: me, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.reactionsCounts).toEqual({
+      like: 2,
+      insightful: 1,
+      celebrate: 0,
+    });
+    expect(article.dataValues.myReaction).toBe("like");
+  });
+
+  // AC-082: an anonymous viewer sees accurate counts but no reaction of
+  // their own (consistent with the favorited/following pattern).
+  test("no loggedUser -> counts still accurate, myReaction is null", async () => {
+    const article = makeArticle({
+      author: makeFollowableUser(),
+      reactions: [{ type: "celebrate", userId: 3 }],
+    });
+    Article.findOne.mockResolvedValue(article);
+    const res = makeRes();
+
+    await singleArticle({ loggedUser: undefined, params: { slug: "a-slug" } }, res, vi.fn());
+
+    expect(article.dataValues.reactionsCounts.celebrate).toBe(1);
+    expect(article.dataValues.myReaction).toBeNull();
   });
 
   // AC-050 / AC-054 (article half) and AC-006 (author half): an anonymous
